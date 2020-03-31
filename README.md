@@ -446,7 +446,7 @@ File descriptions are as follows:
 ## 11: Testing the pipeline
 
 The newly setup pipeline can be tested using provided data and files located in the 'test' directory. 
-To test the pipeline, change directory into the 'test' directory and invoking at the command prompt: 
+To test the pipeline, change into the 'test' directory and invoking at the command prompt: 
 
 ```bash
 DS testConfig.csv
