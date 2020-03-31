@@ -13,6 +13,12 @@ if [[ "$jar_version" != "3.8" ]]; then
 fi
 
 snakeDir=$(pwd)
+
+# Setup test case
+echo "Creating test config file"
+echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,runSSCS,recovery" > test/testConfig.csv
+echo "test,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery_noSynLink.sh" >> test/testConfig.csv
+
 echo "Configuring snakemake"
 snakemake --use-conda --conda-prefix ${snakeDir}/.snakemake --config gatk3=${1} -- initializeEnvs
 
