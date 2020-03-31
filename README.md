@@ -1,5 +1,4 @@
-Duplex Sequencing Basic SnakeMake Protocol  
-1.0.0
+Duplex Sequencing Pipeline
 ======================
 
 Brendan Kohrn, March 30, 2020  
