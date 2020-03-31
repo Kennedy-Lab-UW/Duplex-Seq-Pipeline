@@ -281,7 +281,7 @@ def getReportInput_noBlast(wildcards):
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.txt')
+    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     return(outArgs)
 
