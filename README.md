@@ -17,7 +17,8 @@ University of Washington, Seattle, WA, USA
 8. Recovery script creation
 9. Running pipelines
 10. Output file description
-11. Full and partial reruns
+11. Testing the pipeline
+12. Full and partial reruns
 
 ## 1: Glossary
 
@@ -67,10 +68,10 @@ git clone https://github.com/KennedyLabUW/Duplex-Seq-Pipeline.git
 change into the directory, and run:
 
 ```bash
-bash setupDS.sh GATK_JAR_PATH
+bash setupDS.sh GATK_JAR_PATH MAX_CORES
 ```
 
-where GATK_JAR_PATH is the path to your pre-downloaded GATK jar. After this, with the exception of setting up the Genomes (See Section 4) and the (optional) blast contamination database (See Section 5), you should be able to run the Duplex-Seq pipeline using 
+where GATK_JAR_PATH is the path to your pre-downloaded GATK jar, and MAX_CORES is the maximum number of cores you want the pipeline to be able to use. After this, with the exception of setting up the Genomes (See Section 4) and the (optional) blast contamination database (See Section 5), you should be able to run the Duplex-Seq pipeline using 
 
 ```bash
 DS CONFIG_CSV.csv
