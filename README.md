@@ -443,6 +443,17 @@ File descriptions are as follows:
 | Stats/plots | SAMPLE.sscs_BasePerPosWithoutNs.png |  Plot of error rate per cycle for SSCS  | runSscs=True |  
 | Stats/plots | SAMPLE.sscs.mutsPerRead.png | Plot of mutations per read in SSCS | runSscs=True |  
 
+## 11: Testing the pipeline
+
+The newly setup pipeline can be tested using provided data and files located in the 'test' directory. 
+To test the pipeline, change directory into the 'test' directory and invoking at the command prompt: 
+
+```bash
+DS testConfig.csv
+```
+A final expected output report can be found in the testData/Final directory and be compared to the expected_report.html file
+located in the parent test directory.
+
 ## 11: Full and partial reruns
 
 Sometimes it may be necessary to rerun all or part of the pipeline for various reasons.  The following table lists some of the reasons you might want to rerun all or part of the pipeline, how much of the pipeline you want to rerun in those cases, and how to carry out the rerun.  
