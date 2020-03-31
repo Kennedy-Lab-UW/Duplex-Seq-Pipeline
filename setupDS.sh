@@ -23,7 +23,7 @@ echo "test,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/t
 # Set up progConfig file
 echo "Creating progConfig file"
 echo "gatk3:" > DS_progConfig.yaml
-echo "samples: test/testData/testConfig.csv" >> DS_progConfig.yaml
+echo "samples: test/testConfig.csv" >> DS_progConfig.yaml
 echo "maxCores: ${maxCores}" >> DS_progConfig.yaml
 
 echo "Configuring snakemake"
