@@ -1,0 +1,31 @@
+name: DS_full
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.6.*
+  - bwa=0.7.17.*
+  - samtools=1.9.*
+  - gatk=3.8.*
+  - fgbio=1.0.*
+  - picard=2.20.*
+  - pysam=0.15.3
+  - snakemake=5.*
+  - bcftools=1.9*
+  - r>=3.6*
+  - ensembl-vep
+  - pandas
+  - numpy
+  - matplotlib
+  - regex
+  - kraken
+  - biopython
+  - blast
+  - jupyterlab
+  - nbconvert
+  - pandoc
+  - r-tidyverse 
+  - r-gridextra
+  - r-gridbase
+  - icu=64.*
+  - pillow

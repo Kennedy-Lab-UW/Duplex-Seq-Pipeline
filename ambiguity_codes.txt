@@ -1,0 +1,7 @@
+ambiguity codes:
+0: BLAST has 1 best match, matches bwa position
+1: BLAST has 1 best match, does not match bwa positon
+2: BLAST has 2+ best matches, correct species
+3: BLAST has 2+ best matches, at least one incorrect species
+4: BLAST did not attempt alignment, or no blast matches
+5: Not BLASTed

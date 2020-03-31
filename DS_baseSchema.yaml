@@ -1,0 +1,148 @@
+$schema: "http://json-schema.org/draft-07/schema#"
+description: an entry in the sample sheet
+properties:
+  sample:
+    type: string
+    pattern: ^[^\s]*$
+    description: sample name/identifier
+  rglb:
+    type: string
+    pattern: ^[^\s]*$
+    description: 
+  rbpl:
+    type: string
+    pattern: ^[^\s]*$
+    description: 
+  rgpu:
+    type: string
+    pattern: ^[^\s]*$
+    description: 
+  rgsm:
+    type: string
+    pattern: ^[^\s]*$
+    description: 
+  reference:
+    type: string
+    pattern: ^[^\s]*\.fa(sta)?$
+    description: reference fasta for this sample
+  target_bed:
+    type: string
+    pattern: ^[^\s]*\.bed$
+    description: 
+  blast_db:
+    type: string
+    pattern: ^[^\s]*$
+    description: 
+  targetTaxonId: 
+    type: integer
+    description: 
+  baseDir:
+    type: string
+    pattern: ^[^\s]*$
+    description: 
+  in1:
+    type: string
+    default: "seq1.fq"
+    pattern: ^[^\s]*\.((fq)|(fastq))(\.gz)?$
+    description: 
+  in2:
+    type: string
+    default: "seq2.fq"
+    pattern: ^[^\s]*\.((fq)|(fastq))(\.gz)?$
+    description: 
+  mqFilt:
+    type: integer
+    default: 0
+    minimum: 0
+    description: 
+  minMem:
+    type: integer
+    default: 0
+    minimum: 0
+    description: 
+  maxMem:
+    type: integer
+    default: 200
+    minimum: 0
+    description: 
+  cutOff:
+    type: number
+    default: 0.9
+    minimum: 0.5
+    maximum: 1
+    description: 
+  nCutOff:
+    type: number
+    default: 1
+    minimum: 0
+    maximum: 1
+    description: 
+  umiLen:
+    type: integer
+    default: 8
+    minimum: 0
+    description: 
+  spacerLen:
+    type: integer
+    default: 1
+    minimum: 0
+    description: 
+  locLen:
+    type: integer
+    default: 10
+    minimum: 0
+    description: 
+  readLen:
+    type: integer
+    default: 101
+    minimum: 1
+    description: 
+  clipBegin:
+    type: integer
+    default: 7
+    minimum: 0
+    description: 
+  clipEnd:
+    type: integer
+    default: 0
+    minimum: 0
+    description: 
+  minClone:
+    type: number
+    default: 0
+    minimum: 0
+    maximum: 1
+    description: 
+  maxClone:
+    type: number
+    default: 0.1
+    minimum: 0
+    maximum: 1
+    description: 
+  minDepth:
+    type: integer
+    default: 100
+    minimum: 1
+    description: 
+  maxNs:
+    type: number
+    default: 1
+    minimum: 0
+    maximum: 1
+    description: 
+  recovery:
+    type: string
+    pattern: ^[^\s]*\.sh$
+    default: "noRecovery.sh"
+    description: 
+
+required:
+  - sample
+  - rglb
+  - rgpl
+  - rgpu
+  - rgsm
+  - reference
+  - target_bed
+  - blast_db
+  - targetTaxonId
