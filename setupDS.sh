@@ -57,7 +57,7 @@ echo "#Duplex Sequencign Pipeline" >> ~/.bashrc.temp
 echo "export PATH=\"${snakeDir}:\$PATH\"" >> ~/.bashrc.temp
 echo "" >> ~/.bashrc.temp
 mv ~/.bashrc.temp ~/.bashrc
-source .bashrc
+source ~/.bashrc
 fi
 if [ -e ~/.bash_profile ]
 then
@@ -69,7 +69,7 @@ echo "#Duplex Sequencign Pipeline" >> ~/.bash_profile.temp
 echo "export PATH=\"${snakeDir}:\$PATH\"" >> ~/.bash_profile.temp
 echo "" >> ~/.bash_profile
 mv ~/.bash_profile.temp ~/.bash_profile
-source .bash_profile
+source ~/.bash_profile
 fi
 
 echo "Done"
