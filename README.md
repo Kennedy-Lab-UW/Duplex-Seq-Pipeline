@@ -36,41 +36,42 @@ A construct created by comparing two SSCSs.
 A group of reads that shares the same tag sequence.
 
 ## 2: Dependencies:
+This pipeline is known to work with the following minimum versions of the follow required programs:
 
 * Python3.6+
-* Snakemake
+* Snakemake=5.5.\*
 * Pandas
-* Miniconda/Anaconda
+* Miniconda/Anaconda=4.7.\*
 * A GATK3.8.1 .jar file
 * bwa=0.7.17.* (for genome setup)
-* ncbi-blast (installed separately, for contaminant database setup)
+* ncbi-blast=>2.6.0 (installed separately, for contaminant database setup)
 * wget (on macOS, install using homebrew; present by default on linux)
 
 Once Python3.6 is installed, snakemake and pandas can be installed using 
 pip3 or using whatever package manager you're using.  GATK3.8.1 can be 
 downloaded from 
 https://console.cloud.google.com/storage/browser/_details/gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2.  
-We need to use GATK3.8.1 since it is the last version of GATK that 
+**We need to use GATK3.8.1 since it is the last version of GATK that 
 includes the IndelRealigner functionality; this part was removed in 
-GATK4.  blast can be downloaded in any of several ways, including some 
+GATK4**.  Blast can be downloaded in any of several ways, including some 
 package managers (Ubuntu: sudo apt-get install ncbi-blast+).  It can 
 also be installed using conda if desired.  
 
 ## 3: Setup: 
 
-Find the location where you want the pipeline to end up, and clone the pipeline using git:
+Find the location where you want the pipeline to be located and clone the pipeline using git:
 
 ```bash
 git clone https://github.com/KennedyLabUW/Duplex-Seq-Pipeline.git
 ```
 
-cd into the directory, and run:
+change into the directory, and run:
 
 ```bash
 bash setupDS.sh GATK_JAR_PATH
 ```
 
-where GATK_JAR_PATH is the path to your pre-downloaded GATK jar.  Also, copy the setupBlastDb directory to wherever you store your blast databases (it can be kept with the rest of the program, if you want), navigate into that directory in a terminal window, and run the appropriate setup script using bash.  Note that this will download a number of genomes and one program from UCSC.  After this, you should be able to run the duplex sequencing pipeline using 
+where GATK_JAR_PATH is the path to your pre-downloaded GATK jar.  Copy the setupBlastDb directory to wherever you store your blast databases (it can be kept with the rest of the program, if you want). Navigate into that directory in a terminal window and run the appropriate setup script using bash.  Note that this will download a number of genomes and one program from UCSC.  After this, you should be able to run the Duplex-Seq pipeline using 
 
 ```bash
 DS CONFIG_CSV.csv
@@ -80,7 +81,7 @@ where CONFIG_CSV.csv is a configuration CSV file generated as described below.
 
 ## 4: Genome setup
 
-Put genomes in an easily findable location, such as our references directory (~/bioinformatics/reference). 
+Put genomes in an easily findable location, such as our references directory (i.e. ~/bioinformatics/reference). 
 
 Many genomes can be downloaded from UCSC (http://hgdownload.soe.ucsc.edu/downloads.html).  In order to download genomes from there, you will need to download the twoBitToFa program from the appropriate Utilities directory.  twoBitToFa has the following syntax (Copied from UCSC):
 
@@ -135,11 +136,10 @@ starting list is:
  * Cow (bosTau9)  
  * Dog (canFam3)  
  
-But you can obviously select your own set of species.  It is important that 
-any genome you plan to use for alignment be included in this database, 
+**It is important that any genome you plan to use for alignment be included in this database, 
 in the same version (e.g. if your alignment genome uses UCSC chromosome 
 names, your genome in the database cannot use NCBI chromosme names, but 
-must also use UCSC chromosome names).  
+must also use UCSC chromosome names)**.  
 
 Database setup consists of three steps:
 
@@ -207,10 +207,9 @@ https://genome.ucsc.edu/FAQ/FAQformat.html#format1.
 If you know which genes you are targeting and are using a common 
 published genome, the bed file can be downloaded from the UCSC Table 
 Browser (https://genome.ucsc.edu/cgi-bin/hgTables).  Otherwise, it can 
-be created using results from a BLAST search, or any other method you 
-like.  Be sure that your bed file consists of non-overlapping intervals.  
-
-This pipleine supports blocks as described in the bed spec.  
+be created using results from a BLAST search or any other method you 
+like.  **This pipeline does not currently support overlapping intervals, 
+does support blocks as described in the bed spec.**  
 
 ## 7: Configuration file creation:
 
@@ -251,7 +250,7 @@ Use the ConfigTemplate to create a new file with the appropriate headers.  For e
 Save the file as a .csv file with unix line endings (LF).
 
 ## 8: Recovery script creation
-As part of its operation, this pipeline filters out correct-species reads which blast maps to the correct species where the bwa-mapped position and the blast-mapped position disagree about where the read maps, or where blast is unable to determine conclusively where the read maps.  There is a step which provides an option to recover those reads by using a user-generated bash script.  The recommendation would be to use the bash script to call a python script which will actually accomplish the recovery.  In general, these scripts must:
+As part of its operation, this pipeline filters out correct-species reads where the blast mapping and bwa mapping positions disagree or where blast is unable to determine conclusively where the read maps (i.e.E-scores are the same). There is a step which provides an option to recover those reads by using a user-generated bash script.  Currently, we use a bash script to call a python script which will actually accomplish the recovery, but this functionality may be changed in the future.  In general, these scripts must:
 
 1. accept ambiguous reads as $1
 2. accept non-ambiguous reads as $2
@@ -430,7 +429,7 @@ File descriptions are as follows:
 | Stats/data | SAMPLE.sscs_MutsPerCycle.dat.csv |  Text data of error rate per cycle in unclipped SSCS  | runSscs=True |  
 | Stats/data | SAMPLE.sscs.mutsPerRead.txt | Statistics file for non-SNP mutations per read in SSCS reads | runSscs=True |  
 | Stats/data | SAMPLE.sscs.region.mutpos.vcf_depth.txt | Per-base coverage and N counts for final SSCS  | runSscs=True |  
-| Stats/data | SAMPLE.tagstats.txt |  Family size data (in text for)  | Always |  
+| Stats/data | SAMPLE.tagstats.txt |  Family size data (in text form)  | Always |  
 | Stats/data | SAMPLE.temp.sort.flagstats.txt | Statistics on initial read counts | Always |  
 | Stats | SAMPLE.report.ipynb | iPython notebook for the HTML report | Always |  
 | Stats | plots | Directory containing statistics plots. | Always |  
@@ -439,15 +438,15 @@ File descriptions are as follows:
 | Stats/plots | SAMPLE.dcs.iSize_Histogram.png |  Histogram of insert size metrics for un-clipped DCS  | Always |  
 | Stats/plots | SAMPLE.dcs.mutsPerRead.png | Plot of mutations per read in DCS | Always |  
 | Stats/plots | SAMPLE.dcs.targetCoverage.png | Plot of per-target coverage in DCS | Always |  
-| Stats/plots | SAMPLE_family_size.png |  | Always |  
-| Stats/plots | SAMPLE_fam_size_relation.png |  Plot of relationship between ab and ba families  | Always |  
+| Stats/plots | SAMPLE_family_size.png | Plot of family size distribution | Always |  
+| Stats/plots | SAMPLE_fam_size_relation.png |  Plot of relationship between a:b and b:a families  | Always |  
 | Stats/plots | SAMPLE.sscs_BasePerPosInclNs.png |  Plot of error rate per cycle SSCS, including Ns | runSscs=True |  
 | Stats/plots | SAMPLE.sscs_BasePerPosWithoutNs.png |  Plot of error rate per cycle for SSCS  | runSscs=True |  
 | Stats/plots | SAMPLE.sscs.mutsPerRead.png | Plot of mutations per read in SSCS | runSscs=True |  
 
 ## 11: Full and partial reruns
 
-Sometimes, it may be necessary to rerun all or part of the pipeline for various reasons.  The following table lists some of the reasons you might want to rerun all or part of the pipeline, how much of the pipeline you want to rerun in those cases, and how to carry out the rerun.  
+Sometimes it may be necessary to rerun all or part of the pipeline for various reasons.  The following table lists some of the reasons you might want to rerun all or part of the pipeline, how much of the pipeline you want to rerun in those cases, and how to carry out the rerun.  
 
 | Issue | Amount to rerun | Preparation steps |  
 | ----- | --------------- | ----------------- |  
