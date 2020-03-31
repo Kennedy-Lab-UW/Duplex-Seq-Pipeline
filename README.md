@@ -70,7 +70,7 @@ change into the directory, and run:
 bash setupDS.sh GATK_JAR_PATH
 ```
 
-where GATK_JAR_PATH is the path to your pre-downloaded GATK jar.  Copy the setupBlastDb directory to wherever you store your blast databases (it can be kept with the rest of the program, if you want). Navigate into that directory in a terminal window and run the appropriate setup script using bash.  Note that this will download a number of genomes and one program from UCSC.  After this, you should be able to run the Duplex-Seq pipeline using 
+where GATK_JAR_PATH is the path to your pre-downloaded GATK jar. After this, with the exception of setting up the Genomes (See Section 4) and the (optional) blast contamination database (See Section 5), you should be able to run the Duplex-Seq pipeline using 
 
 ```bash
 DS CONFIG_CSV.csv
@@ -454,7 +454,7 @@ DS testConfig.csv
 A final expected output report can be found in the testData/Final directory and be compared to the expected_report.html file
 located in the parent test directory.
 
-## 11: Full and partial reruns
+## 12: Full and partial reruns
 
 Sometimes it may be necessary to rerun all or part of the pipeline for various reasons.  The following table lists some of the reasons you might want to rerun all or part of the pipeline, how much of the pipeline you want to rerun in those cases, and how to carry out the rerun.  
 

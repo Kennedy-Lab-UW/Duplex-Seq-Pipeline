@@ -98,7 +98,7 @@ also be installed using conda if desired.</p>
 <div class="highlight highlight-source-shell"><pre>git clone https://github.com/KennedyLabUW/Duplex-Seq-Pipeline.git</pre></div>
 <p>change into the directory, and run:</p>
 <div class="highlight highlight-source-shell"><pre>bash setupDS.sh GATK_JAR_PATH</pre></div>
-<p>where GATK_JAR_PATH is the path to your pre-downloaded GATK jar.  Copy the setupBlastDb directory to wherever you store your blast databases (it can be kept with the rest of the program, if you want). Navigate into that directory in a terminal window and run the appropriate setup script using bash.  Note that this will download a number of genomes and one program from UCSC.  After this, you should be able to run the Duplex-Seq pipeline using</p>
+<p>where GATK_JAR_PATH is the path to your pre-downloaded GATK jar. After this, with the exception of setting up the Genomes (See Section 4) and the (optional) blast contamination database (See Section 5), you should be able to run the Duplex-Seq pipeline using</p>
 <div class="highlight highlight-source-shell"><pre>DS CONFIG_CSV.csv</pre></div>
 <p>where CONFIG_CSV.csv is a configuration CSV file generated as described below.</p>
 <h2>
@@ -949,7 +949,14 @@ does support blocks as described in the bed spec.</strong></p>
 </tbody>
 </table>
 <h2>
-<a id="user-content-11-full-and-partial-reruns" class="anchor" href="#11-full-and-partial-reruns" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>11: Full and partial reruns</h2>
+<a id="user-content-11-testing-the-pipeline" class="anchor" href="#11-testing-the-pipeline" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>11: Testing the pipeline</h2>
+<p>The newly setup pipeline can be tested using provided data and files located in the 'test' directory.
+To test the pipeline, change directory into the 'test' directory and invoking at the command prompt:</p>
+<div class="highlight highlight-source-shell"><pre>DS testConfig.csv</pre></div>
+<p>A final expected output report can be found in the testData/Final directory and be compared to the expected_report.html file
+located in the parent test directory.</p>
+<h2>
+<a id="user-content-12-full-and-partial-reruns" class="anchor" href="#12-full-and-partial-reruns" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>12: Full and partial reruns</h2>
 <p>Sometimes it may be necessary to rerun all or part of the pipeline for various reasons.  The following table lists some of the reasons you might want to rerun all or part of the pipeline, how much of the pipeline you want to rerun in those cases, and how to carry out the rerun.</p>
 <table>
 <thead>
