@@ -1,0 +1,26 @@
+# Pipeline files #
+##################
+.snakemake/
+DS
+DS-dag
+DS_progConfig.yaml
+test/testConfig.csv
+.env_initialized
+scripts/__pycache__
+
+# Test files #
+##############
+test/testData/*/
+test/testData/testData_config.sh
+test/testConfig.csv.*
+test/.testConfig.csv.fileList.txt
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
