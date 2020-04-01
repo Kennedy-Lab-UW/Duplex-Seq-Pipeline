@@ -1,6 +1,5 @@
-import pysam
-from argparse import ArgumentParser
 import sys
+from argparse import ArgumentParser
 
 parser = ArgumentParser()
 parser.add_argument('--indexes', dest='inFile', required=True,

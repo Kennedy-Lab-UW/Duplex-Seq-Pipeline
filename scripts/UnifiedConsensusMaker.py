@@ -37,16 +37,17 @@ When doing variant calling, remember that, for Duplex Sequencing,
     samples should not be considered diploid
 """
 
-import sys
-import os
-import gzip
 import datetime
+import gzip
+import multiprocessing as mp
+import os
 import random
-import subprocess
-import pysam
+import sys
 from argparse import ArgumentParser
 from collections import defaultdict
-import multiprocessing as mp
+
+import pysam
+
 
 class iteratorWrapper:
     def __init__(self, inIterator, finalValue):

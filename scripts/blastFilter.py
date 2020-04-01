@@ -1,11 +1,8 @@
-from Bio.Blast import NCBIXML
-import io
-import pysam
-from Bio.Blast.Applications import NcbiblastnCommandline
+from argparse import ArgumentParser
 from collections import namedtuple, Counter
-import sys
-import datetime
-from argparse import ArgumentParser, Namespace
+import pysam
+from Bio.Blast import NCBIXML
+
 
 class multiparser:
     def __init__(self, inBam, inXml):

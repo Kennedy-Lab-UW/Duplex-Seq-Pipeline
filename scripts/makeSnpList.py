@@ -1,6 +1,4 @@
 #makeSnpList.py
-import logging
-import argparse
 from argparse import ArgumentParser
 # ~ import scipy
 # ~ from scipy import stats

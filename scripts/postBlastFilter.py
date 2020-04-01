@@ -1,7 +1,7 @@
-import pysam
 from argparse import ArgumentParser
-import sys
 from collections import defaultdict
+import pysam
+
 
 class iteratorWrapper:
     def __init__(self, inIterator, finalValue):

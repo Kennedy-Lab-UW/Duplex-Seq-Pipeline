@@ -1,15 +1,8 @@
-import argparse
-from argparse import ArgumentParser
-import collections
-from collections import defaultdict, namedtuple
-import pysam
-import matplotlib
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-from VCF_Parser import *
-import sys
 import math
+from argparse import ArgumentParser
+from collections import namedtuple
+
+from VCF_Parser import *
 
 
 def extractVariant(inVarLine):

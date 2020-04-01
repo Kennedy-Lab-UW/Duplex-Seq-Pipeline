@@ -1,14 +1,8 @@
 # BamToCountMuts.py
-import pysam
-from collections import Counter, defaultdict
-from argparse import ArgumentParser
-import sys
-import re
-import csv
-import string
 import logging
-import gzip
-import datetime
+from argparse import ArgumentParser
+from collections import Counter, defaultdict
+import pysam
 from math import sqrt
 
 def Wilson(positive,  total) :

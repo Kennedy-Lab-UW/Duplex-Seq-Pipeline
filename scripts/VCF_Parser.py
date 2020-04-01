@@ -1,5 +1,3 @@
-import logging
-import collections
 from collections import OrderedDict
 
 # VCF file function

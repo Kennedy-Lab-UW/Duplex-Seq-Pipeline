@@ -1,13 +1,10 @@
-import pysam
-from collections import Counter
-from argparse import ArgumentParser
-import sys
-import re
-import csv
-import string
-import logging
-import gzip
 import datetime
+import logging
+import sys
+from argparse import ArgumentParser
+from collections import Counter
+import pysam
+
 
 def SamHeaderToVcfHeader(inSamHeader, progName, progVersion, progCmd):
     headLines=[

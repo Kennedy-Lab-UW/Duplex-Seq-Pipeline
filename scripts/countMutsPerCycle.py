@@ -1,14 +1,12 @@
-import argparse
-from argparse import ArgumentParser
-import collections
-from collections import defaultdict
-import pysam
-import matplotlib
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-from VCF_Parser import *
 import sys
+from argparse import ArgumentParser
+from collections import defaultdict
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pysam
+from VCF_Parser import *
 
 refConvert = {"C":"C", "G":"C", "T":"T", "A":"T"}
 compBase = {"C":"G", "G":"C", "T":"A", "A":"T", "N":"N"}
