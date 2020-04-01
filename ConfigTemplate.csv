@@ -1,0 +1,2 @@
+sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,runSSCS,recovery
+,,,,,,,.,,,seq1.fq,seq2.fq,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,0,noRecovery_noSynLink.sh
