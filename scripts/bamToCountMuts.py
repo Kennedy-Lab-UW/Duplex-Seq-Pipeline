@@ -316,8 +316,6 @@ class countMutsEngine:
                     )
                 self.mutsCounts["DP"] += lnCnts["DP"]
                 self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                # ~ print(f"{pileup_column.reference_pos + 1}\t{lnCnts['DP']}\t"
-                      # ~ f"{lnCnts['A'] + lnCnts['G'] + lnCnts['C'] + lnCnts['T']}")
                 for xIter in ("A","C","G","T"):
                     if xIter != lnCnts["RefBase"]:
                         self.mutsCounts[f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
@@ -437,9 +435,6 @@ class countMutsEngine:
                                     self.subregCounts[subregion.samtoolsStr()]["dels"][xIter] += lnCnts["dels"][xIter]
                     if myChrPos not in linesCounted:
                         linesCounted.append(myChrPos)
-                        
-                        # ~ print(f"{pileup_column.reference_pos + 1}\t{lnCnts['DP']}\t"
-                          # ~ f"{lnCnts['A'] + lnCnts['G'] + lnCnts['C'] + lnCnts['T']}")
                         self.mutsCounts["DP"] += lnCnts["DP"]
                         self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                         
@@ -509,8 +504,6 @@ class countMutsEngine:
                         "DP": myTotCount-myNCount
                         }
             for readTypeKey in mReads:
-                # ~ if '-' in readTypeKey:
-                    # ~ print(readTypeKey)
                 if readTypeKey != "*":
                     if '-' in readTypeKey:
                         myRefBPs = self.inFasta.fetch(reference=myChrom, start=myPos-1, end=myPos+len(readTypeKey[2:])).upper()
@@ -529,7 +522,6 @@ class countMutsEngine:
                         "dels": defaultdict(int), 
                         "DP": 0
                         }
-        #~ logging.debug(f"MyLine is {str(myLine)}")
         return(mutsDict)
     
     def genSummary(self, Fout):
@@ -550,17 +542,10 @@ class countMutsEngine:
                 "##Unique mutations only\n"
                 )
         outFile.write("#SAMPLE,REGION,MUTATION_TYPE,MUTATION_CLASS,COUNT,DENOMINATOR,FREQUENCY\n")
-        # ~ outFile.write(
-            # ~ f"\n##OVERALL: \n"
-            # ~ )
         # Overall Output:
         totPointMuts = 0
 
         for x in ("A","T","C","G"):
-            # ~ outFile.write(
-                # ~ f"\n{x}'s sequenced:\t{self.mutsCounts[''.join((x,'seq'))]}\n"
-                # ~ f"Mutation type\t#\tFrequency\t95% positive CI\t95% negative CI\n"
-                # ~ )
             for y in ("A","T","C","G"):
                 if x != y:
                     wilsonCI = Wilson(
@@ -588,11 +573,7 @@ class countMutsEngine:
         
         # insertions:
         if self.mutsCounts['ins'] != {}:
-            #print(self.mutsCounts['ins'])
             insKeys = sorted(int(x) for x in self.mutsCounts['ins'])
-            # ~ outFile.write(
-                # ~ "\nMutation type\t#\tFrequency\t95% positive CI\t95% negative CI\n"
-                # ~ )
             for n in insKeys:
                 if self.mutsCounts['ins'][str(n)] != 0:
                     wilsonCI = Wilson(
@@ -617,11 +598,7 @@ class countMutsEngine:
                 f"{wilsonCI[0]:.2e}\n"
                 )
         if self.mutsCounts['dels'] != {}:
-            #print(self.mutsCounts['dels'])
             delsKeys = sorted(int(x) for x in self.mutsCounts['dels'])
-            # ~ outFile.write(
-                # ~ "\nMutation type\t#\tFrequency\t95% positive CI\t95% negative CI\n"
-                # ~ )
             for n in delsKeys:
                 if self.mutsCounts['dels'][str(n)] != 0:
                     wilsonCI = Wilson(
@@ -648,15 +625,8 @@ class countMutsEngine:
                 
         # Detail counts:
         for subreg in self.subregCounts:
-            # ~ outFile.write(
-                # ~ f"\n##Detail on {self.subregCounts[subreg]['name']} at {self.subregCounts[subreg]['str']}\n"
-                # ~ )
             totPointMuts = 0
             for x in ("A","T","C","G"):
-                # ~ outFile.write(
-                    # ~ f"\n{x}'s sequenced:\t{self.subregCounts[subreg][''.join((x,'seq'))]}\n"
-                    # ~ f"Mutation type\t#\tFrequency\t95% positive CI\t95% negative CI\n"
-                    # ~ )
                 for y in ("A","T","C","G"):
                     if x != y:
                         wilsonCI = Wilson(
@@ -685,11 +655,7 @@ class countMutsEngine:
             
             # insertions:
             if self.subregCounts[subreg]['ins'] != {}:
-                #print(self.subregCounts[subreg]['ins'])
                 insKeys = sorted(int(x) for x in self.subregCounts[subreg]['ins'])
-                # ~ outFile.write(
-                    # ~ "\nMutation type\t#\tFrequency\t95% positive CI\t95% negative CI\n"
-                    # ~ )
                 for n in insKeys:
                     if self.subregCounts[subreg]['ins'][str(n)] != 0:
                         wilsonCI = Wilson(
@@ -716,11 +682,7 @@ class countMutsEngine:
                     f"{wilsonCI[0]:.2e}\n"
                     )
             if self.subregCounts[subreg]['dels'] != {}:
-                #print(self.subregCounts[subreg]['dels'])
                 delsKeys = sorted(int(x) for x in self.subregCounts[subreg]['dels'])
-                # ~ outFile.write(
-                    # ~ "\nMutation type\t#\tFrequency\t95% positive CI\t95% negative CI\n"
-                    # ~ )
                 for n in delsKeys:
                     if self.subregCounts[subreg]['dels'][str(n)] != 0:
                         wilsonCI = Wilson(
