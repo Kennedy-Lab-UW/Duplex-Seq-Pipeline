@@ -13,14 +13,21 @@ if [[ "$jar_version" != "3.8" ]]; then
 fi
 
 snakeDir=$(pwd)
+maxCores="${2}"
 
 # Setup test case
 echo "Creating test config file"
 echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,runSSCS,recovery" > test/testConfig.csv
 echo "test,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery_noSynLink.sh" >> test/testConfig.csv
 
+# Set up progConfig file
+echo "Creating progConfig file"
+echo "gatk3:" > DS_progConfig.yaml
+echo "samples: test/testConfig.csv" >> DS_progConfig.yaml
+echo "maxCores: ${maxCores}" >> DS_progConfig.yaml
+
 echo "Configuring snakemake"
-snakemake --use-conda --conda-prefix ${snakeDir}/.snakemake --config gatk3=${1} -- initializeEnvs
+snakemake --cores 1 --use-conda --conda-prefix ${snakeDir}/.snakemake --config gatk3=${1} -- initializeEnvs
 
 echo "Creating run script"
 echo "#!/bin/bash" > DS
@@ -50,7 +57,7 @@ echo "#Duplex Sequencign Pipeline" >> ~/.bashrc.temp
 echo "export PATH=\"${snakeDir}:\$PATH\"" >> ~/.bashrc.temp
 echo "" >> ~/.bashrc.temp
 mv ~/.bashrc.temp ~/.bashrc
-source .bashrc
+source ~/.bashrc
 fi
 if [ -e ~/.bash_profile ]
 then
@@ -62,7 +69,7 @@ echo "#Duplex Sequencign Pipeline" >> ~/.bash_profile.temp
 echo "export PATH=\"${snakeDir}:\$PATH\"" >> ~/.bash_profile.temp
 echo "" >> ~/.bash_profile
 mv ~/.bash_profile.temp ~/.bash_profile
-source .bash_profile
+source ~/.bash_profile
 fi
 
 echo "Done"

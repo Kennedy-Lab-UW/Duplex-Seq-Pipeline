@@ -1,3 +1,0 @@
-gatk3:
-samples: test/testConfig.csv
-maxCores: 8
