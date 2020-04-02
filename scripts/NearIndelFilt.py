@@ -54,7 +54,6 @@ def main():
             myVar = extractVariant(line)
             indels[myVar[0]] = indelRegion(myVar[1], myVar[2],myVar[3])
     inIndels.close()
-    # ~ print(indels)
     inVCF = VariantFile(o.inFile,'r')
     inVCF.header.addLine(
         lineType="FILTER", 
@@ -80,7 +79,6 @@ def main():
                 vcfLine.add_filter("near_indel")
         outVCF.writeline(vcfLine)
         recordsWritten += 1
-    # ~ print(f"{recordsRead} read\n{recordsWritten} written")
     inVCF.close()
     outVCF.close()
 

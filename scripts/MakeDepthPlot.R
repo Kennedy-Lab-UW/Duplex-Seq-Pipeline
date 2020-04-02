@@ -74,7 +74,6 @@ if (length(row.names(depth)) > 0) {
 multiplier = -maxDP / maxNs
 
 
-#        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf"
 myFName = paste("Final/",inSampType,"/",inSampName, ".vcf", sep="")
 myVCF <- read_delim(
   myFName, "\t", 

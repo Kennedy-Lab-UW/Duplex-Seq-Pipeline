@@ -68,29 +68,8 @@ for index in indexes:
             peakProportion = float(line.split()[2])
         maxSize = line.split()[0]
     tagstatsFile.close()
-    # get hs_metrics numbers
-    # ~ hsSscsFile = open(f"{index}/{runID}.sscs.filt.no_overlap.hs_metrics.txt", 'r')
-    # ~ lineCtr=0
-    # ~ line = hsSscsFile.readline()
-    # ~ while lineCtr < 7:
-        # ~ line = hsSscsFile.readline()
-        # ~ lineCtr += 1
-    # ~ sscsOnTarget=line.split()[18]
-    # ~ hsSscsFile.close()
     sscsOnTarget="NA"
     
-    # ~ print("Processing hs_metrics")
-    # ~ hsDcsFile = open(f"{index}/{runID}.dcs.filt.no_overlap.hs_metrics.txt", 'r')
-    # ~ lineCtr=0
-    # ~ line = hsDcsFile.readline()
-    # ~ while lineCtr < 7:
-        # ~ line = hsDcsFile.readline()
-        # ~ lineCtr += 1
-    # ~ dcsOnTarget=line.split()[18]
-    # ~ dcsMeanDepth=line.split()[22]
-    # ~ dcsMaxDepth=line.split()[24]
-    # ~ dcsUncovered=line.split()[28]
-    # ~ hsDcsFile.close()
     # read depth file:
     print("Processing Depth")
     depthFile = open(f"{index}/Stats/data/{runID}.dcs.region.mutpos.vcf_depth.txt", 'r')

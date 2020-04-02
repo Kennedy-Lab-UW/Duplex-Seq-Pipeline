@@ -1,8 +1,6 @@
 import logging
 import argparse
 from argparse import ArgumentParser
-# ~ import scipy
-# ~ from scipy import stats
 from VCF_Parser import *
 
 def main():
@@ -73,7 +71,7 @@ def main():
     # Setup logging
     numeric_level = getattr(logging, o.logLvl.upper(), None)
     if not isinstance(numeric_level, int):
-        raise ValueError('Invalid log level: %s' % logLevel)
+        raise ValueError('Invalid log level: %s' % o.logLvl.upper())
     logging.basicConfig(
         format='%(levelname)s: %(message)s', 
         level=numeric_level, 
@@ -123,17 +121,6 @@ def main():
             outSNP.writeline(varLine)
         if len(varLine.ref) > 1 or max([len(x) for x in varLine.alts]) > 1:
             outIndel.writeline(varLine)
-        # ~ else:
-            # ~ ###   Calculate probability that this depth could have occured by random chance, given that the null hypothesis is true (stats.binom_test)
-            # ~ p_notSnp = stats.binom_test(
-                # ~ [int(x) for x in varLine.samples[sampName]["AD"].split(',')]
-                # ~ )
-            # ~ ###   if probability is inside confidence level:
-            # ~ if p_notSnp >= o.confidence:
-                # ~ ### Mark as SNP
-                # ~ varLine.add_filter("SNP")
-                # ~ ### Write to SNP file
-                # ~ outSNP.writeline(varLine)
         ##  write mutation to output file
         outVCF.writeline(varLine)
     # Close files

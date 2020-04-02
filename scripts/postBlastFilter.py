@@ -51,11 +51,9 @@ def main():
     o = parser.parse_args()
     
     inBam = pysam.AlignmentFile("-", 'rb')
-    # ~ print("Opened inbam")
     outGoodBam = pysam.AlignmentFile("-", 'wb', template=inBam)
     outBadBam = pysam.AlignmentFile(f"{o.outPrefix}.wrongSpecies.bam", 'wb', template=inBam)
     outAmbigBam = pysam.AlignmentFile(f"{o.outPrefix}.ambig.bam", 'wb', template=inBam)
-    # ~ print("Opened outBams")
     outTextID = open(f"{o.outPrefix}.speciesComp.txt" ,'w')
     firstLine = next(inBam)
     lineStorage = [firstLine]
@@ -68,8 +66,6 @@ def main():
         else:
             # check if either line has a t0 tag
             addedTag = False
-            # ~ tagVals1 = [x.get_tag("YT") if x.has_tag("YT") else o.taxID for x in lineStorage]
-            # ~ family = [x.query_name for x in lineStorage]
             for xIter in lineStorage:
                 if not xIter.has_tag("t0"):
                     xIter.set_tag("t0",o.taxID, 'i')
@@ -81,7 +77,6 @@ def main():
             tagSet=set(tagVals)
             testSet = {o.taxID, -1}
             tagTest = tagSet - testSet
-            # ~ sys.stderr.write(f"{family}\n{tagVals}\n{tagSet},{addedTag}\n")
             if len(tagTest) == 0:
                 if o.taxID in tagSet:
                     # good pair
@@ -96,7 +91,6 @@ def main():
                 else:
                     # single bad determination
                     altTaxID = next(iter(tagTest))
-                    # ~ sys.stderr.write(f"{tagSet}\n")
             else:
                 # multiple bad determinations
                 altTaxID = -1
@@ -165,7 +159,6 @@ def main():
                         for lIter in lineStorage:
                             lIter.set_tag("t0",-1, 'i')
                             outBadBam.write(lIter)
-                        outTaxID = -2
                 elif len(amTest) == 0:
                     testInd = [x for x in range(len(amVals)) if amVals[x] == 0]
                     if len(testInd) == 0:

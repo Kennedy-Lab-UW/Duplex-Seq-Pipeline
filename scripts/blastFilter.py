@@ -8,7 +8,6 @@ class multiparser:
     def __init__(self, inBam, inXml):
         self.bamFile=pysam.AlignmentFile(inBam, 'rb')
         self.xml = NCBIXML.parse(open(inXml))
-        #self.log = open("testLog.txt", 'w')
         self.bamLineNum = 0
         self.xmlLineNum = 0
         self.bamLine = None
@@ -32,9 +31,6 @@ class multiparser:
                 self.bamLine = next(self.bamFile)
                 self.xmlLine = next(self.xml)
             
-#            while  bamLine.query_name != xmlLine.query.split('/')[0]:
-#                bamLine = next(self.bamFile)
-#                self.log.write(f"Bam Name:\t{bamLine.query_name}\n")
             
             if self.bamLine.query_name == self.xmlLine.query.split('/')[0]:
                 return(self.bamLine, self.xmlLine)
@@ -61,11 +57,8 @@ blastAlignment = namedtuple(
 def extractBlastData(inRecord):
     alignments = []
     myAlnNum = 0
-    # ~ print(inRecord.query)
     for aln in inRecord.alignments:
         for hsp in aln.hsps:
-            # ~ print(aln.title)
-            # ~ print(hsp.expect)
             alignments.append(
                 blastAlignment(
                     myAlnNum, 
@@ -76,9 +69,7 @@ def extractBlastData(inRecord):
                     )
                 )
             myAlnNum += 1
-    # ~ print()
     alignments.sort(key=lambda aln: aln.score)
-    # ~ sys.stderr.write(f"alignments = {alignments}")
     try:
         det = {"queryName":inRecord.query}
         if len(alignments) == 0: 
@@ -88,7 +79,6 @@ def extractBlastData(inRecord):
             det["MaxAln"] = 0
         else:
             # Modify to deal with having more than two maximum alignments <------- ***WORK HERE***
-            # ~ sys.stderr.write("Entering while...\n")
             
             tieCounter = Counter([x.score for x in alignments])
             tiedAlignments = [alignments[x] for x in range(len(alignments)) if alignments[x].score == min(tieCounter)]
@@ -145,22 +135,16 @@ def main():
     for bamLine, blastLine in myIterator:
         if bamLine.query_name == "TGGATACGGTTGATGGCGAAGTGGTTCTCATG":
             print(bamLine.tags)
-        # ~ if records %  == 0:
-        # ~ sys.stderr.write(f"{records} lines processed...\n")
         if blastLine is not None:
-            # ~ sys.stderr.write(f"Determining blast result...\n")
             blastDet = extractBlastData(blastLine)
-            # ~ sys.stderr.write(f"Determined blast result...\n")
-            # ~ sys.stderr.write(f"{blastDet}")
             bamLine.set_tag("t0",blastDet["t0"], 'i')
             if bamLine.query_name == "TGGATACGGTTGATGGCGAAGTGGTTCTCATG":
-                # ~ print(bamLine.tags)
                 print(blastDet)
             try:
                 
                 for aln in range(blastDet["MaxAln"]):
                     if f"t{aln + 1}" in blastDet:
-                         bamLine.set_tag(f"t{aln + 1}", blastDet[f"t{aln + 1}"], 'i')
+                        bamLine.set_tag(f"t{aln + 1}", blastDet[f"t{aln + 1}"], 'i')
                     bamLine.set_tag(f"c{aln + 1}", blastDet[f"c{aln + 1}"], 'Z')
                     bamLine.set_tag(f"p{aln + 1}", blastDet[f"p{aln + 1}"], 'i')
                     bamLine.set_tag(f"l{aln + 1}", blastDet[f"l{aln + 1}"], 'i')
