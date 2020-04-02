@@ -232,6 +232,13 @@ def getParams():
         dest = 'unique', 
         help = 'Run countMutsUnique instead of countMuts'
         )
+    # ~ parser.add_argument(
+        # ~ "--outputType", 
+        # ~ action="store", 
+        # ~ dest="outType", 
+        # ~ default="TOTAL", 
+        # ~ choices=["TOTAL","GENE","BLOCKS","PERBLOCK"
+        # ~ help="Select which sections to output.  
     return(parser.parse_args())
 
 class countMutsEngine:
@@ -290,7 +297,8 @@ class countMutsEngine:
             "dels": defaultdict(int),
             "DP": 0
             }
-        self.subregCounts = {}
+        self.geneCounts
+        self.blockCounts = {}
     
     def processLines(self, 
                      roundLevel
@@ -332,7 +340,7 @@ class countMutsEngine:
             for myRegion in self.myBed:
                 regStr = myRegion.samtoolsStr()
                 subregions = myRegion.get_subregions()
-                self.subregCounts[regStr] = {
+                self.geneCounts[regStr] = {
                     "name": myRegion.name, 
                     "str": regStr, 
                     "Aseq": 0, 
@@ -353,7 +361,8 @@ class countMutsEngine:
                     "G>C": 0,
                     "ins":defaultdict(int),
                     "dels": defaultdict(int),
-                    "DP": 0
+                    "DP": 0, 
+                    "blocks":len(subregions)
                     }
                 if not ( 
                         len(subregions) == 1
@@ -361,7 +370,7 @@ class countMutsEngine:
                         and subregions[0].endPos == myRegion.endPos
                         ):
                     for subregion in subregions:
-                        self.subregCounts[subregion.samtoolsStr()] = {
+                        self.blockCounts[subregion.samtoolsStr()] = {
                             "name": subregion.name, 
                             "str": subregion.samtoolsStr(), 
                             "Aseq": 0, 
@@ -405,16 +414,16 @@ class countMutsEngine:
                         self.params["minC"], 
                         self.params["maxC"]
                         )
-                    self.subregCounts[regStr]["DP"] += lnCnts["DP"]
-                    self.subregCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                    self.geneCounts[regStr]["DP"] += lnCnts["DP"]
+                    self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                     
                     for xIter in ("A","C","G","T"):
                         if xIter != lnCnts["RefBase"]:
-                            self.subregCounts[regStr][f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
+                            self.geneCounts[regStr][f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
                     for xIter in lnCnts["ins"]:
-                        self.subregCounts[regStr]["ins"][xIter] += lnCnts["ins"][xIter]
+                        self.geneCounts[regStr]["ins"][xIter] += lnCnts["ins"][xIter]
                     for xIter in lnCnts["dels"]:
-                        self.subregCounts[regStr]["dels"][xIter] += lnCnts["dels"][xIter]
+                        self.geneCounts[regStr]["dels"][xIter] += lnCnts["dels"][xIter]
                     
                     if not ( 
                             len(subregions) == 1
@@ -428,11 +437,11 @@ class countMutsEngine:
                                 
                                 for xIter in ("A","C","G","T"):
                                     if xIter != lnCnts["RefBase"]:
-                                        self.subregCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
+                                        self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
                                 for xIter in lnCnts["ins"]:
-                                    self.subregCounts[subregion.samtoolsStr()]["ins"][xIter] += lnCnts["ins"][xIter]
+                                    self.blockCounts[subregion.samtoolsStr()]["ins"][xIter] += lnCnts["ins"][xIter]
                                 for xIter in lnCnts["dels"]:
-                                    self.subregCounts[subregion.samtoolsStr()]["dels"][xIter] += lnCnts["dels"][xIter]
+                                    self.blockCounts[subregion.samtoolsStr()]["dels"][xIter] += lnCnts["dels"][xIter]
                     if myChrPos not in linesCounted:
                         linesCounted.append(myChrPos)
                         self.mutsCounts["DP"] += lnCnts["DP"]
@@ -527,7 +536,17 @@ class countMutsEngine:
     def genSummary(self, Fout):
         logging.debug("Generating summary")
         logging.debug(self.mutsCounts)
-        logging.debug(self.subregCounts)
+        logging.debug(self.geneCounts)
+        logging.debug(self.blockCounts)
+        self.sugregCounts = {}
+        subregNum = 0
+        subregNames = [x for x in self.blockCounts]
+        for geneIter in self.geneCounts:
+            self.sugregCounts[geneIter] = self.geneCounts[geneIter]
+            for sugregIter in self.geneCounts[geneIter]["blocks"]:
+                self.subregCounts[subregNames[subregNum]] = self.blockCounts[subregNames[subregNum]]
+                subregNum += 1
+        
         outFile = open(Fout, 'w')
         outFile.write(
             f"##CountMuts output:\n"
