@@ -6,27 +6,26 @@ import pysam
 from math import sqrt
 
 def Wilson(positive,  total) :
+    """Get Wilson confidence intervals for a position"""
+    if total == 0:
+        return 0
 
-        if total == 0:
+    z = 1.96 #1.96 = 95%
+    phat = float(positive) / total
+    positiveCI = (phat 
+                  + z * z / (2 * total) 
+                  + z * sqrt(
+                      (phat * (1 - phat) + z * z / (4 * total)) / total
+                      )
+                  ) / ( 1 + z * z / total)
+    negativeCI =  (phat 
+                   + z * z / (2 * total) 
+                   - z * sqrt(
+                       (phat * (1 - phat) + z * z / (4 * total)) / total
+                       )
+                   ) / (1 + z * z / total)
 
-            return 0
-
-        z = 1.96 #1.96 = 95%
-        phat = float(positive) / total
-        positiveCI = (phat 
-                      + z * z / (2 * total) 
-                      + z * sqrt(
-                          (phat * (1 - phat) + z * z / (4 * total)) / total
-                          )
-                      ) / ( 1 + z * z / total)
-        negativeCI =  (phat 
-                       + z * z / (2 * total) 
-                       - z * sqrt(
-                           (phat * (1 - phat) + z * z / (4 * total)) / total
-                           )
-                       ) / (1 + z * z / total)
-
-        return  (phat, positiveCI , negativeCI )
+    return  (phat, positiveCI , negativeCI )
 
 class Bed_File:
     def __init__(self, inFile):
@@ -297,7 +296,7 @@ class countMutsEngine:
             "dels": defaultdict(int),
             "DP": 0
             }
-        self.geneCounts
+        self.geneCounts = {}
         self.blockCounts = {}
     
     def processLines(self, 
@@ -432,8 +431,8 @@ class countMutsEngine:
                             ):
                         for subregion in subregions:
                             if subregion.contains(myRegion.chrom, pileup_column.reference_pos):
-                                self.subregCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
-                                self.subregCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                                self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
+                                self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                                 
                                 for xIter in ("A","C","G","T"):
                                     if xIter != lnCnts["RefBase"]:
@@ -485,10 +484,7 @@ class countMutsEngine:
         # I'll need to pull the reference base from the fasta file
         
         myRefBase = self.inFasta.fetch(reference=myChrom, start=myPos-1, end=myPos).upper()
-        indelStrip = {ord(c): None for c in '1234567890'}
         logging.debug(f"Refernce is: {myRefBase}")
-        myVcfLines = []
-        myRefCount = myReads[myRefBase]
         myNCount = sum([myReads[x] for x in myReads if x[0] == "N"])
         myTotCount = sum([myReads[x] for x in myReads])
         clonalities = {x: myReads[x]/(myTotCount - myNCount) if myTotCount - myNCount > 0 else 0 for x in myReads}
@@ -538,12 +534,12 @@ class countMutsEngine:
         logging.debug(self.mutsCounts)
         logging.debug(self.geneCounts)
         logging.debug(self.blockCounts)
-        self.sugregCounts = {}
+        self.subregCounts = {}
         subregNum = 0
         subregNames = [x for x in self.blockCounts]
         for geneIter in self.geneCounts:
             self.sugregCounts[geneIter] = self.geneCounts[geneIter]
-            for sugregIter in self.geneCounts[geneIter]["blocks"]:
+            for subregIter in self.geneCounts[geneIter]["blocks"]:
                 self.subregCounts[subregNames[subregNum]] = self.blockCounts[subregNames[subregNum]]
                 subregNum += 1
         
@@ -753,15 +749,6 @@ def main():
         o.sampName
         )
     logging.info("Processing Lines")
-    '''
-        def processLines(self, 
-                     roundLevel, 
-                     unique=False, 
-                     Nprop=1, 
-                     minDepth=1, 
-                     minC=0, 
-                     maxC=1
-    '''
     myEngine.processLines(
         o.round
         )
