@@ -236,13 +236,14 @@ def getParams():
         action="store", 
         dest="outType", 
         default="GB", 
-        choices=["GB","G","B", "BG"],
+        choices=["GB","G","B", "BG", "N"],
         help=(
             f"Select which sections to output, in addition to 'OVERALL'.  "
             f"String of one or more of 'G' and 'B'.  "
             f"G -> output GENE sections for each bed line; "
             f"B -> output 'BLOCK' sections for each block in the bed "
-            f"line (if present).  "
+            f"line (if present); 'N' -> Only output overall frequencies.  "
+            f"Overrides all other options.  "
             )
         )
     parser.add_argument(
@@ -859,6 +860,8 @@ class countMutsEngine:
 
 def main():
     o = getParams()
+    if 'N' in o.outType:
+        o.outType = ""
     if o.sumType[0] == "G":
         o.overallSum = "GENES"
     elif o.sumType[0] == "B":
