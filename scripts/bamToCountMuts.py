@@ -231,13 +231,39 @@ def getParams():
         dest = 'unique', 
         help = 'Run countMutsUnique instead of countMuts'
         )
-    # ~ parser.add_argument(
-        # ~ "--outputType", 
-        # ~ action="store", 
-        # ~ dest="outType", 
-        # ~ default="TOTAL", 
-        # ~ choices=["TOTAL","GENE","BLOCKS","PERBLOCK"
-        # ~ help="Select which sections to output.  
+    parser.add_argument(
+        "--outputType", 
+        action="store", 
+        dest="outType", 
+        default="GB", 
+        choices=["GB","G","B", "BG"],
+        help=(
+            f"Select which sections to output, in addition to 'OVERALL'.  "
+            f"String of one or more of 'G' and 'B'.  "
+            f"G -> output GENE sections for each bed line; "
+            f"B -> output 'BLOCK' sections for each block in the bed "
+            f"line (if present).  "
+            )
+        )
+    parser.add_argument(
+        "--sumType", 
+        action="store", 
+        dest="sumType", 
+        default="GT", 
+        choices=["GT","GB","BT","BB"],
+        help=(
+            f"Select how to sum for 'OVERALL' and 'GENE' sections, "
+            f"where 'GENE' represents a single bed line. "
+            f"The first character controls summing for overall: "
+            f"G -> OVERALL = sum(GENEs); "
+            f"B -> OVERALL = sum(BLOCKs).  "
+            f"In sum(GENEs) mode, this will ignore BLOCKs for the "
+            f"purposes of calculating OVERALL.  "
+            f"The second character controls summing for each GENE: "
+            f"T -> GENE = Whole gene, ignoring BLOCKs; "
+            f"B -> GENE = sum(BLOCKs).  "
+            )
+        )
     return(parser.parse_args())
 
 class countMutsEngine:
@@ -529,7 +555,7 @@ class countMutsEngine:
                         }
         return(mutsDict)
     
-    def genSummary(self, Fout):
+    def genSummary(self, Fout, overall_mode="GENES", gene_mode="FULL", outputs="GB"):
         logging.debug("Generating summary")
         logging.debug(self.mutsCounts)
         logging.debug(self.geneCounts)
@@ -537,11 +563,6 @@ class countMutsEngine:
         self.subregCounts = {}
         subregNum = 0
         subregNames = [x for x in self.blockCounts]
-        for geneIter in self.geneCounts:
-            self.sugregCounts[geneIter] = self.geneCounts[geneIter]
-            for subregIter in self.geneCounts[geneIter]["blocks"]:
-                self.subregCounts[subregNames[subregNum]] = self.blockCounts[subregNames[subregNum]]
-                subregNum += 1
         
         outFile = open(Fout, 'w')
         outFile.write(
@@ -552,6 +573,116 @@ class countMutsEngine:
             f"##Minimum Depth: \t{self.params['minDepth']}\n"
             f"##Clonality: \t{self.params['minC']}-{self.params['maxC']}\n"
             )
+        if overall_mode == "GENES":
+            outFile.write(
+                f"##OVERAL = Sum of Genes\n"
+                )
+            overall_counts = self.mutsCounts
+        elif overall_mode == "BLOCKS":
+            outFile.write(
+                f"##OVERALL = Sum of Blocks\n"
+                )
+            overall_counts = {
+                "Aseq": sum([self.blockCounts[x]["Aseq"] for x in self.blockCounts]), 
+                "A>T": sum([self.blockCounts[x]["A>T"] for x in self.blockCounts]),
+                "A>C": sum([self.blockCounts[x]["A>C"] for x in self.blockCounts]),
+                "A>G": sum([self.blockCounts[x]["A>G"] for x in self.blockCounts]),
+                "Tseq": sum([self.blockCounts[x]["Tseq"] for x in self.blockCounts]),
+                "T>A": sum([self.blockCounts[x]["T>A"] for x in self.blockCounts]),
+                "T>C": sum([self.blockCounts[x]["T>C"] for x in self.blockCounts]),
+                "T>G": sum([self.blockCounts[x]["T>G"] for x in self.blockCounts]),
+                "Cseq": sum([self.blockCounts[x]["Cseq"] for x in self.blockCounts]),
+                "C>A": sum([self.blockCounts[x]["C>A"] for x in self.blockCounts]),
+                "C>T": sum([self.blockCounts[x]["C>T"] for x in self.blockCounts]),
+                "C>G": sum([self.blockCounts[x]["C>G"] for x in self.blockCounts]),
+                "Gseq": sum([self.blockCounts[x]["Gseq"] for x in self.blockCounts]),
+                "G>A": sum([self.blockCounts[x]["G>A"] for x in self.blockCounts]),
+                "G>T": sum([self.blockCounts[x]["G>T"] for x in self.blockCounts]),
+                "G>C": sum([self.blockCounts[x]["G>C"] for x in self.blockCounts]),
+                "ins":Counter(),
+                "dels": Counter(),
+                "DP": sum([self.blockCounts[x]["DP"] for x in self.blockCounts])
+                }
+            for x in self.blockCounts:
+                overall_counts["ins"].update(self.blockCounts[x]["ins"])
+                overall_counts["dels"].update(self.blockCounts[x]["dels"])
+                
+        else:
+            logging.error(f"Invalid overlap mode: {overall_mode}")
+            raise Exception()
+        subregNum = 0
+        subregNames = [x for x in self.blockCounts]
+        if gene_mode == "FULL":
+            outFile.write(
+                f"##GENE = Total\n"
+                )
+            gene_counts = self.geneCounts
+        elif gene_mode == "BLOCKS":
+            outFile.write(
+                f"##GENE = Sum of Blocks\n"
+                )
+            gene_counts = {}
+            for geneIter in self.geneCounts:
+                gene_counts[geneIter] = {
+                    "name": self.geneCounts[geneIter]["name"], 
+                    "str": self.geneCounts[geneIter]["str"], 
+                    "Aseq": 0, 
+                    "A>T": 0,
+                    "A>C": 0,
+                    "A>G": 0,
+                    "Tseq": 0,
+                    "T>A": 0,
+                    "T>C": 0,
+                    "T>G": 0,
+                    "Cseq": 0,
+                    "C>A": 0,
+                    "C>T": 0,
+                    "C>G": 0,
+                    "Gseq": 0,
+                    "G>A": 0,
+                    "G>T": 0,
+                    "G>C": 0,
+                    "ins":defaultdict(int),
+                    "dels": defaultdict(int),
+                    "DP": 0, 
+                    "blocks":self.geneCounts[geneIter]["blocks"]
+                    }
+                for subregIter in range(self.geneCounts[geneIter]["blocks"]):
+                    gene_counts[geneIter]["Aseq"] += self.blockCounts[subregNames[subregNum]]["Aseq"]
+                    gene_counts[geneIter]["A>T"]  += self.blockCounts[subregNames[subregNum]]["A>T"]
+                    gene_counts[geneIter]["A>C"]  += self.blockCounts[subregNames[subregNum]]["A>C"]
+                    gene_counts[geneIter]["A>G"]  += self.blockCounts[subregNames[subregNum]]["A>G"]
+                    gene_counts[geneIter]["Tseq"] += self.blockCounts[subregNames[subregNum]]["Tseq"]
+                    gene_counts[geneIter]["T>A"]  += self.blockCounts[subregNames[subregNum]]["T>A"]
+                    gene_counts[geneIter]["T>C"]  += self.blockCounts[subregNames[subregNum]]["T>C"]
+                    gene_counts[geneIter]["T>G"]  += self.blockCounts[subregNames[subregNum]]["T>G"]
+                    gene_counts[geneIter]["Cseq"] += self.blockCounts[subregNames[subregNum]]["Cseq"]
+                    gene_counts[geneIter]["C>A"]  += self.blockCounts[subregNames[subregNum]]["C>A"]
+                    gene_counts[geneIter]["C>T"]  += self.blockCounts[subregNames[subregNum]]["C>T"]
+                    gene_counts[geneIter]["C>G"]  += self.blockCounts[subregNames[subregNum]]["C>G"]
+                    gene_counts[geneIter]["Gseq"] += self.blockCounts[subregNames[subregNum]]["Gseq"]
+                    gene_counts[geneIter]["G>A"]  += self.blockCounts[subregNames[subregNum]]["G>A"]
+                    gene_counts[geneIter]["G>T"]  += self.blockCounts[subregNames[subregNum]]["G>T"]
+                    gene_counts[geneIter]["G>C"]  += self.blockCounts[subregNames[subregNum]]["G>C"]
+                    gene_counts[geneIter]["DP"] += self.blockCounts[subregNames[subregNum]]["DP"]
+                    gene_counts[geneIter]["ins"].update(self.blockCounts[subregNames[subregNum]]["ins"])
+                    gene_counts[geneIter]["dels"].update(self.blockCounts[subregNames[subregNum]]["dels"])
+                    subregNum += 1
+        else:
+            logging.error(f"Invalid gene mode: {gene_mode}")
+            raise Exception()
+        
+        self.subregCounts = {}
+        subregNum = 0
+        for geneIter in gene_counts:
+            if "G" in outputs:
+                self.subregCounts[geneIter] = gene_counts[geneIter]
+            if "B" in outputs:
+                for subregIter in range(gene_counts[geneIter]["blocks"]):
+                    self.subregCounts[subregNames[subregNum]] = self.blockCounts[subregNames[subregNum]]
+                    subregNum += 1
+                
+        
         if self.params["unique"]:
             outFile.write(
                 "##Unique mutations only\n"
@@ -564,77 +695,77 @@ class countMutsEngine:
             for y in ("A","T","C","G"):
                 if x != y:
                     wilsonCI = Wilson(
-                        self.mutsCounts[f"{x}>{y}"],  
-                        max(self.mutsCounts[f"{x}seq"], 1)
+                        overall_counts[f"{x}>{y}"],  
+                        max(overall_counts[f"{x}seq"], 1)
                         )
-                    totPointMuts += self.mutsCounts[f'{x}>{y}']
+                    totPointMuts += overall_counts[f'{x}>{y}']
                     outFile.write(
                         f"{self.sample},"
                         f"OVERALL,{x}>{y},SNV,"
-                        f"{self.mutsCounts[f'{x}>{y}']},"
-                        f"{self.mutsCounts[f'{x}seq']},"
+                        f"{overall_counts[f'{x}>{y}']},"
+                        f"{overall_counts[f'{x}seq']},"
                         f"{wilsonCI[0]:.2e}\n"
                         )
         
-        wilsonCI = Wilson(totPointMuts, max(self.mutsCounts['DP'], 1))
+        wilsonCI = Wilson(totPointMuts, max(overall_counts['DP'], 1))
         
         outFile.write(
             f"{self.sample},"
             f"OVERALL,Total,SNV,"
             f"{totPointMuts},"
-            f"{self.mutsCounts['DP']},"
+            f"{overall_counts['DP']},"
             f"{wilsonCI[0]:.2e}\n"
             )
         
         # insertions:
-        if self.mutsCounts['ins'] != {}:
-            insKeys = sorted(int(x) for x in self.mutsCounts['ins'])
+        if overall_counts['ins'] != {}:
+            insKeys = sorted(int(x) for x in overall_counts['ins'])
             for n in insKeys:
-                if self.mutsCounts['ins'][str(n)] != 0:
+                if overall_counts['ins'][str(n)] != 0:
                     wilsonCI = Wilson(
-                        self.mutsCounts['ins'][str(n)], 
-                        max(self.mutsCounts['DP'], 1)
+                        overall_counts['ins'][str(n)], 
+                        max(overall_counts['DP'], 1)
                         )
                     outFile.write(
                         f"{self.sample},"
-                        f"OVERALL,+{n},INS,{self.mutsCounts['ins'][str(n)]},"
-                        f"{self.mutsCounts['DP']},"
+                        f"OVERALL,+{n},INS,{overall_counts['ins'][str(n)]},"
+                        f"{overall_counts['DP']},"
                         f"{wilsonCI[0]:.2e}\n"
                         )
-            totIns = sum([self.mutsCounts['ins'][x] for x in self.mutsCounts['ins']])
+            totIns = sum([overall_counts['ins'][x] for x in overall_counts['ins']])
             wilsonCI = Wilson(
                 totIns, 
-                max(self.mutsCounts['DP'], 1)
+                max(overall_counts['DP'], 1)
                 )
             outFile.write(
                 f"{self.sample},"
                 f"OVERALL,Total,INS,{totIns},"
-                f"{self.mutsCounts['DP']},"
+                f"{overall_counts['DP']},"
                 f"{wilsonCI[0]:.2e}\n"
                 )
         if self.mutsCounts['dels'] != {}:
-            delsKeys = sorted(int(x) for x in self.mutsCounts['dels'])
+            delsKeys = sorted(int(x) for x in overall_counts['dels'])
             for n in delsKeys:
-                if self.mutsCounts['dels'][str(n)] != 0:
+                if overall_counts['dels'][str(n)] != 0:
                     wilsonCI = Wilson(
-                        self.mutsCounts['dels'][str(n)], 
-                        max(self.mutsCounts['DP'], 1)
+                        overall_counts['dels'][str(n)], 
+                        max(overall_counts['DP'], 1)
                         )
                     outFile.write(
                         f"{self.sample},"
-                        f"OVERALL,-{n},DEL,{self.mutsCounts['dels'][str(n)]},"
-                        f"{self.mutsCounts['DP']},"
+                        f"OVERALL,-{n},DEL,{overall_counts['dels'][str(n)]},"
+                        f"{overall_counts['DP']},"
                         f"{wilsonCI[0]:.2e}\n"
                         )
-            totDels = sum([self.mutsCounts['dels'][x] for x in self.mutsCounts['dels']])
+            totDels = sum([overall_counts['dels'][x] for x in overall_counts['dels']])
             wilsonCI = Wilson(
                 totDels, 
-                max(self.mutsCounts['DP'], 1)
+                max(overall_counts['DP'], 1)
                 )
             outFile.write(
                 f"{self.sample},"
                 f"OVERALL,Total,DEL,{totDels},"
-                f"{self.mutsCounts['DP']},"
+                f"{overall_counts['DP']},"
                 f"{wilsonCI[0]:.2e}\n"
                 )
                 
@@ -728,6 +859,18 @@ class countMutsEngine:
 
 def main():
     o = getParams()
+    if o.sumType[0] == "G":
+        o.overallSum = "GENES"
+    elif o.sumType[0] == "B":
+        o.overallSum = "BLOCKS"
+    else:
+        raise Exception()
+    if o.sumType[1] == "T":
+        o.geneSum = "FULL"
+    elif o.sumType[1] == "B":
+        o.geneSum = "BLOCKS"
+    else:
+        raise Exception()
     numeric_level = getattr(logging, o.logLvl.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: {o.logLvl}')
@@ -752,7 +895,12 @@ def main():
     myEngine.processLines(
         o.round
         )
-    myEngine.genSummary(o.out_file)
+    myEngine.genSummary(
+        Fout=o.out_file,
+        overall_mode=o.overallSum,
+        gene_mode=o.geneSum,
+        outputs=o.outType
+        )
             
             
 if __name__ == "__main__":
