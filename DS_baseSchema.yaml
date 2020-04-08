@@ -135,6 +135,15 @@ properties:
     pattern: ^[^\s]*\.sh$
     default: "noRecovery.sh"
     description: 
+  cm_outputs:
+    type: string
+    pattern: ^[GBN]*$
+    default: "GB"
+    description: Select which sections to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options.  
+  cm_sumTypes:
+    type: string
+    pattern: ^[GB][TB]$
+    default: "GT"
 
 required:
   - sample

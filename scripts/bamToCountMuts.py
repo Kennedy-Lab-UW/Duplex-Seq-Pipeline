@@ -236,7 +236,12 @@ def getParams():
         action="store", 
         dest="outType", 
         default="GB", 
-        choices=["GB","G","B", "BG", "N"],
+        choices=["GB","G","B",
+                 "BG", "N","GN",
+                 "BN","GBN","BGN",
+                 "NB","NG","NGB",
+                 "NBG","BNG","GNB"
+                 ],
         help=(
             f"Select which sections to output, in addition to 'OVERALL'.  "
             f"String of one or more of 'G' and 'B'.  "
