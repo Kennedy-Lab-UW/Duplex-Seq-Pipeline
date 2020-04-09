@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from collections import Counter, defaultdict
 import pysam
 from math import sqrt
+import sys
 from VCF_Parser import *
 
 def Wilson(positive,  total) :
@@ -162,7 +163,7 @@ def getParams():
         '-f', '--inFasta', 
         action='store', 
         dest='in_fasta', 
-        help='An input fasta file. If None, processes all positions. [%(default)s]', 
+        help='An input fasta file. ', 
         required=True
         )
     parser.add_argument(
@@ -244,19 +245,13 @@ def getParams():
         action="store", 
         dest="outType", 
         default="GB", 
-        choices=["GB","G","B",
-                 "BG", "N","GN",
-                 "BN","GBN","BGN",
-                 "NB","NG","NGB",
-                 "NBG","BNG","GNB"
-                 ],
+        choices=["G","B","GB","N"],
         help=(
             f"Select which sections to output, in addition to 'OVERALL'.  "
             f"String of one or more of 'G' and 'B'.  "
             f"G -> output GENE sections for each bed line; "
             f"B -> output 'BLOCK' sections for each block in the bed "
             f"line (if present); 'N' -> Only output overall frequencies.  "
-            f"Overrides all other options.  "
             )
         )
     parser.add_argument(
@@ -303,7 +298,10 @@ class countMutsEngine:
            "minC": minC, 
            "maxC": maxC
            }
-        self.inBam = pysam.AlignmentFile(inBam, "rb")
+        if inBam is None:
+            self.inBam = pysam.AlignmentFile("-", 'rb')
+        else:
+            self.inBam = pysam.AlignmentFile(inBam, "rb")
         self.inVCF = VariantFile(inVCF, 'r')
         if sampName is None:
             self.sample = "Sample"
