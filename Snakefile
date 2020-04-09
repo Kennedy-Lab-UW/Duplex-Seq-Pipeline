@@ -69,6 +69,10 @@ def get_runDCS(wildcards):
     return(samples.loc[(wildcards.sample),"runDCS"])
 def get_makeDCS(wildcards):
     return(samples.loc[(wildcards.sample),"makeDCS"])
+def get_cm_outputs(wildcards):
+    return(samples.loc[(wildcards.sample),"cm_outputs"])
+def get_cm_sumTypes(wildcards):
+    return(samples.loc[(wildcards.sample),"cm_sumTypes"])
 def get_minClonal(wildcards):
     return(samples.loc[(wildcards.sample),"minClonal"])
 def get_maxClonal(wildcards):
@@ -98,14 +102,11 @@ def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
                 f"{sampIter}{suffix}"
                 )
         elif samples.loc[sampIter,'runSSCS']:
-            # ~ print("RunSSCS True")
             outList.append(
                 f"{samples.loc[sampIter,'baseDir']}/"
                 f"{prefix}"
                 f"{sampIter}.{sampType}{suffix}"
                 )
-        # ~ else:
-            # ~ print("RunSSCS False")
     return(outList)
     
     
@@ -119,14 +120,11 @@ def get_outCountMuts(sampType="dcs"):
                 f"{sampIter}.{sampType}.countmuts.csv"
                 )
         elif samples.loc[sampIter,'runSSCS']:
-            # ~ print("RunSSCS True")
             outList.append(
                 f"{samples.loc[sampIter,'baseDir']}/"
                 f"Final/{sampType}/"
                 f"{sampIter}.{sampType}.countmuts.csv"
                 )
-        # ~ else:
-            # ~ print("RunSSCS False")
     return(outList)
 def get_outMems(sampType="dcs"):
     outList = []
@@ -321,7 +319,6 @@ wildcard_constraints:
     sampType="(sscs)|(dcs)",
     sample="|".join([f"({x})" for x in samples.index])
 
-# ~ print(get_outFiles(sampType="", suffix="temp.sort.bam"))
 rule all:
     input:
         f"{config['samples']}.summary.csv", 
@@ -1166,36 +1163,22 @@ rule pileup:
         cd ../
         """
 
-rule MutAnal:
+rule makeVCF:
     params:
-        sample = get_sample,
         basePath = sys.path[0],
         runPath = get_baseDir,
-        minClonal = get_minClonal,
-        maxClonal = get_maxClonal,
-        minDepth = get_minDepth,
-        maxNs = get_maxNs,
-        sampName = get_rgsm
+        sampName = get_rgsm,
     input:
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inRef = get_reference,
-        inBed = get_target_bed
+        inRef = get_reference
     output:
-        # ~ outMutpos = "{runPath}/{sample}.{sampType}.filt.no_overlap.region.c0-1.d1.mutpos",
-        # ~ outMutpos2 = "{runPath}/{sample}.{sampType}.filt.no_overlap.region.c0-1.d1.N1.mutpos",
-        # ~ outCountMuts = temp(touch("{runPath}/{sample}.{sampType}.countmuts.txt")),
-        outCountMuts2 = "{runPath}/Final/{sampType}/{sample}.{sampType}.countmuts.csv", 
-        outVCF = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf"),
-        outSnps = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.snps.vcf"),
-        outFiltSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf",
         outTmpVCF = temp("{runPath}/{sample}.{sampType}.region.mutpos.vcf"),
-        outFiltVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
         outDepth = "{runPath}/Stats/data/{sample}.{sampType}.region.mutpos.vcf_depth.txt"
     conda:
         "envs/DS_env_full.yaml"
     log:
-         "{runPath}/logs/{sample}_mutAnal_{sampType}.log"
+         "{runPath}/logs/{sample}_makeVCF_{sampType}.log"
     shell:
         """
         cd {params.runPath}
@@ -1206,26 +1189,102 @@ rule MutAnal:
         --samp_name {params.sampName}
         
         mv {wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf_depth.txt Stats/data/{wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf_depth.txt
+        cd ..
+        """
 
+rule getSnps:
+    params:
+        basePath = sys.path[0],
+        runPath = get_baseDir,
+        minDepth = get_minDepth,
+    input:
+        inVCF = "{runPath}/{sample}.{sampType}.region.mutpos.vcf"
+    output:
+        outVCF = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf"),
+        outSnps = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.snps.vcf"),
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        cd {params.runPath}
         python3 {params.basePath}/scripts/SNP_finder.py \
         --in_file {wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf\
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf \
         -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.snps.vcf \
         --min_depth {params.minDepth}
+        cd ..
+        """
 
-        # Filter VCF output
+rule positionFilterVCF:
+    params:
+        runPath = get_baseDir,
+    input:
+        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf", 
+        inBed = get_target_bed
+    output:
+        outVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
+    conda:
+        "envs/DS_env_full.yaml"
+    log:
+        
+    shell:
+        """
+        cd {params.runPath}
         bcftools filter \
         -T {input.inBed} \
         -O v \
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
         Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf
+        cd ..
+        """
         
+rule positionFilterSnpsVCF:
+    params:
+        runPath = get_baseDir,
+    input:
+        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.snps.vcf", 
+        inBed = get_target_bed
+    output:
+        outVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
+    conda:
+        "envs/DS_env_full.yaml"
+    log:
+        
+    shell:
+        """
+        cd {params.runPath}
         bcftools filter \
         -T {input.inBed} \
         -O v \
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.snps.vcf
+        cd ..
+        """
 
+rule makeCountMuts:
+    params:
+        basePath = sys.path[0],
+        runPath = get_baseDir,
+        minClonal = get_minClonal,
+        maxClonal = get_maxClonal,
+        minDepth = get_minDepth,
+        maxNs = get_maxNs,
+        sampName = get_rgsm,
+        cm_outputs = get_cm_outputs,
+        cm_sums = get_cm_sumTypes
+    input:
+        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
+        inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
+        inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
+        inRef = get_reference, 
+        inBed = get_target_bed
+    output:
+        outCountMuts = "{runPath}/Final/{sampType}/{sample}.{sampType}.countmuts.csv", 
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        cd {params.runPath}
         # BamToCountMuts:
         python {params.basePath}/scripts/bamToCountMuts.py \
         --samp_name {params.sampName} \
@@ -1233,20 +1292,17 @@ rule MutAnal:
         -f {input.inRef} \
         -b {input.inBed} \
         -d {params.minDepth} \
+        -v Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
+        --outputType {params.cm_outputs} \
+        --sumType {params.cm_sums} \
         -c {params.minClonal} \
         -C {params.maxClonal} \
         -n {params.maxNs} \
         -u \
-        -o Final/{wildcards.sampType}/{params.sample}.{wildcards.sampType}.countmuts.csv
-        cd ../
+        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.countmuts.csv
+        cd ..
         """
 
-rule getSnps:
-    params:
-
-    input:
-
-    output:
 
 rule InsertSize:
     params:

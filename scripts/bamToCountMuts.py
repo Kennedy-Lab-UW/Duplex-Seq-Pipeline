@@ -532,11 +532,13 @@ class countMutsEngine:
                     "DP": 0, 
                     "blocks":len(subregions)
                     }
-                if not ( 
+                if ( 
                         len(subregions) == 1
                         and subregions[0].startPos == myRegion.startPos
                         and subregions[0].endPos == myRegion.endPos
                         ):
+                    self.geneCounts[regStr]["blocks"] -= 1
+                else:
                     for subregion in subregions:
                         self.blockCounts[subregion.samtoolsStr()] = {
                             "name": subregion.name, 
