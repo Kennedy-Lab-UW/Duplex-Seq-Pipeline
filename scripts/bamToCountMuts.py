@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from collections import Counter, defaultdict
 import pysam
 from math import sqrt
+from VCF_Parser import *
 
 def Wilson(positive,  total) :
     """Get Wilson confidence intervals for a position"""
@@ -138,31 +139,38 @@ def getParams():
         )
     parser.add_argument(
         '-i', '--inBam', 
-        action ='store', 
-        dest = 'inBam', 
-        help = 'An imput bam file. If None, defaults to stdin. [%(default)s]', 
-        default = None
+        action='store', 
+        dest='inBam', 
+        help='An imput bam file. If None, defaults to stdin. [%(default)s]', 
+        default=None
+        )
+    parser.add_argument(
+        '-v', '--inVCF', 
+        action='store', 
+        dest='inVCF', 
+        help='An input vcf file.',
+        required=True
         )
     parser.add_argument(
         '-b', '--inBed', 
-        action ='store', 
-        dest = 'inBed', 
-        help = 'An input bed file. If None, processes all positions. [%(default)s]', 
-        default = None
+        action='store', 
+        dest='inBed', 
+        help='An input bed file. If None, processes all positions. [%(default)s]', 
+        default=None
         )
     parser.add_argument(
         '-f', '--inFasta', 
-        action ='store', 
-        dest = 'in_fasta', 
-        help = 'An input bed file. If None, processes all positions. [%(default)s]', 
-        default = None
+        action='store', 
+        dest='in_fasta', 
+        help='An input fasta file. If None, processes all positions. [%(default)s]', 
+        required=True
         )
     parser.add_argument(
         '-o', '--outfile', 
-        action = 'store', 
-        dest = 'out_file', 
-        help = 'A filename for the output file.  If None, outputs to stdout.  [%(default)s]', 
-        default = None
+        action='store', 
+        dest='out_file', 
+        help='A filename for the output file.  If None, outputs to stdout.  [%(default)s]', 
+        default=None
         )
     parser.add_argument(
         "--round", 
@@ -170,7 +178,7 @@ def getParams():
         type=int, 
         dest="round", 
         help="How many digits to round frequencies to.", 
-        default = 4
+        default=4
         )
     parser.add_argument(
         '--logLevel', 
@@ -191,45 +199,45 @@ def getParams():
         )
     parser.add_argument(
         "-d", "--depth", 
-        action = "store", 
-        type = int, 
-        dest = "mindepth", 
-        default = 20,
-        help = "Minimum depth for counting mutations at a site [20]"
+        action="store", 
+        type=int, 
+        dest="mindepth", 
+        default=20,
+        help="Minimum depth for counting mutations at a site [20]"
         )
     parser.add_argument(
         "-c", "--min_clonality", 
-        action = "store", 
-        type = float, 
-        dest = "min_clonality", 
-        default = 0,
-        help = (f"Minimum (exclusive) cutoff of mutant reads for scoring a "
+        action="store", 
+        type=float, 
+        dest="min_clonality", 
+        default=0,
+        help=(f"Minimum (exclusive) cutoff of mutant reads for scoring a "
                 f"clonal mutation [0]"
                 )
         )
     parser.add_argument(
         "-C", "--max_clonality", 
-        action = "store", 
-        type = float, 
-        dest = "max_clonality", 
-        default = 0.1,
-        help = (f"Maximum (inclusive) cutoff of mutant reads for scoring a "
-                f"clonal mutation [%(default)s]"
-                )
+        action="store", 
+        type=float, 
+        dest="max_clonality", 
+        default=0.1,
+        help=(f"Maximum (inclusive) cutoff of mutant reads for scoring a "
+              f"clonal mutation [%(default)s]"
+              )
         )
     parser.add_argument(
         "-n", "--n_cutoff", 
-        action = "store", 
-        type = float, 
-        dest = "n_cutoff", 
-        default = 0.05,
-        help = "Maximum fraction of N's allowed to score a position [0.05]"
+        action="store", 
+        type=float, 
+        dest="n_cutoff", 
+        default=0.05,
+        help="Maximum fraction of N's allowed to score a position [0.05]"
         )
     parser.add_argument(
         '-u', '--unique', 
-        action = 'store_true', 
-        dest = 'unique', 
-        help = 'Run countMutsUnique instead of countMuts'
+        action='store_true', 
+        dest='unique', 
+        help='Run countMutsUnique instead of countMuts'
         )
     parser.add_argument(
         "--outputType", 
@@ -276,6 +284,7 @@ class countMutsEngine:
     def __init__(self, 
                  inBam, 
                  inFasta, 
+                 inVCF, 
                  inBed=None, 
                  unique=False, 
                  Nprop=1, 
@@ -295,6 +304,7 @@ class countMutsEngine:
            "maxC": maxC
            }
         self.inBam = pysam.AlignmentFile(inBam, "rb")
+        self.inVCF = VariantFile(inVCF, 'r')
         if sampName is None:
             self.sample = "Sample"
         else:
@@ -331,6 +341,140 @@ class countMutsEngine:
         self.geneCounts = {}
         self.blockCounts = {}
     
+    def countVCF(self):
+        for varIter in self.inVCF:
+            nProp = int(varIter.samples[self.inVCF.samps[0]]['NC']) / (
+                int(varIter.samples[self.inVCF.samps[0]]['NC']) 
+                + int(varIter.samples[self.inVCF.samps[0]]['DP'])
+                )
+            clonality = int(varIter.samples[self.inVCF.samps[0]]['AD'].split(',')[1])/int(varIter.samples[self.inVCF.samps[0]]['DP'])
+            if (
+                    nProp <= self.params['Nprop'] 
+                    and varIter.filter in ([],["PASS"])
+                    and clonality >= self.params["minC"] 
+                    and clonality <= self.params["maxC"]
+                    and int(varIter.samples[self.inVCF.samps[0]]['DP']) >= self.params['minDepth']
+                    and 'N' not in varIter.alts[0]
+                    ):
+                if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                    if self.params["unique"]:
+                        self.mutsCounts[f"{varIter.ref}>{varIter.alts[0]}"] += 1
+                    else:
+                        self.mutsCounts[
+                            f"{varIter.ref}>{varIter.alts[0]}"
+                            ] += int(
+                                varIter.samples[
+                                    self.inVCF.samps[0]
+                                    ]['AD'].split()[1]
+                                )
+                elif len(varIter.ref) > len(varIter.alts[0]):
+                    # This is a deletion
+                    delLen = len(varIter.ref) - len(varIter.alts[0])
+                    if self.params["unique"]:
+                        self.mutsCounts["dels"][f"{delLen}"] += 1
+                    else:
+                        self.mutsCounts["dels"][f"{delLen}"] += int(
+                            varIter.samples[
+                                self.inVCF.samps[0]
+                                ]['AD'].split()[1]
+                            )
+                elif len(varIter.ref) < len(varIter.alts[0]):
+                    # This is an insertion
+                    insLen = len(varIter.alts[0]) - len(varIter.ref)
+                    if self.params["unique"]:
+                        self.mutsCounts["ins"][f"{insLen}"] += 1
+                    else:
+                        self.mutsCounts["ins"][f"{insLen}"] += int(
+                            varIter.samples[
+                                self.inVCF.samps[0]
+                                ]['AD'].split()[1]
+                            )
+                for subreg in self.geneCounts:
+                    subregBins = self.geneCounts[subreg]['str'].split(':')
+                    subregion = Bed_Line(
+                        subregBins[0],
+                        subregBins[1],
+                        subregBins[2], 
+                        self.geneCounts[subreg]['str']
+                        )
+                    if subregion.contains(varIter.chrom, varIter.pos - 1):
+                        if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                            if self.params["unique"]:
+                                self.geneCounts[subregion.samtoolsStr()][f"{varIter.ref}>{varIter.alts[0]}"] += 1
+                            else:
+                                self.geneCounts[subregion.samtoolsStr()][
+                                    f"{varIter.ref}>{varIter.alts[0]}"
+                                    ] += int(
+                                        varIter.samples[
+                                            self.inVCF.samps[0]
+                                            ]['AD'].split()[1]
+                                        )
+                        elif len(varIter.ref) > len(varIter.alts[0]):
+                            # This is a deletion
+                            delLen = len(varIter.ref) - len(varIter.alts[0])
+                            if self.params["unique"]:
+                                self.geneCounts[subregion.samtoolsStr()]["dels"][f"{delLen}"] += 1
+                            else:
+                                self.geneCounts[subregion.samtoolsStr()]["dels"][f"{delLen}"] += int(
+                                    varIter.samples[
+                                        self.inVCF.samps[0]
+                                        ]['AD'].split()[1]
+                                    )
+                        elif len(varIter.ref) < len(varIter.alts[0]):
+                            # This is an insertion
+                            insLen = len(varIter.alts[0]) - len(varIter.ref)
+                            if self.params["unique"]:
+                                self.geneCounts[subregion.samtoolsStr()]["ins"][f"{insLen}"] += 1
+                            else:
+                                self.geneCounts[subregion.samtoolsStr()]["ins"][f"{insLen}"] += int(
+                                    varIter.samples[
+                                        self.inVCF.samps[0]
+                                        ]['AD'].split()[1]
+                                    )
+                
+                for subreg in self.blockCounts:
+                    subregBins = self.blockCounts[subreg]['str'].split(':')
+                    subregion = Bed_Line(
+                        subregBins[0],
+                        subregBins[1],
+                        subregBins[2], 
+                        self.blockCounts[subreg]['str']
+                        )
+                    if subregion.contains(varIter.chrom, varIter.pos - 1):
+                        if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                            if self.params["unique"]:
+                                self.blockCounts[subregion.samtoolsStr()][f"{varIter.ref}>{varIter.alts[0]}"] += 1
+                            else:
+                                self.blockCounts[subregion.samtoolsStr()][
+                                    f"{varIter.ref}>{varIter.alts[0]}"
+                                    ] += int(
+                                        varIter.samples[
+                                            self.inVCF.samps[0]
+                                            ]['AD'].split()[1]
+                                        )
+                        elif len(varIter.ref) > len(varIter.alts[0]):
+                            # This is a deletion
+                            delLen = len(varIter.ref) - len(varIter.alts[0])
+                            if self.params["unique"]:
+                                self.blockCounts[subregion.samtoolsStr()]["dels"][f"{delLen}"] += 1
+                            else:
+                                self.blockCounts[subregion.samtoolsStr()]["dels"][f"{delLen}"] += int(
+                                    varIter.samples[
+                                        self.inVCF.samps[0]
+                                        ]['AD'].split()[1]
+                                    )
+                        elif len(varIter.ref) < len(varIter.alts[0]):
+                            # This is an insertion
+                            insLen = len(varIter.alts[0]) - len(varIter.ref)
+                            if self.params["unique"]:
+                                self.blockCounts[subregion.samtoolsStr()]["ins"][f"{insLen}"] += 1
+                            else:
+                                self.blockCounts[subregion.samtoolsStr()]["ins"][f"{insLen}"] += int(
+                                    varIter.samples[
+                                        self.inVCF.samps[0]
+                                        ]['AD'].split()[1]
+                                    )
+    
     def processLines(self, 
                      roundLevel
                      ):
@@ -355,13 +499,6 @@ class countMutsEngine:
                     )
                 self.mutsCounts["DP"] += lnCnts["DP"]
                 self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                for xIter in ("A","C","G","T"):
-                    if xIter != lnCnts["RefBase"]:
-                        self.mutsCounts[f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
-                for xIter in lnCnts["ins"]:
-                    self.mutsCounts["ins"][xIter] += lnCnts["ins"][xIter]
-                for xIter in lnCnts["dels"]:
-                    self.mutsCounts["dels"][xIter] += lnCnts["dels"][xIter]
                 
             linesProcessed += 1
             if linesProcessed % 1000 == 0:
@@ -448,13 +585,6 @@ class countMutsEngine:
                     self.geneCounts[regStr]["DP"] += lnCnts["DP"]
                     self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                     
-                    for xIter in ("A","C","G","T"):
-                        if xIter != lnCnts["RefBase"]:
-                            self.geneCounts[regStr][f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
-                    for xIter in lnCnts["ins"]:
-                        self.geneCounts[regStr]["ins"][xIter] += lnCnts["ins"][xIter]
-                    for xIter in lnCnts["dels"]:
-                        self.geneCounts[regStr]["dels"][xIter] += lnCnts["dels"][xIter]
                     
                     if not ( 
                             len(subregions) == 1
@@ -466,26 +596,10 @@ class countMutsEngine:
                                 self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
                                 self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                                 
-                                for xIter in ("A","C","G","T"):
-                                    if xIter != lnCnts["RefBase"]:
-                                        self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
-                                for xIter in lnCnts["ins"]:
-                                    self.blockCounts[subregion.samtoolsStr()]["ins"][xIter] += lnCnts["ins"][xIter]
-                                for xIter in lnCnts["dels"]:
-                                    self.blockCounts[subregion.samtoolsStr()]["dels"][xIter] += lnCnts["dels"][xIter]
                     if myChrPos not in linesCounted:
                         linesCounted.append(myChrPos)
                         self.mutsCounts["DP"] += lnCnts["DP"]
                         self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                        
-                        for xIter in ("A","C","G","T"):
-                            if xIter != lnCnts["RefBase"]:
-                                self.mutsCounts[f"{lnCnts['RefBase']}>{xIter}"] += lnCnts[xIter]
-                        for xIter in lnCnts["ins"]:
-                            self.mutsCounts["ins"][xIter] += lnCnts["ins"][xIter]
-                        for xIter in lnCnts["dels"]:
-                            self.mutsCounts["dels"][xIter] += lnCnts["dels"][xIter]
-                        
                         linesProcessed += 1
                         if linesProcessed % 1000 == 0:
                             logging.info(f"{linesProcessed} lines processed...")
@@ -891,6 +1005,7 @@ def main():
     myEngine = countMutsEngine(
         o.inBam, 
         o.in_fasta, 
+        o.inVCF,
         o.inBed, 
         o.unique,
         o.n_cutoff, 
@@ -903,6 +1018,7 @@ def main():
     myEngine.processLines(
         o.round
         )
+    myEngine.countVCF()
     myEngine.genSummary(
         Fout=o.out_file,
         overall_mode=o.overallSum,
