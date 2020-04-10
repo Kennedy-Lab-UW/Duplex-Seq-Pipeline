@@ -144,7 +144,10 @@ properties:
     type: string
     pattern: ^[GB][TB]$
     default: "GT"
-
+  runSSCS:
+    type: boolean
+    default: false
+    description: whether to run full processing for SSCS data.
 required:
   - sample
   - rglb
