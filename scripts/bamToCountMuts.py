@@ -163,7 +163,7 @@ def getParams():
         '-f', '--inFasta', 
         action='store', 
         dest='in_fasta', 
-        help='An input fasta file. ', 
+        help='An input fasta file, usually the reference genome. ', 
         required=True
         )
     parser.add_argument(
@@ -252,6 +252,7 @@ def getParams():
             f"G -> output GENE sections for each bed line; "
             f"B -> output 'BLOCK' sections for each block in the bed "
             f"line (if present); 'N' -> Only output overall frequencies.  "
+            f"Valid options are %(choices)s [default = %(default)s].  "
             )
         )
     parser.add_argument(
@@ -271,6 +272,7 @@ def getParams():
             f"The second character controls summing for each GENE: "
             f"T -> GENE = Whole gene, ignoring BLOCKs; "
             f"B -> GENE = sum(BLOCKs).  "
+            f"Valid options are %(choices)s [default = %(default)s].  "
             )
         )
     return(parser.parse_args())

@@ -121,6 +121,8 @@ Once you have downloaded a genome and converted it into FASTA format, it needs t
     java -jar /Path/To/PicardTools/picard.jar CreateSequenceDictionary R=genome.fasta O=genome.dict  
 ```
 
+At the moment, this pipeline does not support compressed genomes.
+
 ## 5: Contaminant Database Setup:
 The Duplex-Seq pipeline is designed to use a local NCBI Blast instance to detect and remove potential contamination from non-target species and identify issues arising from pseudogenes.
 *This step is optional, but requires a non valid NCBI Blast database file name. We recommend either a dummy path and file name or '.' to be present in the blast_db field in the config.csv file. Blank entries will result in pipeline failure.*
