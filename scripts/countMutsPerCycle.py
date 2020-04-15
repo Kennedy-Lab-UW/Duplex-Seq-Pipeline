@@ -53,16 +53,12 @@ class MismatchCounter:
                     snpTest = f"{refChrom}:{refPos}:{refBase}>{readBase}"
                     if snpTest not in self.snps:
                         if readDir == -1:
-                            #print(len(self.mismatch_counts))
-                            #print(rLen - x[0])
                             self.mismatch_counts[rLen - x[0]-hardclipping-1][f"{refBase}>{readBase}"] += 1
                         elif readDir == 1:
                             self.mismatch_counts[x[0]+hardclipping][f"{refBase}>{readBase}"] += 1
                         if readBase != "N":
                             numMuts += 1
                 if readDir == -1:
-                    #print(len(self.mismatch_counts))
-                    #print(rLen - x[0])
                     self.mismatch_counts[rLen - x[0]-hardclipping-1]["Count"] += 1
                 elif readDir == 1:
                     self.mismatch_counts[x[0]+hardclipping]["Count"] += 1
@@ -282,7 +278,6 @@ def main():
         # Plot with Ns
         fig, ax = plt.subplots(figsize=(20,14))
         margin_bottom = np.zeros(len(df['Base'].drop_duplicates()))
-        #print(len(margin_bottom))
         colors={"C>A":'#5abdeb', "C>G":'#050708', "C>T":'#d43c32', "T>A":'#cbcacb', "T>C":'#aacb72', "T>G":'#e7c9c6', "C>N":"#4B0082", "T>N":"#4B0082", "":'w'}
 
         for xIter in ["C>T", "C>A", "C>G", "T>A", "T>C", "T>G", "C>N", "T>N"]:
@@ -292,7 +287,6 @@ def main():
         labels = ax.get_xticklabels()
         
         for i, l in enumerate(labels):
-            #print(i,l)
             val = int(l.get_text())
             if val % 5 != 0:
                 labels[i] = ''
@@ -302,10 +296,8 @@ def main():
         plt.xlabel("Cycle", fontsize=40)
         plt.yticks(fontsize=25)
         plt.xticks(fontsize=20)
-        #ax.tick_params(axis='both', which='major', labelsize=20)
         ax2 = ax.twinx()
         ax2.set_ylabel("Fraction of Total Reads", fontsize=40)
-        #df.plot.line(x="Base", ax=ax2, y="Count_percent", color="#cd7f32", ylim=(0,1.02), legend=False) # Weird bug in Pandas causes off-by-one error in x-axis labels. Use maplotlib.plot() to directly plot 
         ax2.set_title(o.inFile.split('/')[-1], fontsize=35) #Not portable to Windows platform
         plt.plot(df["Base"], df['Count_percent'], color="black")
         plt.ylim(0,1.02)
@@ -324,7 +316,6 @@ def main():
         labels = ax.get_xticklabels()
         
         for i, l in enumerate(labels):
-            #print(i,l)
             val = int(l.get_text())
             if val % 5 != 0:
                 labels[i] = ''
@@ -334,10 +325,8 @@ def main():
         plt.xlabel("Cycle", fontsize=40)
         plt.yticks(fontsize=25)
         plt.xticks(fontsize=20)
-        #ax.tick_params(axis='both', which='major', labelsize=20)
         ax2 = ax.twinx()
         ax2.set_ylabel("Fraction of Total Reads", fontsize=40)
-        #df.plot.line(x="Base", ax=ax2, y="Count_percent", color="#cd7f32", ylim=(0,1.02), legend=False) # Weird bug in Pandas causes off-by-one error in x-axis labels. Use maplotlib.plot() to directly plot 
         ax2.set_title(o.inFile.split('/')[-1], fontsize=35) #Not portable to Windows platform
         plt.plot(df["Base"], df['Count_percent'], color="black")
         plt.ylim(0,1.02)

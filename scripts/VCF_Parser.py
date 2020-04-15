@@ -129,7 +129,7 @@ class VariantRecord:
     
     def remove_filter(self, test_filter):
         if test_filter in self.filter:
-            a.remove(test_filter)
+            self.filter.remove(test_filter)
             return(True)
         else:
             return(False)

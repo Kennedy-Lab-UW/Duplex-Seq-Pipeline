@@ -19,7 +19,6 @@ colorTrans = c("C>A"='#5abdeb',
                "C>N"="#4B0082", 
                "T>N"="#4B0082")
 for ( sampIter in seq(length(row.names(myConfig))) ) {
-  #print(sampIter)
   # load data
   
   inSampName = myConfig$sample[sampIter]

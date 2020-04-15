@@ -34,7 +34,7 @@ echo "#!/bin/bash" > DS
 echo "" >> DS
 echo "# This is a run script for the DS snakemake pipeline" >> DS
 echo "inConfig=\"\$1\"" >> DS
-echo "snakemake -s ${snakeDir}/Snakefile --use-conda -j 6 --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\"" >> DS
+echo "snakemake -s ${snakeDir}/Snakefile --use-conda -j ${maxCores} --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\"" >> DS
 chmod a+x DS
 
 echo "Creating dag script"
@@ -42,7 +42,7 @@ echo "#!/bin/bash" > DS-dag
 echo "" >> DS-dag
 echo "# This is a run script for the DS snakemake pipeline" >> DS-dag
 echo "inConfig=\"\$1\"" >> DS-dag
-echo "snakemake -s ${snakeDir}/Snakefile --use-conda -j 6 --dag --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\" -- | dot -Tpdf > \${inConfig}_dag.pdf" >> DS-dag
+echo "snakemake -s ${snakeDir}/Snakefile --use-conda -j ${maxCores} --dag --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\" -- | dot -Tpdf > \${inConfig}_dag.pdf" >> DS-dag
 chmod a+x DS-dag
 
 currentDate=$(date +%F)

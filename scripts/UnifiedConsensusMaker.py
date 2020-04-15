@@ -114,7 +114,7 @@ def consensus_caller(input_reads, cutoff, tag, length_check):
                     break
                 elif j == 4:
                     consensus_seq += 'N'
-        except:
+        except Exception:
             consensus_seq += 'N'
         nuc_identity_list = [0, 0, 0, 0, 0, 0]  
         # Reset for the next nucleotide position
@@ -303,15 +303,15 @@ def main():
         read1_dcs_fq_file = gzip.open(f"{o.prefix}_read1_dcs.fq.gz", 'wt')
         read2_dcs_fq_file = gzip.open(f"{o.prefix}_read2_dcs.fq.gz", 'wt')
 
-    '''This block of code takes an unaligned bam file, extracts the tag 
-    sequences from the reads, and converts them to to "ab/ba" format 
-    where 'a' and 'b' are the tag sequences from Read 1 and Read 2, 
-    respectively. Conversion occurs by putting the tag with the "lesser" 
-    value in front of the tag with the "higher" value. The original 
-    tag orientation is denoted by appending #ab or #ba to the end of 
-    the tag. After conversion, the resulting temporary bam file is then
-    sorted by read name.
-    '''
+    # This block of code takes an unaligned bam file, extracts the tag 
+    # sequences from the reads, and converts them to to "ab/ba" format 
+    # where 'a' and 'b' are the tag sequences from Read 1 and Read 2, 
+    # respectively. Conversion occurs by putting the tag with the "lesser" 
+    # value in front of the tag with the "higher" value. The original 
+    # tag orientation is denoted by appending #ab or #ba to the end of 
+    # the tag. After conversion, the resulting temporary bam file is then
+    # sorted by read name.
+    
     tl = o.tag_len
     sl = o.spcr_len
     ll = o.loc_len
@@ -405,10 +405,9 @@ def main():
     # Sort by read name, which will be the tag sequence in this case.
     os.remove(f"{o.prefix}.temp.bam")
 
-    '''Extracting tags and sorting based on tag sequence is complete. 
-    This block of code now performs the consensus calling on the tag 
-    families in the temporary name sorted bam file.
-    '''
+    #Extracting tags and sorting based on tag sequence is complete. 
+    #This block of code now performs the consensus calling on the tag 
+    #families in the temporary name sorted bam file.
     
     seq_dict = {'ab:1': [], 'ab:2': [], 'ba:1': [], 'ba:2': []}
     qual_dict = {'ab:1': [], 'ab:2': [], 'ba:1': [], 'ba:2': []}

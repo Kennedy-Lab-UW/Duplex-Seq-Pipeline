@@ -1,14 +1,12 @@
 #makeSnpList.py
 from argparse import ArgumentParser
-# ~ import scipy
-# ~ from scipy import stats
 from VCF_Parser import *
 
 parser = ArgumentParser()
 parser.add_argument(
     '-i', 'inSnps', 
     action='store', 
-    dest='in', 
+    dest='inSnps', 
     help='A input SNPs VCF file'
     )
 parser.add_argument(
@@ -19,7 +17,7 @@ parser.add_argument(
     )
 o = parser.parse_args()
 
-snpFile = VariantFile(o.in)
+snpFile = VariantFile(o.inSnps)
 outFile = open(o.out, 'a')
 for varLine in variantFile:
     outFile.write(
