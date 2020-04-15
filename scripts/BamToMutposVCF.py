@@ -136,9 +136,9 @@ def getParams():
         )
     parser.add_argument(
         '-f', '--inFasta', 
-        action ='store', 
-        dest = 'in_fasta', 
-        help = 'An input fasta file, usually the reference genome. ', 
+        action='store', 
+        dest='in_fasta', 
+        help='An input fasta file, usually the reference genome. ', 
         required=True
         )
     parser.add_argument(
