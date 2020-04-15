@@ -133,7 +133,7 @@ properties:
   recovery:
     type: string
     pattern: ^[^\s]*\.sh$
-    default: "noRecovery.sh"
+    default: "noRecovery_noSynLink.sh"
     description: 
   cm_outputs:
     type: string
