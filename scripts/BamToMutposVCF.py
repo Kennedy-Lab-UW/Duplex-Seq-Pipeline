@@ -138,8 +138,8 @@ def getParams():
         '-f', '--inFasta', 
         action ='store', 
         dest = 'in_fasta', 
-        help = 'An input bed file. If None, processes all positions. [%(default)s]', 
-        default = None
+        help = 'An input fasta file, usually the reference genome. ', 
+        required=True
         )
     parser.add_argument(
         '-o', '--outfile', 
