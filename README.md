@@ -121,6 +121,8 @@ Once you have downloaded a genome and converted it into FASTA format, it needs t
     java -jar /Path/To/PicardTools/picard.jar CreateSequenceDictionary R=genome.fasta O=genome.dict  
 ```
 
+At the moment, this pipeline does not support compressed genomes.
+
 ## 5: Contaminant Database Setup:
 The Duplex-Seq pipeline is designed to use a local NCBI Blast instance to detect and remove potential contamination from non-target species and identify issues arising from pseudogenes.
 *This step is optional, but requires a non valid NCBI Blast database file name. We recommend either a dummy path and file name or '.' to be present in the blast_db field in the config.csv file. Blank entries will result in pipeline failure.*
@@ -217,37 +219,39 @@ does support blocks as described in the bed spec.**
 
 Use the ConfigTemplate to create a new file with the appropriate headers.  For each row, fill in the information about a particular sample:
 
-| Header           | Information |
-| ---------------- | ----------- |
-| sample           | A unique identifier for a sample; this will be used to name all output files for this sample |
-| rglb             | Read Group Library Identifier |
-| rgpl             | Read Group Platform; usually illumina |
-| rgpu             | Read Group Platform Unit |
-| rgsm             | Read Group Sample |
-| reference        | The path to the prepared reference genome to use with this sample.  |
-| target_bed       | A bed file showing where the targets are for this particular sample |  
-| blast_db | The blast database to use for contaminant filtering; must include your target genome.  |
-| targetTaxonId | The taxon ID of the species you are expecting to be present in the sample.  |
-| baseDir          | The directory the input files are in, and where the output files will be created. |
-| in1              | The read1 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.  |
-| in2              | The read2 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.   |
-| mqFilt           | A threshold for mapping quality filtering, if desired. |
-| minMem           | The minimum number of reads that must be in a family for consensus making |
-| maxMem           | The maximum number of reads in a family the consensus maker should consider. |
-| cutOff           | The threshold for consensus making; the consensus maker will require at least this much agreement on a per base pair level. |
-| nCutOff          | The maximum proportion of N bases in an output consensus sequence. |
-| umiLen           | The length of the UMI in this sample |
-| spacerLen        | The length of the spacer sequence in this sample |
-| locLen           | The localization length to use for this sample |
-| readLen          | The length of a read for this sample |
-| clipBegin        | How many bases to clip off the 5' end of the read |
-| clipEnd          | How many bases to clip off the 3' end of the read |
-| minClonal        | The minimum clonality to use for count_muts generation |
-| maxClonal        | The maximum clonality to use for count_muts generation |
-| minDepth         | The minimum depth to use for count_muts generation |
-| maxNs            | The maximum proportion of N bases to use for count_muts generation |
-| runSSCS | True or False; whether to do full analysis for SSCS data.  | 
-| recovery | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |
+| Header           | Required or Default | Information |
+| ---------------- | ------------------- | ----------- |
+| sample           | Required        | A unique identifier for a sample; this will be used to name all output files for this sample |
+| rglb             | Required        | Read Group Library Identifier |
+| rgpl             | Required        | Read Group Platform; usually illumina |
+| rgpu             | Required        | Read Group Platform Unit |
+| rgsm             | Required        | Read Group Sample |
+| reference        | Required        | The path to the prepared reference genome to use with this sample.  |
+| target_bed       | Required        | A bed file showing where the targets are for this particular sample |  
+| blast_db         | Required        | The blast database to use for contaminant filtering; must include your target genome.  |
+| targetTaxonId    | Required        | The taxon ID of the species you are expecting to be present in the sample.  |
+| baseDir          | Required        | The directory the input files are in, and where the output files will be created. |
+| in1              | Required        | The read1 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.  |
+| in2              | Required        | The read2 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.   |
+| mqFilt           | 0               | A threshold for mapping quality filtering, if desired. |
+| minMem           | 0               | The minimum number of reads that must be in a family for consensus making |
+| maxMem           | 200             | The maximum number of reads in a family the consensus maker should consider. |
+| cutOff           | 0.9             | The threshold for consensus making; the consensus maker will require at least this much agreement on a per base pair level. |
+| nCutOff          | 1               | The maximum proportion of N bases in an output consensus sequence. |
+| umiLen           | 8               | The length of the UMI in this sample |
+| spacerLen        | 1               | The length of the spacer sequence in this sample |
+| locLen           | 10              | The localization length to use for this sample |
+| readLen          | 101             | The length of a read for this sample |
+| clipBegin        | 7               | How many bases to clip off the 5' end of the read |
+| clipEnd          | 0               | How many bases to clip off the 3' end of the read |
+| minClonal        | 0               | The minimum clonality to use for count_muts generation |
+| maxClonal        | 0.1             | The maximum clonality to use for count_muts generation |
+| minDepth         | 100             | The minimum depth to use for count_muts generation |
+| maxNs            | 1               | The maximum proportion of N bases to use for count_muts generation |
+| cm_outputs       | "GB"            | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
+| cm_sumTypes      | "GT"            | How to calculate OVERALL and GENE blocks for countmuts output. |
+| runSSCS          | false           | true or false; whether to do full analysis for SSCS data.  | 
+| recovery         | "noRecovery.sh" | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
 
 Save the file as a .csv file with unix line endings (LF).
 
