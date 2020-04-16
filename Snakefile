@@ -1315,8 +1315,8 @@ rule InsertSize:
         inAligned = "{runPath}/{sample}_mem.{sampType}.sort.bam",
         inAlignedBai = "{runPath}/{sample}_mem.{sampType}.sort.bam.bai"
     output:
-        outMetrics = "{runPath}/Stats/data/{sample}.{sampType}.iSize_Metrics.txt",
-        out_iSizeHist = temp("{runPath}/{sample}.{sampType}.iSize_Histogram.pdf"),
+        outMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.iSize_Metrics.txt"),
+        out_iSizeHist = temp(touch("{runPath}/{sample}.{sampType}.iSize_Histogram.pdf")),
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -1325,6 +1325,19 @@ rule InsertSize:
         """
         cd {params.runPath}
         # Plot insert-size histogram (using unfiltered and unclipped data)
+        echo "# Dummy insert size file" > Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "## HISTOGRAM" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "insert_size	All_Reads.fr_count" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        echo "0	0" >> Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
+        
         picard CollectInsertSizeMetrics \
         I=../{input.inAligned} \
         O=../{output.outMetrics} \
@@ -1709,6 +1722,22 @@ import numpy as np
         mappedSscs=int(sscsFlagstats[4].split()[0])
         dcsReads=int(dcsFlagstats[0].split()[0])
         mappedDcs=int(dcsFlagstats[4].split()[0])
+        if int(rawTarget[1].split()[0]) == 0:
+            rawOnTarget=0
+        else:
+            rawOnTarget=int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0])
+        if sscsReads == 0:
+            sscsMapped=0
+            raw_sscs=0
+        else:
+            sscsMapped=mappedSscs/sscsReads
+            raw_sscs=rawReads/sscsReads
+        if dcsReads == 0:
+            dcsMapped=0
+            sscs_dcs=0
+        else:
+            dcsMapped=mappedDcs/dcsReads
+            sscs_dcs=sscsReads/dcsReads
         myCells.append(nbf.v4.new_markdown_cell(
             f"##Read Statistics:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
@@ -1725,16 +1754,16 @@ import numpy as np
             f"  \n"
             f"| | |  \n"
             f"| --- | --- |  \n"
-            f"| Raw on target | {round(int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0]),4)*100}% |  \n"
-            f"| SSCS Mapped | {round(mappedSscs/sscsReads, 4)*100}% |  \n"
-            f"| DCS Mapped | {round(mappedDcs/dcsReads, 4)*100}% |  \n"
+            f"| Raw on target | {round(rawOnTarget,4)*100}% |  \n"
+            f"| SSCS Mapped | {round(sscsMapped, 4)*100}% |  \n"
+            f"| DCS Mapped | {round(dcsMapped, 4)*100}% |  \n"
             f"##Consensus Making Ratios:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             f"  \n"
             f"| | |  \n"
             f"| --- | --- |  \n"
-            f"| Raw/SSCS | {round(rawReads/sscsReads, 2)} |  \n"
-            f"| SSCS/DCS | {round(sscsReads/dcsReads, 2)} |  \n"
+            f"| Raw/SSCS | {round(raw_sscs, 2)} |  \n"
+            f"| SSCS/DCS | {round(sscs_dcs, 2)} |  \n"
             ))
         # BLAST Statitics:
         # Table of species (taxIDs)
@@ -1993,6 +2022,22 @@ import numpy as np
         mappedSscs=int(sscsFlagstats[4].split()[0])
         dcsReads=int(dcsFlagstats[0].split()[0])
         mappedDcs=int(dcsFlagstats[4].split()[0])
+        if int(rawTarget[1].split()[0]) == 0:
+            rawOnTarget=0
+        else:
+            rawOnTarget=int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0])
+        if sscsReads == 0:
+            sscsMapped=0
+            raw_sscs=0
+        else:
+            sscsMapped=mappedSscs/sscsReads
+            raw_sscs=rawReads/sscsReads
+        if dcsReads == 0:
+            dcsMapped=0
+            sscs_dcs=0
+        else:
+            dcsMapped=mappedDcs/dcsReads
+            sscs_dcs=sscsReads/dcsReads
         myCells.append(nbf.v4.new_markdown_cell(
             f"##Read Statistics:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
@@ -2009,16 +2054,16 @@ import numpy as np
             f"  \n"
             f"| | |  \n"
             f"| --- | --- |  \n"
-            f"| Raw on target | {round(int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0]),4)*100}% |  \n"
-            f"| SSCS Mapped | {round(mappedSscs/sscsReads, 4)*100}% |  \n"
-            f"| DCS Mapped | {round(mappedDcs/dcsReads, 4)*100}% |  \n"
+            f"| Raw on target | {round(rawOnTarget,4)*100}% |  \n"
+            f"| SSCS Mapped | {round(sscsMapped, 4)*100}% |  \n"
+            f"| DCS Mapped | {round(dcsMapped, 4)*100}% |  \n"
             f"##Consensus Making Ratios:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             f"  \n"
             f"| | |  \n"
             f"| --- | --- |  \n"
-            f"| Raw/SSCS | {round(rawReads/sscsReads, 2)} |  \n"
-            f"| SSCS/DCS | {round(sscsReads/dcsReads, 2)} |  \n"
+            f"| Raw/SSCS | {round(raw_sscs, 2)} |  \n"
+            f"| SSCS/DCS | {round(sscs_dcs, 2)} |  \n"
             ))
         # BLAST Statitics:
         myCells.append(nbf.v4.new_markdown_cell(

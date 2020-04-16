@@ -107,7 +107,10 @@ for index in indexes:
                 numInsertReads += linebins[1]
         except StopIteration:
             contIter = False
-    meanInsertSize = totInsertSize / numInsertReads
+    if numInsertReads == 0:
+        meanInsertSize = "N/A"
+    else:
+        meanInsertSize = totInsertSize / numInsertReads
     print("Processing countmuts")
     # get countmuts data
     sys.stderr.write(f"{index}/{runID}.dcs.filt.no_overlap.region.c{c}-{C}.d{d}.unique.countmuts.txt\n")
