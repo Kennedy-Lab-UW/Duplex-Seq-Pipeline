@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import pysam
 
 
@@ -55,15 +55,20 @@ def main():
     outBadBam = pysam.AlignmentFile(f"{o.outPrefix}.wrongSpecies.bam", 'wb', template=inBam)
     outAmbigBam = pysam.AlignmentFile(f"{o.outPrefix}.ambig.bam", 'wb', template=inBam)
     outTextID = open(f"{o.outPrefix}.speciesComp.txt" ,'w')
-    firstLine = next(inBam)
-    lineStorage = [firstLine]
     FinalValue = pysam.AlignedSegment()
+    tmpTup = namedtuple("tmpTup", ['query_name'])
+    try:
+        firstLine = next(inBam)
+    except StopIteration:
+        # Catch an empty input file
+        firstLine = tmpTup("FALSE")
+    lineStorage = [firstLine]
     FinalValue.query_name = "FinalValue"
     taxID_dict = defaultdict(int)
     for line in iteratorWrapper(inBam.fetch(until_eof=True), FinalValue):
         if line.query_name == firstLine.query_name:
             lineStorage.append(line)
-        else:
+        elif type(firstLine) != type(tmpTup("FALSE")):
             # check if either line has a t0 tag
             addedTag = False
             for xIter in lineStorage:
