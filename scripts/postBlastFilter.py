@@ -68,7 +68,7 @@ def main():
     for line in iteratorWrapper(inBam.fetch(until_eof=True), FinalValue):
         if line.query_name == firstLine.query_name:
             lineStorage.append(line)
-        elif firstLine != tmpTup("FALSE"):
+        elif type(firstLine) != type(tmpTup("FALSE")):
             # check if either line has a t0 tag
             addedTag = False
             for xIter in lineStorage:
