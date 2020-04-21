@@ -81,10 +81,9 @@ class VariantRecord:
         self.ref = linebins[3]
         self.alts = [x for x in linebins[4].split(',')]
         self.qual = int(linebins[5]) if linebins[5] is not '.' else None
-        if linebins[6] == '.':
-            self.filter = []
-        else:
-            self.filter = linebins[6].split(';')
+        self.filter = [
+            x for x in linebins[6].split(';') if x not in ("PASS",".")
+            ]
         if linebins[7] == '.':
             self.info = {}
         else:
@@ -105,7 +104,7 @@ class VariantRecord:
             str(self.ref), 
             ",".join(self.alts), 
             str(self.qual) if self.qual is not None else '.', 
-            ';'.join(sorted(self.filter)) if len(self.filter) != 0 else '.', 
+            ';'.join(sorted(self.filter)) if len(self.filter) != 0 else 'PASS', 
             ";".join([f"{x}={self.info[x]}" for x in self.info]) if len(self.info) != 0 else '.', 
             ':'.join(self.format)
             ]

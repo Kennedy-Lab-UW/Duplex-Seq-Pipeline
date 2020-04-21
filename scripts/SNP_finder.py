@@ -30,6 +30,14 @@ def main():
         help='An name for the output VCF file including only SNPs', 
         required=True
         )
+    ##  Output Indel file
+    parser.add_argument(
+        '--indel_file', 
+        action='store',
+        dest='Findel', 
+        help='A name for the output VCF file including only indels', 
+        default='myIndels.vcf'
+        )
     ##  minimum depth for SNP detection
     parser.add_argument(
         '-d', '--min_depth', 
@@ -94,6 +102,9 @@ def main():
     # Open SNP VCF
     outSNP = VariantFile(o.Fsnp, 'w', inVCF.header)
     
+    # Open output indel file
+    outIndel = VariantFile(o.Findel, 'w', inVCF.header)
+    
     # Open output VCF file
     outVCF = VariantFile(o.Fout, 'w', inVCF.header)
     
@@ -108,6 +119,8 @@ def main():
             varLine.add_filter("SNP")
             ### Write to SNP file
             outSNP.writeline(varLine)
+        if len(varLine.ref) > 1 or max([len(x) for x in varLine.alts]) > 1:
+            outIndel.writeline(varLine)
         ##  write mutation to output file
         outVCF.writeline(varLine)
     # Close files

@@ -701,7 +701,8 @@ rule PreBlastProcessing2:
         inVCF="{runPath}/{sample}_dcs.vars.vcf",
     output:
         tempMarked = temp("{runPath}/{sample}_dcs.Markedvars.vcf"),
-        tempSnps = temp("{runPath}/{sample}_dcs.snps.vcf")
+        tempSnps = temp("{runPath}/{sample}_dcs.snps.vcf"),
+        tempIndels = temp("{runPath}/{sample}_dcs.temp.indels.vcf"),
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -713,6 +714,7 @@ rule PreBlastProcessing2:
         python3 {params.basePath}/scripts/SNP_finder.py \
         --in_file {wildcards.sample}_dcs.vars.vcf \
         -o {wildcards.sample}_dcs.Markedvars.vcf \
+        --indel_file {wildcards.sample}_dcs.temp.indels.vcf \
         -s {wildcards.sample}_dcs.snps.vcf
         cd ../
         """
@@ -1202,6 +1204,7 @@ rule getSnps:
     output:
         outVCF = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf"),
         outSnps = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.snps.vcf"),
+        outIndels = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.indels.vcf", 
     conda:
         "envs/DS_env_full.yaml"
     shell:
@@ -1211,7 +1214,28 @@ rule getSnps:
         --in_file {wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf\
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf \
         -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.snps.vcf \
+        --indel_file Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.indels.vcf \
         --min_depth {params.minDepth}
+        cd ..
+        """
+
+rule IndelFilterVCF:
+    params:
+        basePath = sys.path[0],
+    input:
+        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf", 
+        inIndels = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.indels.vcf", 
+    output:
+        outVCF = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.filt2.vcf"), 
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        cd {wildcards.runPath}
+        python3 {params.basePath}/scripts/NearIndelFilt.py \
+        -i Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf \
+        -v Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.indels.vcf \
+        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.filt2.vcf
         cd ..
         """
 
@@ -1219,7 +1243,7 @@ rule positionFilterVCF:
     params:
         runPath = get_baseDir,
     input:
-        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf", 
+        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.filt2.vcf", 
         inBed = get_target_bed
     output:
         outVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
@@ -1234,7 +1258,7 @@ rule positionFilterVCF:
         -T {input.inBed} \
         -O v \
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
-        Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf
+        Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.filt2.vcf
         cd ..
         """
         
@@ -1261,7 +1285,9 @@ rule positionFilterSnpsVCF:
         cd ..
         """
 
-rule makeCountMuts:
+
+
+rule MutationFreqFromVCF:
     params:
         basePath = sys.path[0],
         runPath = get_baseDir,
@@ -1286,7 +1312,7 @@ rule makeCountMuts:
         """
         cd {params.runPath}
         # BamToCountMuts:
-        python {params.basePath}/scripts/bamToCountMuts.py \
+        python {params.basePath}/scripts/MutationFreqFromVCF.py \
         --samp_name {params.sampName} \
         -i ../{input.inBam} \
         -f {input.inRef} \
