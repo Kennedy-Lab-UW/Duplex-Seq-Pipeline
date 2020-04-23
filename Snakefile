@@ -137,14 +137,7 @@ def get_outMems(sampType="dcs"):
     return(outList)
 def getOutConfig(wildcards):
     return(f'{samples.loc[(wildcards.sample),"baseDir"]}/{samples.loc[(wildcards.sample),"baseDir"]}_config.sh')
-def get_dummyConfigs():
-    outList = []
-    for sampIter in samples.index:
-        outList.append(
-            f"{samples.loc[sampIter,'baseDir']}/"
-            f"{sampIter}_config.sh"
-            )
-    return(outList)
+
 def get_outMutPos(sampType="dcs"):
     outList = []
     for sampIter in samples.index:
@@ -305,8 +298,6 @@ def getSummaryInput():
     outFiles.extend(get_outMems(sampType="dcs"))
     # ~ outFiles.extend(get_outMutPos(sampType="sscs"))
     # ~ outFiles.extend(get_outMutPos(sampType="dcs"))
-    outFiles.extend(get_dummyConfigs())
-    outFiles.extend(get_outOnTarget())
     outFiles.extend(get_outFiles(prefix="Final/sscs/", sampType="sscs", suffix=".mutated.bam"))
     outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".mutated.bam"))
     outFiles.extend(get_outFiles(prefix="Final/sscs/", sampType="sscs", suffix=".vcf"))
@@ -1436,81 +1427,11 @@ rule MutsPerCycle:
         cd ../
         """
 
-rule makeConfigRecord:
-    params:
-        sample = get_sample,
-        rglb = get_rglb,
-        rgpl = get_rgpl,
-        rgsm = get_rgsm,
-        reference = get_reference,
-        target_bed = get_target_bed,
-        baseDir = get_baseDir,
-        in1 = get_in1,
-        in2 = get_in2,
-        mqFilt = get_mqFilt,
-        minMem = get_minMem,
-        maxMem = get_maxMem,
-        cutOff = get_cutOff,
-        nCutOff = get_nCutOff,
-        umiLen = get_umiLen,
-        spacerLen = get_spacerLen,
-        locLen = get_locLen,
-        clipBegin = get_clipBegin,
-        clipEnd = get_clipEnd,
-        minClonal = get_minClonal,
-        maxClonal = get_maxClonal,
-        minDepth = get_minDepth,
-        maxNs = get_maxNs,
-        outConfig = getOutConfig
-    output:
-        outConfigTmp = temp("{runPath}/{sample}_config.sh"),
-        # ~
-    run:
-        with open(output.outConfigTmp, 'w') as tmpOut:
-            tmpOut.write("")
-        with open(params.outConfig, 'w') as outFile:
-            outFile.write(
-                f"RUN_ID={params.sample}\n"
-                f"rglb={params.rglb}\n"
-                f"rgpl={params.rgpl}\n"
-                f"rgsm={params.rgsm}\n"
-                f"reference={params.reference}\n"
-                f"target_bed={params.target_bed}\n"
-                f"baseDir={params.baseDir}\n"
-                f"in1={params.in1}\n"
-                f"in2={params.in2}\n"
-                f"mqFilt={params.mqFilt}\n"
-                f"minMem={params.minMem}\n"
-                f"maxMem={params.maxMem}\n"
-                f"cutOff={params.cutOff}\n"
-                f"nCutOff={params.nCutOff}\n"
-                f"umiLen={params.umiLen}\n"
-                f"spacerLen={params.spacerLen}\n"
-                f"locLen={params.locLen}\n"
-                f"clipBegin={params.clipBegin}\n"
-                f"clipEnd={params.clipEnd}\n"
-                f"minClonal={params.minClonal}\n"
-                f"maxClonal={params.maxClonal}\n"
-                f"minDepth={params.minDepth}\n"
-                f"maxNs={params.maxNs}\n"
-                )
-
-rule makeFileList:
-    params:
-        samples=samples.loc[:,"baseDir"]
-    output:
-        outFileList = f".{config['samples']}.fileList.txt"
-    run:
-        with open(output.outFileList, 'w') as outF:
-            for samp in params.samples:
-                outF.write(f"{samp}\n")
-
 rule makeSummaryCSV:
     params:
         basePath = sys.path[0],
         configPath = config["samples"]
     input:
-        f".{config['samples']}.fileList.txt",
         getSummaryInput()
     output:
         outSum = f"{config['samples']}.summary.csv"
@@ -1519,7 +1440,7 @@ rule makeSummaryCSV:
     shell:
         """
         python {params.basePath}/scripts/retrieveSummary.py \
-        --indexes {input[0]} --config {params.configPath}
+        --config {params.configPath}
         """
 
 rule makeSummaryDepth:
