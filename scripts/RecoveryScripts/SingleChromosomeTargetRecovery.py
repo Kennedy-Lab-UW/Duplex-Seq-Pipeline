@@ -26,6 +26,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("inBam")
     parser.add_argument("outBam")
+    parser.add_argument("ambigBam")
     parser.add_argument("goodChr")
     o = parser.parse_args()
     #class o:
@@ -43,6 +44,7 @@ def main():
     
     inBam = pysam.AlignmentFile(o.inBam, 'rb')
     resort = False
+    
     if inBam.header.as_dict()['HD']['SO'] != "queryname":
         inBam.close()
         logging.info("Input not querry name sorted.  Sorting into query-name order...")
@@ -51,8 +53,10 @@ def main():
         inBam = pysam.AlignmentFile(f"{o.inBam}.temp.sort.bam", 'rb')
     if resort:
         outBam = pysam.AlignmentFile(f"{o.outBam}.temp.bam", 'wb', template=inBam)
+        outAmbig = pysam.AlignmentFile(f"{o.ambigBam}.temp.bam", 'wb', template=inBam)
     else:
         outBam = pysam.AlignmentFile(o.outBam, 'wb', template=inBam)
+        outAmbig = pysam.AlignmentFile(o.ambigBam, 'wb', template=inBam)
     try:
         firstLine = next(inBam)
         contRecover = True
@@ -86,15 +90,20 @@ def main():
                     if goodPos:
                         for read in lineStorage:
                             outBam.write(read)
+                    else:
+                        for read in lineStorage:
+                            outAmbig.write(read)
                 firstLine = line
                 lineStorage = [firstLine]
     outBam.close()
     if resort:
         logging.info("Resorting into coordinate order...")
         pysam.sort("-o", o.outBam, f"{o.outBam}.temp.bam")
+        pysam.sort("-o", o.outAmbig, f"{o.outAmbig}.temp.bam")
         logging.info("Cleaning up temporary files")
         os.remove(f"{o.outBam}.temp.bam")
         os.remove(f"{o.inBam}.temp.sort.bam")
+        os.remove(f"{o.outAmbig}.temp.bam")
 
     logging.info("Done")
 

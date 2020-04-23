@@ -445,7 +445,12 @@ rule makeDirs:
     shell:
         """
         cd {wildcards.runPath}
-        mkdir -p Intermediate/ConsensusMakerOutputs Intermediate/postBlast/FilteredReads Final/dcs Final/sscs Stats/data Stats/plots Intermediate/PreVariantCallsCp/sscs Intermediate/PreVariantCallsCp/dcs
+        mkdir -p Intermediate/ConsensusMakerOutputs \
+        Intermediate/postBlast/FilteredReads \
+        Final/dcs Final/sscs Final/dcs/FilteredReads \
+        Stats/data Stats/plots \
+        Intermediate/PreVariantCallsCp/sscs \
+        Intermediate/PreVariantCallsCp/dcs
         cd ../
         """
 
@@ -819,7 +824,7 @@ rule PostBlastProcessing2:
         tempBam4 = temp("{runPath}/{sample}_dcs.wrongSpecies.bam"),
         tempAmbigBam = temp("{runPath}/{sample}_dcs.ambig.bam"),
         outBadBam = "{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.wrongSpecies.sort.bam",
-        outBam = temp("{runPath}/{sample}_dcs.speciesFilt.sort.bam"),
+        outBam = temp("{runPath}/{sample}_dcs.speciesFilt.sort.temp.bam"),
         outAmbBam = "{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.ambig.sort.bam",
         outSpecComp = "{runPath}/Stats/data/{sample}_dcs.speciesComp.txt",
         tempDir1 = temp(touch(directory("{runPath}/{sample}.dcs.postBlast1.samtoolsTemp"))),
@@ -849,7 +854,7 @@ rule PostBlastProcessing2:
         {params.taxID} \
         | samtools sort \
         -T {wildcards.sample}.dcs.postBlast2.samtoolsTemp \
-        -o {wildcards.sample}_dcs.speciesFilt.sort.bam
+        -o {wildcards.sample}_dcs.speciesFilt.sort.temp.bam
         samtools sort -o Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam \
         -T {wildcards.sample}.dcs.postBlast3.samtoolsTemp \
         {wildcards.sample}_dcs.wrongSpecies.bam
@@ -867,10 +872,13 @@ rule postBlastRecovery:
     priority: 40
     input:
         inAmbigBam="{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.ambig.sort.bam",
-        inNonAmbigBam="{runPath}/{sample}_dcs.speciesFilt.sort.bam",
+        inNonAmbigBam="{runPath}/{sample}_dcs.speciesFilt.sort.temp.bam",
+        inWrongSpeciesBam="{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.wrongSpecies.sort.bam",
         inRecoveryScript=get_recovery
     output:
-        outBam = temp("{runPath}/{sample}_dcs.speciesFilt.recovered.sort.temp.bam")
+        outBam = temp("{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam"),
+        outAmbigBam = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.ambig.bam",
+        outWrongSpeciesBam = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.wrongSpecies.bam"
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -881,8 +889,13 @@ rule postBlastRecovery:
         bash {input.inRecoveryScript} \
         Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam \
         {wildcards.sample}_dcs.speciesFilt.sort.bam \
-        {wildcards.sample}_dcs.speciesFilt.recovered.sort.temp.bam \
+        Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam \
+        {wildcards.sample}_dcs.postRecovery \
         "{params.basePath}"
+        mv {wildcards.sample}_dcs.postRecovery.ambig.bam \
+        Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.ambig.bam
+        mv {wildcards.sample}_dcs.postRecovery.wrongSpecies.bam \
+        Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam
         cd ../
         """
 
@@ -890,8 +903,8 @@ rule CountAmbig:
     params:
         basePath = sys.path[0],
     input:
-        inNonAmbigFile = "{runPath}/Final/dcs/{sample}.dcs.final.bam",
-        inAmbigFile = "{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.ambig.sort.bam"
+        inNonAmbigFile = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam",
+        inAmbigFile = "{runPath}/{sample}_dcs.postRecovery.ambig.bam"
     output:
         "{runPath}/Stats/data/{sample}.dcs_ambiguity_counts.txt"
     conda:
@@ -956,10 +969,9 @@ rule endClipDcs:
         basePath = sys.path[0],
         runPath = get_baseDir
     input:
-        inBam = "{runPath}/{sample}_dcs.speciesFilt.recovered.sort.temp.bam",
-        inBai = "{runPath}/{sample}_dcs.speciesFilt.recovered.sort.temp.bam.bai",
+        inBam = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam",
+        inBai = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam.bai",
         inRef = get_reference, 
-        inNonAmbigBam="{runPath}/{sample}_dcs.speciesFilt.sort.bam"
     output:
         outBam = temp("{runPath}/{sample}.dcs.filt.clipped.bam"),
         outBai = temp("{runPath}/{sample}.dcs.filt.clipped.bai"),
