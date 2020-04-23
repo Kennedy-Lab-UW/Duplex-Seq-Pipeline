@@ -71,6 +71,12 @@ if (length(row.names(depth)) > 0) {
     maxNs = 1
     depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
 }
+if (maxNs == 0) {
+  maxNs = 1
+}
+if (maxDP == 0) {
+  maxDP = 1
+}
 multiplier = -maxDP / maxNs
 
 

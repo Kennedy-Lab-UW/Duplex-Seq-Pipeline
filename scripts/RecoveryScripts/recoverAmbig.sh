@@ -6,12 +6,12 @@ inWrongSpeciesReads=$3
 outPrefix=$4
 basePath=$5
 
-samtools merge -c\
+samtools merge -c \
 ${outPrefix}.recovered.temp.bam \
 ${inNonAmbigReads} \
 ${inAmbigReads}
 
-samtools view -Hb ${outRecoveredReads} \
+samtools view -Hb ${outPrefix}.recovered.temp.bam \
 > ${outPrefix}.ambig.bam
 cp ${inWrongSpeciesReads} \
 ${outPrefix}.wrongSpecies.bam

@@ -11,5 +11,6 @@ ${outPrefix}.recovered.temp.bam \
 ${inNonAmbigReads} \
 ${inWrongSpeciesReads}
 
-samtools view -Hb ${outRecoveredReads} \
+samtools view -Hb ${outPrefix}.recovered.temp.bam \
 > ${outPrefix}.wrongSpecies.bam
+cp ${inAmbigReads} ${outPrefix}.ambig.bam

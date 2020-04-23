@@ -888,7 +888,7 @@ rule postBlastRecovery:
         cd {wildcards.runPath}
         bash {input.inRecoveryScript} \
         Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam \
-        {wildcards.sample}_dcs.speciesFilt.sort.bam \
+        {wildcards.sample}_dcs.speciesFilt.sort.temp.bam \
         Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam \
         {wildcards.sample}_dcs.postRecovery \
         "{params.basePath}"
@@ -904,7 +904,7 @@ rule CountAmbig:
         basePath = sys.path[0],
     input:
         inNonAmbigFile = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam",
-        inAmbigFile = "{runPath}/{sample}_dcs.postRecovery.ambig.bam"
+        inAmbigFile = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.ambig.bam"
     output:
         "{runPath}/Stats/data/{sample}.dcs_ambiguity_counts.txt"
     conda:
@@ -914,8 +914,8 @@ rule CountAmbig:
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/countAmbiguityClasses.py \
         Stats/data/{wildcards.sample}.dcs \
-        Final/dcs/{wildcards.sample}.dcs.final.bam \
-        Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam
+        {wildcards.sample}_dcs.postRecovery.recovered.temp.bam \
+        Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.ambig.bam
         cd ../
         """
 
