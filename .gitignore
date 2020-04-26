@@ -4,7 +4,6 @@
 DS
 DS-dag
 DS_progConfig.yaml
-test/testConfig.csv
 .env_initialized
 scripts/__pycache__
 
