@@ -1602,7 +1602,8 @@ rule makeReport:
         maxNs = get_maxNs,
         outConfig = getOutConfig,
         rLen = get_readLen,
-        contaminantDb = get_blast_db
+        contaminantDb = get_blast_db, 
+        version = next(open(f"{sys.path[0]}/VERSION",'r')).strip()
     input:
         getReportInput, 
         get_blast_db_path
@@ -1669,6 +1670,7 @@ import numpy as np
             f"  \n"
             f"| Parameter | Value |  \n"
             f"| --------- | ----- |  \n"
+            f"|Version|{params.version}|  \n"
             f"|RunID |{wildcards.sample}|  \n"
             f"|Run Directory | {wildcards.runPath} |  \n"
             f"|Inputs| |  \n"
@@ -1903,7 +1905,8 @@ rule makeReport_noBlast:
         maxNs = get_maxNs,
         outConfig = getOutConfig,
         rLen = get_readLen,
-        contaminantDb = get_blast_db
+        contaminantDb = get_blast_db, 
+        version = next(open(f"{sys.path[0]}/VERSION",'r')).strip()
     input:
         getReportInput_noBlast
     output:
@@ -1969,6 +1972,7 @@ import numpy as np
             f"  \n"
             f"| Parameter | Value |  \n"
             f"| --------- | ----- |  \n"
+            f"|Version|{params.version}|  \n"
             f"|RunID |{wildcards.sample}|  \n"
             f"|Run Directory | {wildcards.runPath} |  \n"
             f"|Inputs| |  \n"
