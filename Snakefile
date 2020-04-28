@@ -1373,7 +1373,7 @@ rule PlotCoverage:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.region.mutpos.vcf_depth.txt",
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
-        temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff")
+        "{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff"
     conda:
         "envs/DS_env_full.yaml"
     log:
