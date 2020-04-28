@@ -20,29 +20,10 @@ depth <- read_delim(myFName,
                     "\t", escape_double = FALSE, trim_ws = TRUE, 
                     col_types="cicii") 
 # Set column names
+bedColNames = c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd","itemRgb","blockCounts","blockSizes","blockStarts")
 numCols = length(colnames(myBed))
-if (numCols == 3) {
-  colnames(myBed) <- c("Chrom","Start","End")
-  myBed$Name = row.names(myBed)
-} else if (numCols == 4) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name")
-} else if (numCols == 5) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score")
-} else if (numCols == 6) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score","Strand")
-} else if (numCols == 7) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score","Strand","thickStart")
-} else if (numCols == 8) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd")
-} else if (numCols == 9) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd","itemRgb")
-} else if (numCols == 10) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd","itemRgb","blockCounts")
-}  else if (numCols == 11) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd","itemRgb","blockCounts","blockSizes")
-} else if (numCols == 12) {
-  colnames(myBed) <- c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd","itemRgb","blockCounts","blockSizes","blockStarts")
-} 
+colnames(myBed) <- bedColNames[1:numCols]
+
 myBed$Start <- myBed$Start + 1
 myBed$End <- myBed$End + 1
 myBed$Target = factor(myBed$Name, levels = c(myBed$Name,"Off_Target"))
