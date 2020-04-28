@@ -71,10 +71,16 @@ if (length(row.names(depth)) > 0) {
     maxNs = 1
     depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
 }
+if (maxNs == 0) {
+  maxNs = 1
+}
+if (maxDP == 0) {
+  maxDP = 1
+}
 multiplier = -maxDP / maxNs
 
 
-myFName = paste("Final/",inSampType,"/",inSampName, ".vcf", sep="")
+#myFName = paste("Final/",inSampType,"/",inSampName, ".vcf", sep="")
 myVCF <- read_delim(
   myFName, "\t", 
   escape_double = FALSE, 
@@ -98,8 +104,8 @@ for (dataIter in seq(1,length(row.names(myVCF)))) {
 myVCF$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
 } else {myVCF$Target = factor()}
 myPlot=ggplot(data = depth[depth$Target != "Off_Target",]) + 
-  geom_area(mapping = aes(x = Pos, y = DP), stat="identity") + 
-  geom_area(mapping=aes(x=Pos, y=Ns * multiplier), color='red', alpha=0.7) + 
+  geom_bar(mapping = aes(x = Pos, y = DP), stat="identity", width=1) + 
+  geom_bar(mapping=aes(x=Pos, y=Ns * multiplier), color='red', alpha=0.7, stat="identity", width=1) + 
   geom_segment(data = myBed, mapping = aes(x=Start,xend=End, y=0, yend=0))
 if (length(row.names(myVCF)) > 0) {
   myPlot = myPlot + 
@@ -116,6 +122,7 @@ myPlot = myPlot +
     axis.text.x = element_text(angle=90)
   ) + 
   facet_wrap(. ~ Target, scales = "free_x", ncol = min(length(myBed$Name), 4))
+myPlot
 ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.png", sep=""), 
        plot=myPlot, 
        width = 200, 
