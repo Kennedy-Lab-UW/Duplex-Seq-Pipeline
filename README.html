@@ -421,21 +421,40 @@ does support blocks as described in the bed spec.</strong></p>
 <p>Save the file as a .csv file with unix line endings (LF).</p>
 <h2>
 <a id="user-content-8-recovery-script-creation" class="anchor" href="#8-recovery-script-creation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>8: Recovery script creation</h2>
-<p>As part of its operation, this pipeline filters out correct-species reads where the blast mapping and bwa mapping positions disagree or where blast is unable to determine conclusively where the read maps (i.e.E-scores are the same). There is a step which provides an option to recover those reads by using a user-generated bash script.  Currently, we use a bash script to call a python script which will actually accomplish the recovery, but this functionality may be changed in the future.  In general, these scripts must:</p>
+<p>As part of its operation, this pipeline filters out correct-species reads
+where the blast mapping and bwa mapping positions disagree or where blast
+is unable to determine conclusively where the read maps (i.e.E-scores are
+the same). There is a step which provides an option to recover those reads
+by using a user-generated bash script.  Currently, we use a bash script to
+call a python script which will actually accomplish the recovery, but this
+functionality may be changed in the future.  In general, these scripts must:</p>
 <ol>
 <li>accept ambiguous reads as $1</li>
 <li>accept non-ambiguous reads as $2</li>
-<li>take a file name for output reads as $3</li>
-<li>take a basePath for location of script files as $4</li>
+<li>accept reads labeled as incorrect species as $3</li>
+<li>take a name base for output files as $4</li>
+<li>take a basePath for location of script files as $5</li>
 </ol>
+<p>The script must create the folowing output files:</p>
+<ul>
+<li>${4}.recovered.temp.bam</li>
+<li>${4}.ambig.bam</li>
+<li>${4}.wrongSpecies.bam</li>
+</ul>
 <p>All script files must be stored in scripts/RecoveryScripts.</p>
+<p>Note that if you decide to write your own recovery scripts, you are
+responsible for ensuring that your recovery scripts actually work as
+intended, and do not break your computer.  We are unable to guarentee
+that any sample run with a recovery script other than one of the ones
+provided with the pipeline will produce accurate data.</p>
 <h2>
 <a id="user-content-9-running-pipelines" class="anchor" href="#9-running-pipelines" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>9: Running pipelines:</h2>
 <p>The pipeline can be run using the DS command created by the setup script:</p>
 <div class="highlight highlight-source-shell"><pre>DS CONFIG_CSV.csv</pre></div>
 <h2>
 <a id="user-content-10-output-file-descriptions" class="anchor" href="#10-output-file-descriptions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>10: Output file descriptions:</h2>
-<p>The pipeline will create a set of summary files covering all samples, as well as a file directory structure for each sample.  The summary files are:</p>
+<p>The pipeline will create a set of summary files covering all samples, as
+well as a file directory structure for each sample.  The summary files are:</p>
 <table>
 <thead>
 <tr>
