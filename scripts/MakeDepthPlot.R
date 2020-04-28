@@ -48,28 +48,28 @@ myBed$End <- myBed$End + 1
 myBed$Target = factor(myBed$Name, levels = c(myBed$Name,"Off_Target"))
 namesVect = c()
 if (length(row.names(depth)) > 0) {
-    for (dataIter in seq(1,length(row.names(depth)))) {
-      myName = "Off_Target"
-      for (bedIter in seq(1, length(row.names(myBed)))) {
-        if ( depth$`#Chrom`[dataIter] == myBed$Chrom[bedIter] && 
-             depth$Pos[dataIter] >= myBed$Start[bedIter] && 
-             depth$Pos[dataIter] < myBed$End[bedIter]) {
-          myName = myBed$Name[bedIter]
-          break
-        }
+  for (dataIter in seq(1,length(row.names(depth)))) {
+    myName = "Off_Target"
+    for (bedIter in seq(1, length(row.names(myBed)))) {
+      if ( depth$`#Chrom`[dataIter] == myBed$Chrom[bedIter] && 
+           depth$Pos[dataIter] >= myBed$Start[bedIter] && 
+           depth$Pos[dataIter] < myBed$End[bedIter]) {
+        myName = myBed$Name[bedIter]
+        break
       }
-      namesVect = c(namesVect, myName)
     }
-    maxDP = max(depth$DP)
-    depth$Nfract = depth$Ns / depth$DP * 100
-    depth$Nfract[depth$DP == 0] = 0
-    depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
-    maxNs = ceiling(max(depth$Ns[depth$Target != "Off_Target"])/3)*3
-    
+    namesVect = c(namesVect, myName)
+  }
+  maxDP = max(depth$DP)
+  depth$Nfract = depth$Ns / depth$DP * 100
+  depth$Nfract[depth$DP == 0] = 0
+  depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
+  maxNs = ceiling(max(depth$Ns[depth$Target != "Off_Target"])/3)*3
+  
 } else {
-    maxDP = 1
-    maxNs = 1
-    depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
+  maxDP = 1
+  maxNs = 1
+  depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
 }
 if (maxNs == 0) {
   maxNs = 1
@@ -80,28 +80,28 @@ if (maxDP == 0) {
 multiplier = -maxDP / maxNs
 
 
-#myFName = paste("Final/",inSampType,"/",inSampName, ".vcf", sep="")
+myFName = paste("Final/",inSampType,"/",inSampName, ".vcf", sep="")
 myVCF <- read_delim(
   myFName, "\t", 
   escape_double = FALSE, 
   comment = "##", 
   trim_ws = TRUE
-  )
+)
 namesVect = c()
 if (length(row.names(myVCF)) > 0) {
-for (dataIter in seq(1,length(row.names(myVCF)))) {
-  myName = "Off_Target"
-  for (bedIter in seq(1, length(row.names(myBed)))) {
-    if ( myVCF$`#CHROM`[dataIter] == myBed$Chrom[bedIter] && 
-         myVCF$POS[dataIter] >= myBed$Start[bedIter] && 
-         myVCF$POS[dataIter] < myBed$End[bedIter]) {
-      myName = myBed$Name[bedIter]
-      break
+  for (dataIter in seq(1,length(row.names(myVCF)))) {
+    myName = "Off_Target"
+    for (bedIter in seq(1, length(row.names(myBed)))) {
+      if ( myVCF$`#CHROM`[dataIter] == myBed$Chrom[bedIter] && 
+           myVCF$POS[dataIter] >= myBed$Start[bedIter] && 
+           myVCF$POS[dataIter] < myBed$End[bedIter]) {
+        myName = myBed$Name[bedIter]
+        break
+      }
     }
+    namesVect = c(namesVect, myName)
   }
-  namesVect = c(namesVect, myName)
-}
-myVCF$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
+  myVCF$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
 } else {myVCF$Target = factor()}
 myPlot=ggplot(data = depth[depth$Target != "Off_Target",]) + 
   geom_bar(mapping = aes(x = Pos, y = DP), stat="identity", width=1) + 
@@ -109,7 +109,7 @@ myPlot=ggplot(data = depth[depth$Target != "Off_Target",]) +
   geom_segment(data = myBed, mapping = aes(x=Start,xend=End, y=0, yend=0))
 if (length(row.names(myVCF)) > 0) {
   myPlot = myPlot + 
-  geom_point(data=myVCF[myVCF$Target != "Off_Target",], mapping=aes(x=POS, y=maxDP), shape=1)
+    geom_point(data=myVCF[myVCF$Target != "Off_Target",], mapping=aes(x=POS, y=maxDP), shape=1)
 }
 myPlot = myPlot + 
   scale_y_continuous(
@@ -122,10 +122,10 @@ myPlot = myPlot +
     axis.text.x = element_text(angle=90)
   ) + 
   facet_wrap(. ~ Target, scales = "free_x", ncol = min(length(myBed$Name), 4))
-myPlot
-ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.png", sep=""), 
+ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.tiff", sep=""), 
        plot=myPlot, 
        width = 200, 
        height=50*ceiling(length(levels(depth$Target)) / 4), 
        units="mm", 
-       device = "png")
+       device = "tiff", 
+       compression="lzw")
