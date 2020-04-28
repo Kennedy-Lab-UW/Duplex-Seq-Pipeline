@@ -179,7 +179,7 @@ def getDepthFiles():
         outList.append(
             f"{samples.loc[sampIter,'baseDir']}/"
             f"Stats/plots/"
-            f"{sampIter}.dcs.targetCoverage.tiff"
+            f"{sampIter}.dcs.targetCoverage.png"
             )
     return(outList)
 
@@ -189,7 +189,7 @@ def getInsertFiles():
         outList.append(
             f"{samples.loc[sampIter,'baseDir']}/"
             f"Stats/plots/"
-            f"{sampIter}.dcs.iSize_Histogram.tiff"
+            f"{sampIter}.dcs.iSize_Histogram.png"
             )
     return(outList)
 
@@ -230,7 +230,7 @@ def getReportInput(wildcards):
     #'Clipping Stats files
     #'Mutations Stats Files
     #'Final stats files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.tiff')
+    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam.bai')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
@@ -245,10 +245,9 @@ def getReportInput(wildcards):
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.tiff')
+    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.tiff')
     return(outArgs)
 
 def getReportInput_noBlast(wildcards):
@@ -267,7 +266,7 @@ def getReportInput_noBlast(wildcards):
     #'Clipping Stats files
     #'Mutations Stats Files
     #'Final stats files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.tiff')
+    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam.bai')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
@@ -278,9 +277,8 @@ def getReportInput_noBlast(wildcards):
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.tiff')
+    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.tiff')
     return(outArgs)
 
 
@@ -1303,7 +1301,6 @@ rule makeCountMuts:
         cd ..
         """
 
-
 rule InsertSize:
     params:
         sample = get_sample,
@@ -1352,7 +1349,7 @@ rule PlotInsertSize:
     input:
         "{runPath}/Stats/data/{sample}.{sampType}.iSize_Metrics.txt",
     output:
-        "{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.tiff"
+        temp("{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.tiff")
     conda:
         "envs/DS_env_full.yaml"
     shell:
@@ -1371,7 +1368,7 @@ rule PlotCoverage:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.region.mutpos.vcf_depth.txt",
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
-        "{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff"
+        temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff")
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -1492,6 +1489,22 @@ rule makeFileList:
         with open(output.outFileList, 'w') as outF:
             for samp in params.samples:
                 outF.write(f"{samp}\n")
+
+rule tiff2png:
+    params:
+        basePath = sys.path[0],
+    input:
+        "{prefix}.tiff"
+    output:
+        "{prefix}.png"
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        python {params.basePath}/scripts/tiff2png.py \
+        {wildcards.prefix}.tiff \
+        {wildcards.prefix}.png
+        """
 
 rule makeSummaryCSV:
     params:
@@ -1799,7 +1812,7 @@ import numpy as np
             # ~ f'IFrame(f"{wildcards.sample}.dcs.iSize_Histogram.pdf",600,600)\n'
             # ~ ))
         myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}.dcs.iSize_Histogram.tiff")'
+            f'Image(f"plots/{wildcards.sample}.dcs.iSize_Histogram.png")'
             ))
 
         # Depth statistics
@@ -1808,7 +1821,7 @@ import numpy as np
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             ))
         myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}.dcs.targetCoverage.tiff")'
+            f'Image(f"plots/{wildcards.sample}.dcs.targetCoverage.png")'
             ))
 
         # Muts per read pos statistics
@@ -2085,7 +2098,7 @@ import numpy as np
             # ~ f'IFrame(f"{wildcards.sample}.dcs.iSize_Histogram.pdf",600,600)\n'
             # ~ ))
         myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}.dcs.iSize_Histogram.tiff")'
+            f'Image(f"plots/{wildcards.sample}.dcs.iSize_Histogram.png")'
             ))
 
         # Depth statistics
@@ -2094,7 +2107,7 @@ import numpy as np
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             ))
         myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}.dcs.targetCoverage.tiff")'
+            f'Image(f"plots/{wildcards.sample}.dcs.targetCoverage.png")'
             ))
 
         # Muts per read pos statistics
