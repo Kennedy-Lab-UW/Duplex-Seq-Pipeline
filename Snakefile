@@ -241,7 +241,6 @@ def getReportInput(wildcards):
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     return(outArgs)
 
 def getReportInput_noBlast(wildcards):
@@ -273,7 +272,6 @@ def getReportInput_noBlast(wildcards):
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
     outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     return(outArgs)
 
 
@@ -310,6 +308,7 @@ wildcard_constraints:
     sampType="(sscs)|(dcs)",
     sample="|".join([f"({x})" for x in samples.index])
 
+# Run all steps of the pipeline
 rule all:
     input:
         f"{config['samples']}.summary.csv", 
@@ -339,6 +338,8 @@ rule rerun:
         rm .rerunPrepDone
         """
 
+# Environment set up rules
+# Implemented to save time at run-time on environment setup
 rule initializeEnvs:
     input:
         "full.initialized"
@@ -430,6 +431,7 @@ rule initialize fgbio_env:
         touch fgbio.initialized
         """
 
+# Setup output directories
 rule makeDirs:
     output:
         outConfigTmp = temp(touch("{runPath}/.{sample}_dirsMade")), 
@@ -445,6 +447,7 @@ rule makeDirs:
         cd ../
         """
 
+# Make consensus sequences from input fastqs
 rule makeConsensus:
     params:
         sample = get_sample,
@@ -513,6 +516,7 @@ rule makeConsensus:
         cd ../
         """
 
+# Calculate # on target raw reads based on outAln1 and outAln2 from makeConsensus
 rule getOnTarget:
     params:
         basePath = sys.path[0],
@@ -552,6 +556,7 @@ rule getOnTarget:
         cd ../
         """
 
+# Align SSCS and DCS to provided reference genome, and sort based on position
 rule alignReads:
     params:
         sample = get_sample,
@@ -594,6 +599,7 @@ rule alignReads:
         cd ../
         """
 
+# Filter out secondary and supplamentery alignments prior to BLAST filters.
 rule PreBlastFilter:
     input:
         inBam="{runPath}/{sample}_mem.dcs.sort.bam",
@@ -620,6 +626,7 @@ rule PreBlastFilter:
         cd ../
         """
 
+# Make bam index for temporary bam files
 rule makeTempBai:
     input:
         inBam = "{runPath}/{fileBase}.temp.bam"
@@ -633,6 +640,7 @@ rule makeTempBai:
         samtools index {input.inBam} {output.outBai}
         """
 
+# make bam index for non-temporary bam files
 rule makeBai:
     input:
         inBam = "{runPath}/{fileBase}.bam"
@@ -646,6 +654,7 @@ rule makeBai:
         samtools index {input.inBam} {output.outBai}
         """
 
+# Get samtools flagstat output for a bam file
 rule getFlagstats:
     input:
         inBam = "{runPath}/{fileBase}.bam"
@@ -662,6 +671,8 @@ rule getFlagstats:
         cd ../
         """
 
+# Do nieve variant calling to allow us to not include reads that just have 
+# SNPs in them.  
 rule PreBlastProcessing1:
     params:
         basePath = sys.path[0],
@@ -689,6 +700,7 @@ rule PreBlastProcessing1:
         cd ../
         """
 
+# Get SNPs from nieve variant calling
 rule PreBlastProcessing2:
     params:
         basePath = sys.path[0]
@@ -713,6 +725,7 @@ rule PreBlastProcessing2:
         cd ../
         """
 
+# Seperate out reads with non-SNP variants for examination with BLAST
 rule PreBlastProcessing3:
     params:
         basePath = sys.path[0],
@@ -747,6 +760,7 @@ rule PreBlastProcessing3:
         cd ../
         """
 
+# BLAST reads with non-SNP variants
 rule BLAST:
     params:
         basePath = sys.path[0],
@@ -779,6 +793,7 @@ rule BLAST:
         cd ../
         """
 
+# Label reads with taxIDs based on BLAST results
 rule PostBlastProcessing1:
     params:
         basePath = sys.path[0]
@@ -802,7 +817,11 @@ rule PostBlastProcessing1:
         {wildcards.sample}_dcs
         cd ../
         """
-
+# Multi-step process.  
+# 1. Merge species-labeled and unblasted reads into a single bam file
+# 2. Sort reads based on read name
+# 3. Filter out incorect species reads
+# 4. Sort all outputs into position sorting
 rule PostBlastProcessing2:
     params:
         basePath = sys.path[0],
@@ -856,6 +875,7 @@ rule PostBlastProcessing2:
         cd ../
         """
 
+# Run user-defined recovery script
 rule postBlastRecovery:
     params:
         basePath = sys.path[0],
@@ -890,6 +910,8 @@ rule postBlastRecovery:
         cd ../
         """
 
+# Count number of reads in files after post-blast recovery with different 
+# ambiguity scores
 rule CountAmbig:
     params:
         basePath = sys.path[0],
@@ -910,6 +932,7 @@ rule CountAmbig:
         cd ../
         """
 
+# Apply fixed end clipping to SSCS (with no BLAST)
 rule endClipSscs:
     params:
         sample = get_sample,
@@ -952,6 +975,7 @@ rule endClipSscs:
         fi
         """
 
+# Apply fixed end clipping to DCS (with BLAST)
 rule endClipDcs:
     params:
         sample = get_sample,
@@ -994,6 +1018,7 @@ rule endClipDcs:
         fi
         """
 
+# Apply fixed end clipping to DCS (with no BLAST)
 rule endClipDcs_noBlast:
     params:
         sample = get_sample,
@@ -1036,6 +1061,7 @@ rule endClipDcs_noBlast:
         fi
         """
 
+# Run GATK3-based local realignment
 rule localRealign:
     params:
         sample = get_sample,
@@ -1073,6 +1099,7 @@ rule localRealign:
         cd ../
         """
 
+# Clip overlapping reads
 rule overlapClip:
     params:
         sample = get_sample,
@@ -1103,6 +1130,7 @@ rule overlapClip:
         cd ../
         """
 
+# Filter reads to only reads that overlap the provided bed file
 rule FinalFilter:
     params:
         runPath = get_baseDir,
@@ -1130,42 +1158,7 @@ rule FinalFilter:
         cd ../
         """
 
-rule pileup:
-    params:
-        sample = get_sample,
-        basePath = sys.path[0],
-        runPath = get_baseDir
-    input:
-        inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
-        inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inRef = get_reference,
-        inBed = get_target_bed
-    output:
-        outPile1 = temp("{runPath}/{sample}.{sampType}.filt.no_overlap.pileup"),
-        outPile2 = temp("{runPath}/{sample}.{sampType}.filt.no_overlap.region.pileup")
-    conda:
-        "envs/DS_env_full.yaml"
-    log:
-         "{runPath}/logs/{sample}_pileup_{sampType}.log"
-    shell:
-        """
-        cd {params.runPath}
-        samtools mpileup\
-        -B \
-        -A \
-        -d 500000 \
-        -Q 0 \
-        -f {input.inRef} \
-        ../{input.inBam} \
-        > ../{output.outPile1}
-        python {params.basePath}/scripts/filter_pileup.py \
-        {input.inBed} \
-        ../{output.outPile1} \
-        ../{output.outPile2} \
-        N
-        cd ../
-        """
-
+# Create VCF output
 rule makeVCF:
     params:
         basePath = sys.path[0],
@@ -1195,6 +1188,7 @@ rule makeVCF:
         cd ..
         """
 
+# get SNPs from VCF
 rule getSnps:
     params:
         basePath = sys.path[0],
@@ -1218,6 +1212,7 @@ rule getSnps:
         cd ..
         """
 
+# filter VCF to only variants covered by the provided bed file
 rule positionFilterVCF:
     params:
         runPath = get_baseDir,
@@ -1240,7 +1235,8 @@ rule positionFilterVCF:
         Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf
         cd ..
         """
-        
+
+# filter SNPs VCF to only SNPs covered by the provided bed file
 rule positionFilterSnpsVCF:
     params:
         runPath = get_baseDir,
@@ -1264,6 +1260,7 @@ rule positionFilterSnpsVCF:
         cd ..
         """
 
+# Make countMuts file from VCF file
 rule makeCountMuts:
     params:
         basePath = sys.path[0],
@@ -1306,7 +1303,7 @@ rule makeCountMuts:
         cd ..
         """
 
-
+# Collect insert size data
 rule InsertSize:
     params:
         sample = get_sample,
@@ -1348,14 +1345,15 @@ rule InsertSize:
         TMP_DIR=picardTempDir
         cd ../
         """
-        
+
+# Create insert size plot
 rule PlotInsertSize:
     params:
         basePath = sys.path[0],
     input:
         "{runPath}/Stats/data/{sample}.{sampType}.iSize_Metrics.txt",
     output:
-        "{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.png"
+        temp("{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.tiff")
     conda:
         "envs/DS_env_full.yaml"
     shell:
@@ -1366,6 +1364,7 @@ rule PlotInsertSize:
         cd ..
         """
 
+# Create coverage plot
 rule PlotCoverage:
     params:
         basePath = sys.path[0],
@@ -1374,7 +1373,7 @@ rule PlotCoverage:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.region.mutpos.vcf_depth.txt",
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
-        "{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.png"
+        temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff")
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -1389,6 +1388,7 @@ rule PlotCoverage:
         cd ..
         """
 
+# Plot number of non-SNP variants per sequencing cycle
 rule MutsPerCycle:
     params:
         sample = get_sample,
@@ -1427,6 +1427,28 @@ rule MutsPerCycle:
         cd ../
         """
 
+# Convert TIFF figures created by R into PNG figures
+# We implemented this due to artifacts in the raw PNG output produced by
+# R, and a desire to embed the resulting figures in the report html file.
+# This issue may be revisited in the future, if we come accross a better 
+# PNG device for R.  
+rule tiff2png:
+    params:
+        basePath = sys.path[0],
+    input:
+        "{prefix}.tiff"
+    output:
+        "{prefix}.png"
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        python {params.basePath}/scripts/tiff2png.py \
+        {wildcards.prefix}.tiff \
+        {wildcards.prefix}.png
+        """
+
+# make summary files
 rule makeSummaryCSV:
     params:
         basePath = sys.path[0],
@@ -1507,6 +1529,7 @@ rule makeSummaryFamilySize:
         {params.configPath}
         """
 
+# make per-sample report file (with BLAST)
 rule makeReport:
     params:
         sample = get_sample,
@@ -1535,7 +1558,8 @@ rule makeReport:
         maxNs = get_maxNs,
         outConfig = getOutConfig,
         rLen = get_readLen,
-        contaminantDb = get_blast_db
+        contaminantDb = get_blast_db, 
+        version = next(open(f"{sys.path[0]}/VERSION",'r')).strip()
     input:
         getReportInput, 
         get_blast_db_path
@@ -1602,6 +1626,7 @@ import numpy as np
             f"  \n"
             f"| Parameter | Value |  \n"
             f"| --------- | ----- |  \n"
+            f"|Version|{params.version}|  \n"
             f"|RunID |{wildcards.sample}|  \n"
             f"|Run Directory | {wildcards.runPath} |  \n"
             f"|Inputs| |  \n"
@@ -1808,6 +1833,7 @@ import numpy as np
         nb['cells'] = myCells
         nbf.write(nb, f"{wildcards.runPath}/Stats/{wildcards.sample}.report.ipynb")
 
+# make per-sample report file (without BLAST)
 rule makeReport_noBlast:
     params:
         sample = get_sample,
@@ -1836,7 +1862,8 @@ rule makeReport_noBlast:
         maxNs = get_maxNs,
         outConfig = getOutConfig,
         rLen = get_readLen,
-        contaminantDb = get_blast_db
+        contaminantDb = get_blast_db, 
+        version = next(open(f"{sys.path[0]}/VERSION",'r')).strip()
     input:
         getReportInput_noBlast
     output:
@@ -1902,6 +1929,7 @@ import numpy as np
             f"  \n"
             f"| Parameter | Value |  \n"
             f"| --------- | ----- |  \n"
+            f"|Version|{params.version}|  \n"
             f"|RunID |{wildcards.sample}|  \n"
             f"|Run Directory | {wildcards.runPath} |  \n"
             f"|Inputs| |  \n"
@@ -2092,6 +2120,7 @@ import numpy as np
         nb['cells'] = myCells
         nbf.write(nb, f"{wildcards.runPath}/Stats/{wildcards.sample}.report.ipynb")
 
+# Compile report ipython notebook
 rule compileReport:
     input:
         "{runPath}/Stats/{sample}.report.ipynb"
@@ -2107,6 +2136,7 @@ rule compileReport:
         cd ../../
         """
 
+# Ruleorders
 ruleorder: alignReads > makeBai
 ruleorder: PreBlastFilter > makeBai
 ruleorder: PreBlastProcessing1 > makeBai
