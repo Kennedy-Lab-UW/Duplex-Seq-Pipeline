@@ -10,6 +10,6 @@ samples = pd.read_csv(o.config).set_index("sample", drop=False)
 
 myImages = []
 for sampIter in samples.index:
-    myImages.append(Image.open(f'{samples.loc[sampIter,"baseDir"]}/Stats/plots/{sampIter}.dcs.iSize_Histogram.png').convert('RGB'))
+    myImages.append(Image.open(f'{samples.loc[sampIter,"baseDir"]}/Stats/plots/{sampIter}.dcs.iSize_Histogram.tiff').convert('RGB'))
 
 myImages[0].save(f'{o.config}.summaryInsertSize.pdf', save_all=True, append_images=myImages[1:])
