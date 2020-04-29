@@ -1428,27 +1428,6 @@ rule MutsPerCycle:
         """
 
 
-# Convert TIFF figures created by R into PNG figures
-# We implemented this due to artifacts in the raw PNG output produced by
-# R, and a desire to embed the resulting figures in the report html file.
-# This issue may be revisited in the future, if we come accross a better 
-# PNG device for R.  
-rule tiff2png:
-    params:
-        basePath = sys.path[0],
-    input:
-        "{prefix}.tiff"
-    output:
-        "{prefix}.png"
-    conda:
-        "envs/DS_env_full.yaml"
-    shell:
-        """
-        python {params.basePath}/scripts/tiff2png.py \
-        {wildcards.prefix}.tiff \
-        {wildcards.prefix}.png
-        """
-
 
 # Convert TIFF figures created by R into PNG figures
 # We implemented this due to artifacts in the raw PNG output produced by
