@@ -249,9 +249,9 @@ Use the ConfigTemplate to create a new file with the appropriate headers.  For e
 | minDepth         | 100             | The minimum depth to use for count_muts generation |
 | maxNs            | 1               | The maximum proportion of N bases to use for count_muts generation |
 | cm_outputs       | "GB"            | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
-| cm_sumTypes      | "GT"            | How to calculate OVERALL and GENE blocks for countmuts output. |
+| cm_sumTypes      | "GT"            | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
 | runSSCS          | false           | true or false; whether to do full analysis for SSCS data.  | 
-| recovery         | "noRecovery.sh" | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
+| recovery         | "noRecovery_noSynLink.sh" | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
 
 Save the file as a .csv file with unix line endings (LF).
 
