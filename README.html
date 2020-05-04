@@ -404,7 +404,7 @@ does support blocks as described in the bed spec.</strong></p>
 <tr>
 <td>cm_sumTypes</td>
 <td>"GT"</td>
-<td>How to calculate OVERALL and GENE blocks for countmuts output.</td>
+<td>How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -&gt; OVERALL = sum(GENEs); B -&gt; OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -&gt; GENE = Whole gene, ignoring BLOCKs; B -&gt; GENE = sum(BLOCKs).</td>
 </tr>
 <tr>
 <td>runSSCS</td>
@@ -413,7 +413,7 @@ does support blocks as described in the bed spec.</strong></p>
 </tr>
 <tr>
 <td>recovery</td>
-<td>"noRecovery.sh"</td>
+<td>"noRecovery_noSynLink.sh"</td>
 <td>The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.</td>
 </tr>
 </tbody>
