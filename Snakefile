@@ -137,14 +137,7 @@ def get_outMems(sampType="dcs"):
     return(outList)
 def getOutConfig(wildcards):
     return(f'{samples.loc[(wildcards.sample),"baseDir"]}/{samples.loc[(wildcards.sample),"baseDir"]}_config.sh')
-def get_dummyConfigs():
-    outList = []
-    for sampIter in samples.index:
-        outList.append(
-            f"{samples.loc[sampIter,'baseDir']}/"
-            f"{sampIter}_config.sh"
-            )
-    return(outList)
+
 def get_outMutPos(sampType="dcs"):
     outList = []
     for sampIter in samples.index:
@@ -303,8 +296,6 @@ def getSummaryInput():
     outFiles.extend(get_outMems(sampType="dcs"))
     # ~ outFiles.extend(get_outMutPos(sampType="sscs"))
     # ~ outFiles.extend(get_outMutPos(sampType="dcs"))
-    outFiles.extend(get_dummyConfigs())
-    outFiles.extend(get_outOnTarget())
     outFiles.extend(get_outFiles(prefix="Final/sscs/", sampType="sscs", suffix=".mutated.bam"))
     outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".mutated.bam"))
     outFiles.extend(get_outFiles(prefix="Final/sscs/", sampType="sscs", suffix=".vcf"))
@@ -447,7 +438,12 @@ rule makeDirs:
     shell:
         """
         cd {wildcards.runPath}
-        mkdir -p Intermediate/ConsensusMakerOutputs Intermediate/postBlast/FilteredReads Final/dcs Final/sscs Stats/data Stats/plots Intermediate/PreVariantCallsCp/sscs Intermediate/PreVariantCallsCp/dcs
+        mkdir -p Intermediate/ConsensusMakerOutputs \
+        Intermediate/postBlast/FilteredReads \
+        Final/dcs Final/sscs Final/dcs/FilteredReads \
+        Stats/data Stats/plots \
+        Intermediate/PreVariantCallsCp/sscs \
+        Intermediate/PreVariantCallsCp/dcs
         cd ../
         """
 
@@ -838,7 +834,7 @@ rule PostBlastProcessing2:
         tempBam4 = temp("{runPath}/{sample}_dcs.wrongSpecies.bam"),
         tempAmbigBam = temp("{runPath}/{sample}_dcs.ambig.bam"),
         outBadBam = "{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.wrongSpecies.sort.bam",
-        outBam = temp("{runPath}/{sample}_dcs.speciesFilt.sort.bam"),
+        outBam = temp("{runPath}/{sample}_dcs.speciesFilt.sort.temp.bam"),
         outAmbBam = "{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.ambig.sort.bam",
         outSpecComp = "{runPath}/Stats/data/{sample}_dcs.speciesComp.txt",
         tempDir1 = temp(touch(directory("{runPath}/{sample}.dcs.postBlast1.samtoolsTemp"))),
@@ -868,7 +864,7 @@ rule PostBlastProcessing2:
         {params.taxID} \
         | samtools sort \
         -T {wildcards.sample}.dcs.postBlast2.samtoolsTemp \
-        -o {wildcards.sample}_dcs.speciesFilt.sort.bam
+        -o {wildcards.sample}_dcs.speciesFilt.sort.temp.bam
         samtools sort -o Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam \
         -T {wildcards.sample}.dcs.postBlast3.samtoolsTemp \
         {wildcards.sample}_dcs.wrongSpecies.bam
@@ -887,10 +883,13 @@ rule postBlastRecovery:
     priority: 40
     input:
         inAmbigBam="{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.ambig.sort.bam",
-        inNonAmbigBam="{runPath}/{sample}_dcs.speciesFilt.sort.bam",
+        inNonAmbigBam="{runPath}/{sample}_dcs.speciesFilt.sort.temp.bam",
+        inWrongSpeciesBam="{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.wrongSpecies.sort.bam",
         inRecoveryScript=get_recovery
     output:
-        outBam = temp("{runPath}/{sample}_dcs.speciesFilt.recovered.sort.temp.bam")
+        outBam = temp("{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam"),
+        outAmbigBam = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.ambig.bam",
+        outWrongSpeciesBam = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.wrongSpecies.bam"
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -900,9 +899,14 @@ rule postBlastRecovery:
         cd {wildcards.runPath}
         bash {input.inRecoveryScript} \
         Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam \
-        {wildcards.sample}_dcs.speciesFilt.sort.bam \
-        {wildcards.sample}_dcs.speciesFilt.recovered.sort.temp.bam \
+        {wildcards.sample}_dcs.speciesFilt.sort.temp.bam \
+        Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam \
+        {wildcards.sample}_dcs.postRecovery \
         "{params.basePath}"
+        mv {wildcards.sample}_dcs.postRecovery.ambig.bam \
+        Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.ambig.bam
+        mv {wildcards.sample}_dcs.postRecovery.wrongSpecies.bam \
+        Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam
         cd ../
         """
 
@@ -912,8 +916,8 @@ rule CountAmbig:
     params:
         basePath = sys.path[0],
     input:
-        inNonAmbigFile = "{runPath}/Final/dcs/{sample}.dcs.final.bam",
-        inAmbigFile = "{runPath}/Intermediate/postBlast/FilteredReads/{sample}_dcs.ambig.sort.bam"
+        inNonAmbigFile = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam",
+        inAmbigFile = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.ambig.bam"
     output:
         "{runPath}/Stats/data/{sample}.dcs_ambiguity_counts.txt"
     conda:
@@ -923,8 +927,8 @@ rule CountAmbig:
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/countAmbiguityClasses.py \
         Stats/data/{wildcards.sample}.dcs \
-        Final/dcs/{wildcards.sample}.dcs.final.bam \
-        Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam
+        {wildcards.sample}_dcs.postRecovery.recovered.temp.bam \
+        Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.ambig.bam
         cd ../
         """
 
@@ -980,10 +984,9 @@ rule endClipDcs:
         basePath = sys.path[0],
         runPath = get_baseDir
     input:
-        inBam = "{runPath}/{sample}_dcs.speciesFilt.recovered.sort.temp.bam",
-        inBai = "{runPath}/{sample}_dcs.speciesFilt.recovered.sort.temp.bam.bai",
+        inBam = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam",
+        inBai = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam.bai",
         inRef = get_reference, 
-        inNonAmbigBam="{runPath}/{sample}_dcs.speciesFilt.sort.bam"
     output:
         outBam = temp("{runPath}/{sample}.dcs.filt.clipped.bam"),
         outBai = temp("{runPath}/{sample}.dcs.filt.clipped.bai"),
@@ -1424,78 +1427,7 @@ rule MutsPerCycle:
         cd ../
         """
 
-# make config file for making summary CSV
-# This step will be removed in the future
-rule makeConfigRecord:
-    params:
-        sample = get_sample,
-        rglb = get_rglb,
-        rgpl = get_rgpl,
-        rgsm = get_rgsm,
-        reference = get_reference,
-        target_bed = get_target_bed,
-        baseDir = get_baseDir,
-        in1 = get_in1,
-        in2 = get_in2,
-        mqFilt = get_mqFilt,
-        minMem = get_minMem,
-        maxMem = get_maxMem,
-        cutOff = get_cutOff,
-        nCutOff = get_nCutOff,
-        umiLen = get_umiLen,
-        spacerLen = get_spacerLen,
-        locLen = get_locLen,
-        clipBegin = get_clipBegin,
-        clipEnd = get_clipEnd,
-        minClonal = get_minClonal,
-        maxClonal = get_maxClonal,
-        minDepth = get_minDepth,
-        maxNs = get_maxNs,
-        outConfig = getOutConfig
-    output:
-        outConfigTmp = temp("{runPath}/{sample}_config.sh"),
-        # ~
-    run:
-        with open(output.outConfigTmp, 'w') as tmpOut:
-            tmpOut.write("")
-        with open(params.outConfig, 'w') as outFile:
-            outFile.write(
-                f"RUN_ID={params.sample}\n"
-                f"rglb={params.rglb}\n"
-                f"rgpl={params.rgpl}\n"
-                f"rgsm={params.rgsm}\n"
-                f"reference={params.reference}\n"
-                f"target_bed={params.target_bed}\n"
-                f"baseDir={params.baseDir}\n"
-                f"in1={params.in1}\n"
-                f"in2={params.in2}\n"
-                f"mqFilt={params.mqFilt}\n"
-                f"minMem={params.minMem}\n"
-                f"maxMem={params.maxMem}\n"
-                f"cutOff={params.cutOff}\n"
-                f"nCutOff={params.nCutOff}\n"
-                f"umiLen={params.umiLen}\n"
-                f"spacerLen={params.spacerLen}\n"
-                f"locLen={params.locLen}\n"
-                f"clipBegin={params.clipBegin}\n"
-                f"clipEnd={params.clipEnd}\n"
-                f"minClonal={params.minClonal}\n"
-                f"maxClonal={params.maxClonal}\n"
-                f"minDepth={params.minDepth}\n"
-                f"maxNs={params.maxNs}\n"
-                )
 
-# Make file list for making summary CSV file
-# this step will be removed in the future
-rule makeFileList:
-    params:
-        samples=samples.loc[:,"baseDir"]
-    output:
-        outFileList = f".{config['samples']}.fileList.txt"
-    run:
-        with open(output.outFileList, 'w') as outF:
-            for samp in params.samples:
-                outF.write(f"{samp}\n")
 
 # Convert TIFF figures created by R into PNG figures
 # We implemented this due to artifacts in the raw PNG output produced by
@@ -1524,7 +1456,6 @@ rule makeSummaryCSV:
         basePath = sys.path[0],
         configPath = config["samples"]
     input:
-        f".{config['samples']}.fileList.txt",
         getSummaryInput()
     output:
         outSum = f"{config['samples']}.summary.csv"
@@ -1533,7 +1464,7 @@ rule makeSummaryCSV:
     shell:
         """
         python {params.basePath}/scripts/retrieveSummary.py \
-        --indexes {input[0]} --config {params.configPath}
+        --config {params.configPath}
         """
 
 rule makeSummaryDepth:
@@ -1812,6 +1743,9 @@ import numpy as np
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             f"###Species Composition:  \n"
             f"To look up taxIDs, use [NCBI taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy)  \n"
+            f" * TaxIDs of -1 are assigned to between species BLAST ties. \n"
+            f" * TaxIDs of -3 are assigned to records with no BLAST results. \n"
+            f" * TaxIDs of -4 are assigned to records which were submitted to BLAST, for which BLAST did not attempt alignment.  \n"
             f"  \n{blastSpec}\n"
             f"###Ambiguity Composition:  \n"
             f"```\n{inAmbigs}```"

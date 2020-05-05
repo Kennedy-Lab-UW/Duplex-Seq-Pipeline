@@ -2,7 +2,10 @@
 
 inAmbigReads=$1
 inNonAmbigReads=$2
-outRecoveredReads=$3
-basePath=$4
+inWrongSpeciesReads=$3
+outPrefix=$4
+basePath=$5
 
-ln -s ${inNonAmbigReads} ${outRecoveredReads}
+cp ${inNonAmbigReads} ${outPrefix}.recovered.temp.bam
+cp ${inAmbigReads} ${outPrefix}.ambig.bam
+cp ${inWrongSpeciesReads} ${outPrefix}.wrongSpecies.bam

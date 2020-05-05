@@ -256,14 +256,33 @@ Use the ConfigTemplate to create a new file with the appropriate headers.  For e
 Save the file as a .csv file with unix line endings (LF).
 
 ## 8: Recovery script creation
-As part of its operation, this pipeline filters out correct-species reads where the blast mapping and bwa mapping positions disagree or where blast is unable to determine conclusively where the read maps (i.e.E-scores are the same). There is a step which provides an option to recover those reads by using a user-generated bash script.  Currently, we use a bash script to call a python script which will actually accomplish the recovery, but this functionality may be changed in the future.  In general, these scripts must:
+As part of its operation, this pipeline filters out correct-species reads 
+where the blast mapping and bwa mapping positions disagree or where blast 
+is unable to determine conclusively where the read maps (i.e.E-scores are 
+the same). There is a step which provides an option to recover those reads 
+by using a user-generated bash script.  Currently, we use a bash script to 
+call a python script which will actually accomplish the recovery, but this 
+functionality may be changed in the future.  In general, these scripts must:
 
 1. accept ambiguous reads as $1
 2. accept non-ambiguous reads as $2
-3. take a file name for output reads as $3
-4. take a basePath for location of script files as $4
+3. accept reads labeled as incorrect species as $3
+4. take a name base for output files as $4
+5. take a basePath for location of script files as $5
+
+The script must create the folowing output files: 
+
+ * ${4}.recovered.temp.bam
+ * ${4}.ambig.bam
+ * ${4}.wrongSpecies.bam
 
 All script files must be stored in scripts/RecoveryScripts.  
+
+Note that if you decide to write your own recovery scripts, you are 
+responsible for ensuring that your recovery scripts actually work as 
+intended, and do not break your computer.  We are unable to guarentee 
+that any sample run with a recovery script other than one of the ones 
+provided with the pipeline will produce accurate data.  
 
 ## 9: Running pipelines:
 
@@ -275,7 +294,8 @@ DS CONFIG_CSV.csv
 
 ## 10: Output file descriptions:
 
-The pipeline will create a set of summary files covering all samples, as well as a file directory structure for each sample.  The summary files are:
+The pipeline will create a set of summary files covering all samples, as 
+well as a file directory structure for each sample.  The summary files are:
 
 | File Name | Description |  
 | --------- | ----------- | 
