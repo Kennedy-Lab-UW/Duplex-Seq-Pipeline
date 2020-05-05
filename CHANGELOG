@@ -1,0 +1,21 @@
+CHANGELOG
+v1.1.0: 
+Bugfixes:
+    Add testConfig.csv file, which was accidentally omitted in the 1.0.0 release
+    Fix bug with depth plots where zero-depth positions could accidentally be labeled as having non-zero depth
+    Fix crashes from running samples that produce no DCS data
+    Change the default recovery script to avoid synlinks
+New Features: 
+    Additional output options for the bamToCountmuts program
+        Allow summing total and genes by gene or by block
+        Allow outputting all, overall + genes, overall + blocks, or just overall
+    Add VERSION file, and specify pipeline version in the report output.
+    Get mutation counts from the VCF file, instead of directly from the BAM file
+    Add ability to set maximum number of cores to use during setup.
+Internal changes:
+    Simplify bed file column naming in depth plotting script
+    Separate mutanal steps into different snakemake rules
+    General code cleanup
+    
+V1.0.0:
+New release of the Duplex Sequencing Bioinformatics Pipeline, based on Snakemake instead of Bash.  

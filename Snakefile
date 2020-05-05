@@ -671,7 +671,7 @@ rule getFlagstats:
         cd ../
         """
 
-# Do nieve variant calling to allow us to not include reads that just have 
+# Do naive variant calling to allow us to not include reads that just have 
 # SNPs in them.  
 rule PreBlastProcessing1:
     params:
@@ -700,7 +700,7 @@ rule PreBlastProcessing1:
         cd ../
         """
 
-# Get SNPs from nieve variant calling
+# Get SNPs from naive variant calling
 rule PreBlastProcessing2:
     params:
         basePath = sys.path[0]
@@ -725,7 +725,7 @@ rule PreBlastProcessing2:
         cd ../
         """
 
-# Seperate out reads with non-SNP variants for examination with BLAST
+# Separate out reads with non-SNP variants for examination with BLAST
 rule PreBlastProcessing3:
     params:
         basePath = sys.path[0],
@@ -820,7 +820,7 @@ rule PostBlastProcessing1:
 # Multi-step process.  
 # 1. Merge species-labeled and unblasted reads into a single bam file
 # 2. Sort reads based on read name
-# 3. Filter out incorect species reads
+# 3. Filter out incorrect species reads
 # 4. Sort all outputs into position sorting
 rule PostBlastProcessing2:
     params:
