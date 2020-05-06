@@ -1,3 +1,4 @@
+import sys
 import logging
 import argparse
 from argparse import ArgumentParser
@@ -5,6 +6,7 @@ import math
 from collections import namedtuple
 from VCF_Parser import *
 import pandas as pd
+import pysam
 
 def varDictLine2vcfLine (inVarDictLine, inSampName):
     recordStr = (
@@ -76,6 +78,14 @@ def main():
               ), 
         required=True
         )
+    parser.add_argument(
+        '-b', '--in_bam_file', 
+        action='store', 
+        dest='Bin', 
+        help=(f"An input bam file used to generate both VarDict inputs"
+              ), 
+        required=True
+        )
     ##  Output VCF file
     parser.add_argument(
         '-o', '--out_file', 
@@ -128,33 +138,138 @@ def main():
         format='%(levelname)s: %(message)s', 
         level=numeric_level, 
         )
-    
+    # SWITCH THIS LINE IN BEFORE DEPLOYMENT; it will get the current version from VERSION
+    # pipelineVersion=open(f"{sys.path[0]}/../VERSION", 'r').readline().strip()
+    pipelineVersion="2.0.0b"
+    cmd=" ".join(sys.argv)
     # create VCF header
+    myHeader = SamHeaderToVcfHeader(
+            pysam.AlignmentFile(o.Bin, "rb").header, 
+            o.sampName,
+            "VarDictToVCF", 
+            pipelineVersion,
+            cmd
+            )
     # Numbers: #, A, R, G, .
     # Types (Format): Integer, Float, Character, String
     # Types (Info): Integer, Float, Flag, Character, String
-    myHeader = VariantHeader([
-        '##fileformat=VCFv4.3', 
-        '##INFO=<ID=GENE,Number=1,Type=CharacterDescription="Target name from the provided bed file",Source="VarDict-Java",Version="1.7.0">',
-        '##INFO=<ID=MSI,Number=1,Type=IntegerDescription=" MicroSatellite. > 1 indicates MSI",Source="VarDict-Java",Version="1.7.0">',
-        '##INFO=<ID=MSINT,Number=1,Type=IntegerDescription="MicroSatellite unit length in bp`",Source="VarDict-Java",Version="1.7.0">',
-        '##INFO=<ID=5pFlank,Number=1,Type=CharacterDescription="Neighboring reference sequence to 5\' end",Source="VarDict-Java",Version="1.7.0">',
-        '##INFO=<ID=3pFlank,Number=1,Type=CharacterDescription="Neighboring reference sequence to 3\' end",Source="VarDict-Java",Version="1.7.0">',
-        '##INFO=<ID=VARTYPE,Number=1,Type=CharacterDescription="Variant type",Source="VarDict-Java",Version="1.7.0">',
-        '##INFO=<ID=VarDesc,Number=1,Type=Character,Description="Variant description string, from VarDict Genotype field",Source="VarDict-Java",Version="1.7.0">',
-        '##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Depth contribution of each allele">',
-        '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Total depth">',
-        '##FORMAT=<ID=AF,Number=R,Type=Float,Description="Fraction of total depth accounted for by each allele">',
-        '##FORMAT=<ID=NC,Number=1,Type=Integer,Description="Number of Ns at this position">',
-        '##FORMAT=<ID=AFC,Number=A,Type=IntegerDescription="The number of reads for each allele that are forward mapping">',
-        '##FORMAT=<ID=ARC,Number=A,Type=IntegerDescription="The number of reads for each allele that are reverse mapping">',
-        '##FORMAT=<ID=PM,Number=1,Type=FloatDescription="Mean position of the alt allele in the read">',
-        '##FORMAT=<ID=QM,Number=1,Type=FloatDescription="Mean quality score of data at this position">',
-        '##FORMAT=<ID=MQ,Number=1,Type=FloatDescription="Mean mapping quality of reads covering this position">',
-        '##FORMAT=<ID=NM,Number=1,Type=FloatDescription="Average number of mismatches for reads containing the ALT allele">',
-        '##FILTER=<ID=ID,Description="description">'
-        
-        ])
+    vardictVersion="1.7.0"
+    myHeader.addLine(lineType="INFO",
+                     label="GENE",
+                     number="1",
+                     Type="Character",
+                     description="Target name from the provided bed file",
+                     source="VarDict-Java",
+                     vNum=vardictVersion
+                     )
+    myHeader.addLine(lineType="INFO",
+                     label="MSI",
+                     number="1",
+                     Type="Integer",
+                     description="MicroSatellite. > 1 indicates MSI",
+                     source="VarDict-Java",
+                     vNum=vardictVersion
+                     )
+    myHeader.addLine(lineType="INFO",
+                     label="MSINT",
+                     number="1",
+                     Type="Integer",
+                     description="MicroSatellite unit length in bp`",
+                     source="VarDict-Java",
+                     vNum=vardictVersion
+                     )
+    myHeader.addLine(lineType="INFO",
+                     label="5pFlank",
+                     number="1",
+                     Type="Character",
+                     description="Neighboring reference sequence to 5\' end",
+                     source="VarDict-Java",
+                     vNum=vardictVersion
+                     )
+    myHeader.addLine(lineType="INFO",
+                     label="3pFlank",
+                     number="1",
+                     Type="Character",
+                     description="Neighboring reference sequence to 3\' end",
+                     source="VarDict-Java",
+                     vNum=vardictVersion
+                     )
+    myHeader.addLine(lineType="INFO",
+                     label="VARTYPE",
+                     number="1",
+                     Type="Character",
+                     description="Variant type",
+                     source="VarDict-Java",
+                     vNum=vardictVersion
+                     )
+    myHeader.addLine(lineType="INFO",
+                     label="VarDesc",
+                     number="1",
+                     Type="Character",
+                     description="Variant description string, from VarDict Genotype field",
+                     source="VarDict-Java",
+                     vNum=vardictVersion
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="AD",
+                     number="R",
+                     Type="Integer",
+                     description="Depth contribution of each allele"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="DP",
+                     number="1",
+                     Type="Integer",
+                     description="Total depth"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="AF",
+                     number="R",
+                     Type="Float",
+                     description="Fraction of total depth accounted for by each allele"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="NC",
+                     number="1",
+                     Type="Integer",
+                     description="Number of Ns at this position"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="AFC",
+                     number="A",
+                     Type="Integer",
+                     description="The number of reads for each allele that are forward mapping"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="ARC",
+                     number="A",
+                     Type="Integer",
+                     description="The number of reads for each allele that are reverse mapping"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="PM",
+                     number="1",
+                     Type="Float",
+                     description="Mean position of the alt allele in the read"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="QM",
+                     number="1",
+                     Type="Float",
+                     description="Mean quality score of data at this position"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="MQ",
+                     number="1",
+                     Type="Float",
+                     description="Mean mapping quality of reads covering this position"
+                     )
+    myHeader.addLine(lineType="FORMAT",
+                     label="NM",
+                     number="1",
+                     Type="Float",
+                     description="Average number of mismatches for reads containing the ALT allele"
+                     )
     # read in non-Ns vardict file and sort it
     try:
         vardict_vars = pd.read_csv(o.Fin, sep='\t', header=0).sort_values(['Chr','Start'])
