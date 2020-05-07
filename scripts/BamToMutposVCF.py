@@ -9,10 +9,10 @@ import pysam
 def SamHeaderToVcfHeader(inSamHeader, progName, progVersion, progCmd):
     headLines = [
         "##fileformat=VCFv4.3"
-        ]
+    ]
     contigBlock = []
     programBlock = []
-    
+
     for line in str(inSamHeader).split('\n'):
         linebins = line.strip().split('\t')
         if linebins[0] == '@HD':
@@ -20,7 +20,7 @@ def SamHeaderToVcfHeader(inSamHeader, progName, progVersion, progCmd):
         elif linebins[0] == '@SQ':
             contigBlock.append(
                 f"##contig=<ID={linebins[1].split(':')[1]},length={linebins[2].split(':')[1]}>"
-                )
+            )
         elif linebins[0] == '@PG':
             progHead = None
             progVersion = None
@@ -41,35 +41,37 @@ def SamHeaderToVcfHeader(inSamHeader, progName, progVersion, progCmd):
     headLines.append(f"##{progName}Version={progVersion}")
     headLines.append(f"##{progName}Command={progCmd}")
     headLines.extend(contigBlock)
-    return(headLines)
+    return headLines
+
 
 class Bed_File:
     def __init__(self, inFile):
         self.file = open(inFile, 'r')
-        
+
     def __iter__(self):
-        return(self)
-    
+        return self
+
     def __next__(self):
         myLine = self.file.readline()
         if myLine != "":
-            return(Bed_Line(*myLine.strip().split()))
+            return Bed_Line(*myLine.strip().split())
         else:
             raise StopIteration
-            
+
+
 class Bed_Line:
-    def __init__(self, 
-                 chrom, 
-                 startPos, 
-                 endPos, 
+    def __init__(self,
+                 chrom,
+                 startPos,
+                 endPos,
                  name="",
-                 score="", 
+                 score="",
                  strand=".",
-                 thickStart="", 
+                 thickStart="",
                  thickEnd="",
-                 itemRGB="", 
+                 itemRGB="",
                  blockCount="",
-                 blockSizes="", 
+                 blockSizes="",
                  blockStarts=""
                  ):
         self.chrom = chrom
@@ -108,9 +110,10 @@ class Bed_Line:
             self.blockStarts = 0
         else:
             self.blockStarts = [int(x) for x in blockStarts.split(',')]
-    
+
     def samtoolsStr(self):
-        return(f"{self.chrom}:{self.startPos}:{self.endPos}")
+        return f"{self.chrom}:{self.startPos}:{self.endPos}"
+
 
 def getParams():
     parser = ArgumentParser(
@@ -118,87 +121,90 @@ def getParams():
             f"Make a mutpos vcf file from a post-procesing duplex "
             f"sequencing BAM file.  Note that this program will fail if"
             f" the maximum depth in your bam file is > 8000.  "
-            )
         )
+    )
     parser.add_argument(
-        '-i', '--inBam', 
-        action='store', 
-        dest='inBam', 
-        help='An imput bam file. If None, defaults to stdin. [%(default)s]', 
+        '-i', '--inBam',
+        action='store',
+        dest='inBam',
+        help='An imput bam file. If None, defaults to stdin. [%(default)s]',
         default=None
-        )
+    )
     parser.add_argument(
-        '-b', '--inBed', 
-        action='store', 
-        dest='inBed', 
-        help='An input bed file. If None, processes all positions. [%(default)s]', 
+        '-b', '--inBed',
+        action='store',
+        dest='inBed',
+        help='An input bed file. If None, processes all positions. [%(default)s]',
         default=None
-        )
+    )
     parser.add_argument(
-        '-f', '--inFasta', 
-        action='store', 
-        dest='in_fasta', 
-        help='The reference genome fasta file.  ', 
+        '-f', '--inFasta',
+        action='store',
+        dest='in_fasta',
+        help='The reference genome fasta file.  ',
         required=True
-        )
+    )
     parser.add_argument(
-        '-o', '--outfile', 
-        action='store', 
-        dest='out_file', 
-        help='A filename for the output file.  If None, outputs to stdout.  [%(default)s]', 
+        '-o', '--outfile',
+        action='store',
+        dest='out_file',
+        help='A filename for the output file.  If None, outputs to stdout.  [%(default)s]',
         default=None
-        )
+    )
     parser.add_argument(
-        "--round", 
-        action="store", 
-        type=int, 
-        dest="round", 
-        help="How many digits to round frequencies to.", 
+        "--round",
+        action="store",
+        type=int,
+        dest="round",
+        help="How many digits to round frequencies to.",
         default=4
-        )
+    )
     parser.add_argument(
-        '--logLevel', 
-        action="store", 
-        dest="logLvl", 
+        '--logLevel',
+        action="store",
+        dest="logLvl",
         default="Info",
         help=(f"Identification for how much information gets output. "
               f"Acceptable levels are: 'DEBUG', 'INFO', 'WARNING', "
               f"'ERROR', and 'CRITICAL'.  "
               )
-        )
+    )
     parser.add_argument(
-        '--samp_name', 
-        action='store', 
+        '--samp_name',
+        action='store',
         dest='sampName',
         default=None,
         help='A name for the sample in the output VCF file.  '
-        )
-    return(parser.parse_args())
+    )
+    return parser.parse_args()
+
 
 class Error(Exception):
     """Base class for exceptions in this module."""
     pass
+
 
 class VCF_Error(Error):
     def __init__(self, message):
         self.message = f"VCF_ERROR: {message}"
         sys.stderr.write(self.message)
 
+
 class VCF_Line:
-    def __init__(self, 
-                 chrom=".", 
-                 pos=".", 
-                 ref=".", 
-                 alt=".", 
-                 refCnt=0, 
-                 altCnt=0, 
-                 nCnt=0, 
+    def __init__(self,
+                 chrom=".",
+                 pos=".",
+                 ref=".",
+                 alt=".",
+                 refCnt=0,
+                 altCnt=0,
+                 nCnt=0,
                  depth=0
                  ):
         self.chrom = chrom
         self.pos = pos
         self.id = '.'
-        
+
         self.qual = '.'
         self.filter = '.'
         self.info = '.'
@@ -213,49 +219,50 @@ class VCF_Line:
             myAlt = alt
         self.alleles = [myRef.upper(), myAlt.upper()]
         self.data = {
-            "AD": {myRef.upper(): refCnt, myAlt.upper():altCnt}, 
-            "DP": depth, 
-            "AF":{
-                myRef.upper(): f"{refCnt/depth:.2E}", 
-                myAlt.upper():f"{altCnt/depth:.2E}"
-                }, 
+            "AD": {myRef.upper(): refCnt, myAlt.upper(): altCnt},
+            "DP": depth,
+            "AF": {
+                myRef.upper(): f"{refCnt / depth:.2E}",
+                myAlt.upper(): f"{altCnt / depth:.2E}"
+            },
             "NC": nCnt
-            }
+        }
         self.skippedReads = 0
-        
+
     def formatStr(self):
-        return(":".join(self.format))
-        
+        return ":".join(self.format)
+
     def dataStr(self):
         retStr = (
             f"{','.join([str(self.data['AD'][x]) for x in self.alleles])}"
             f":{self.data['DP']}"
             f":{','.join([str(self.data['AF'][x]) for x in self.alleles])}"
             f":{self.data['NC']}"
-            )
-        return(retStr)
-    
+        )
+        return retStr
+
     def __str__(self):
         if len(self.alleles) == 1:
-            return("")
+            return ""
         else:
-            return(f"\n{self.chrom}"
-                   f"\t{self.pos}"
-                   f"\t{self.id}"
-                   f"\t{self.alleles[0]}"
-                   f"\t{','.join(self.alleles[1:])}"
-                   f"\t{self.qual}"
-                   f"\t{self.filter}"
-                   f"\t{self.info}"
-                   f"\t{self.formatStr()}"
-                   f"\t{self.dataStr()}"
-                   )
+            return (f"\n{self.chrom}"
+                    f"\t{self.pos}"
+                    f"\t{self.id}"
+                    f"\t{self.alleles[0]}"
+                    f"\t{','.join(self.alleles[1:])}"
+                    f"\t{self.qual}"
+                    f"\t{self.filter}"
+                    f"\t{self.info}"
+                    f"\t{self.formatStr()}"
+                    f"\t{self.dataStr()}"
+                    )
+
 
 class VCF_File:
-    def __init__(self, 
-                 inFileName, 
-                 inFileMode,   
-                 sampName=None, 
+    def __init__(self,
+                 inFileName,
+                 inFileMode,
+                 sampName=None,
                  headStart=None
                  ):
         self.mode = inFileMode
@@ -273,7 +280,7 @@ class VCF_File:
                     f'##fileDate={d.year}{str(d.month).zfill(2)}{str(d.day).zfill(2)}\n'
                     f'##VCF_MutposVersion=v0.2.0\n'
                     f'##VCF_MutposCommand=VCF_Mutpos test command'
-                    )
+                )
             else:
                 self.file.write("\n".join(headStart))
             self.file.write(
@@ -283,54 +290,54 @@ class VCF_File:
                 f'##FORMAT=<ID=AF,Number=R,Type=Float,Description="Allele frequency">\n'
                 f'##FORMAT=<ID=NC,Number=1,Type=Integer,Description="N Count">\n'
                 f'#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t'
-                )
+            )
             if sampName is None:
                 self.file.write("SAMPLE")
             else:
                 self.file.write(f"{sampName.upper()}")
         else:
             raise VCF_Error(f"invalid mode: {inFileMode}")
-    
+
     def readline(self):
         if self.mode == 'r':
-            return(self.file.readline())
+            return self.file.readline()
         else:
             logging.error(f"This file is in write mode")
             raise ValueError(f"This file is in write mode")
-    
+
     def write(self, lineToWrite):
         if self.mode == 'w':
             self.file.write(str(lineToWrite))
         else:
             logging.error(f"This file is in read mode")
             raise ValueError(f"This file is in read mode")
-    
-    def makeline(self, chrom=".", pos=".", ref="."):
-        return()
 
-class MutposEngine: 
+    def makeline(self, chrom=".", pos=".", ref="."):
+        return ()
+
+
+class MutposEngine:
     def __init__(
-            self, 
-            in_bam, 
-            out_file, 
-            in_fasta, 
-            sampName=None, 
-            in_bed=None, 
-            cmd=" ".join(sys.argv), 
+            self,
+            in_bam,
+            out_file,
+            in_fasta,
+            sampName=None,
+            in_bed=None,
+            cmd=" ".join(sys.argv),
             NsOut=False
-            ):
+    ):
         self.inBam = pysam.AlignmentFile(in_bam, "rb")
         self.outputNs = NsOut
-        
-        
+
         # open output file
         # Create vcf header
         vcfHeadStart = SamHeaderToVcfHeader(
-            self.inBam.header, 
-            "VCF_Mutpos", 
+            self.inBam.header,
+            "VCF_Mutpos",
             "0.3.0",
             cmd
-            )
+        )
         self.outFile = VCF_File(out_file, 'w', sampName, vcfHeadStart)
 
         self.outDepth = open(f"{out_file}_depth.txt", 'w')
@@ -343,17 +350,17 @@ class MutposEngine:
             self.myBed = None
         else:
             self.myBed = Bed_File(in_bed)
-    
+
     def processLines(self):
         linesProcessed = 0
         if self.myBed is None:
             for pileup_column in self.inBam.pileup(
-                    fastafile=self.inFasta, 
-                    truncate=True, 
-                    stepper="nofilter", 
-                    max_depth=1000000, 
+                    fastafile=self.inFasta,
+                    truncate=True,
+                    stepper="nofilter",
+                    max_depth=1000000,
                     min_base_quality=0
-                    ):
+            ):
                 myLines = self.makeVcfLine(pileup_column)
                 logging.debug(f"{str(myLines)}")
                 for myLine in myLines[0]:
@@ -364,23 +371,23 @@ class MutposEngine:
                     f"{myLines[1]['Ref']}\t"
                     f"{myLines[1]['DP']}\t"
                     f"{myLines[1]['Ns']}\n"
-                    )
+                )
                 linesProcessed += 1
                 if linesProcessed % 1000 == 0:
                     logging.info(f"{linesProcessed} lines processed...")
         else:
             for myRegion in self.myBed:
                 for pileup_column in self.inBam.pileup(
-                        reference=myRegion.chrom, 
-                        start=myRegion.startPos - 1, 
+                        reference=myRegion.chrom,
+                        start=myRegion.startPos - 1,
                         end=myRegion.endPos,
-                        fastafile=self.inFasta, 
-                        truncate=True, 
-                        stepper="nofilter", 
-                        max_depth=1000000, 
+                        fastafile=self.inFasta,
+                        truncate=True,
+                        stepper="nofilter",
+                        max_depth=1000000,
                         min_base_quality=0
-                        ):
-                    
+                ):
+
                     myLines = self.makeVcfLine(pileup_column)
                     logging.debug(f"MyLines are {str(myLines)}")
                     for myLine in myLines[0]:
@@ -391,26 +398,25 @@ class MutposEngine:
                         f"{myLines[1]['Ref']}\t"
                         f"{myLines[1]['DP']}\t"
                         f"{myLines[1]['Ns']}\n"
-                        )
+                    )
                     linesProcessed += 1
                     if linesProcessed % 1000 == 0:
                         logging.info(f"{linesProcessed} lines processed...")
-    
-    
+
     def makeVcfLine(self, pileup_column):
         myReads = Counter(
-            [x.translate(self.rmNumTable).upper() 
+            [x.translate(self.rmNumTable).upper()
              for x in pileup_column.get_query_sequences(
                 add_indels=True
-                )
-             ]
             )
+             ]
+        )
         myChrom = pileup_column.reference_name
         myPos = pileup_column.reference_pos + 1
         # I'll need to pull the reference base from the fasta file
-        
-        myRefBase = self.inFasta.fetch(reference=myChrom, start=myPos-1, end=myPos).upper()
-        
+
+        myRefBase = self.inFasta.fetch(reference=myChrom, start=myPos - 1, end=myPos).upper()
+
         logging.debug(f"Refernce is: {myRefBase}")
         myVcfLines = []
         myRefCount = myReads[myRefBase]
@@ -424,22 +430,22 @@ class MutposEngine:
                     if self.outputNs:
                         myVcfLines.append(
                             VCF_Line(
-                                chrom=myChrom, 
-                                pos=myPos, 
-                                ref=myRefBase, 
-                                alt=readTypeKey, 
-                                refCnt=myRefCount, 
-                                depth=myTotCount, 
-                                altCnt=myReads[readTypeKey], 
+                                chrom=myChrom,
+                                pos=myPos,
+                                ref=myRefBase,
+                                alt=readTypeKey,
+                                refCnt=myRefCount,
+                                depth=myTotCount,
+                                altCnt=myReads[readTypeKey],
                                 nCnt=myNCount)
-                            )
+                        )
                 elif readTypeKey != "*":
                     if '-' in readTypeKey:
                         myRefBPs = self.inFasta.fetch(
-                            reference=myChrom, 
-                            start=myPos-1, 
-                            end=myPos+len(readTypeKey[2:])
-                            ).upper()
+                            reference=myChrom,
+                            start=myPos - 1,
+                            end=myPos + len(readTypeKey[2:])
+                        ).upper()
                     else:
                         myRefBPs = myRefBase
                     logging.debug(
@@ -447,28 +453,28 @@ class MutposEngine:
                         f"{myReads[readTypeKey]}, "
                         f"{myRefBPs}, "
                         f"{myReads[myRefBPs]}"
-                        )
+                    )
                     myVcfLines.append(
                         VCF_Line(
-                            chrom=myChrom, 
-                            pos=myPos, 
-                            ref=myRefBPs, 
-                            alt=readTypeKey, 
-                            refCnt=myRefCount, 
-                            depth=myTotCount-myNCount, 
-                            altCnt=myReads[readTypeKey], 
+                            chrom=myChrom,
+                            pos=myPos,
+                            ref=myRefBPs,
+                            alt=readTypeKey,
+                            refCnt=myRefCount,
+                            depth=myTotCount - myNCount,
+                            altCnt=myReads[readTypeKey],
                             nCnt=myNCount
-                            )
                         )
-        DepthLine={
-            "Chrom": myChrom, 
-            "Pos": myPos, 
-            "Ref": myRefBase, 
-            "DP": myTotCount - myNCount, 
+                    )
+        DepthLine = {
+            "Chrom": myChrom,
+            "Pos": myPos,
+            "Ref": myRefBase,
+            "DP": myTotCount - myNCount,
             "Ns": myNCount
-            }
-        return([myVcfLines, DepthLine])
-    
+        }
+        return [myVcfLines, DepthLine]
+
 
 def delRepFunc(inStr):
     if len(inStr.group(0)) == 2:
@@ -483,19 +489,20 @@ def main():
     if not isinstance(numeric_level, int):
         raise ValueError('Invalid log level: {o.logLvl}')
     logging.basicConfig(
-        format='%(levelname)s: %(message)s', 
-        level=numeric_level, 
-        )
+        format='%(levelname)s: %(message)s',
+        level=numeric_level,
+    )
     # Start engine
     logging.info("Starting Engine")
-    myEngine = MutposEngine(o.inBam, 
-                            o.out_file, 
-                            o.in_fasta, 
-                            o.sampName, 
+    myEngine = MutposEngine(o.inBam,
+                            o.out_file,
+                            o.in_fasta,
+                            o.sampName,
                             o.inBed
                             )
     logging.info("Processing Lines")
     myEngine.processLines()
+
 
 if __name__ == "__main__":
     main()
