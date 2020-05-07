@@ -1,17 +1,19 @@
 from collections import OrderedDict
 import datetime
 
+
 # VCF file function
 def VariantFile(file_name, mode='r', header=None):
     if mode not in ('r', 'w'):
         raise Exception(f"Unrecognized mode {mode}")
     elif mode == 'r':
-        return(VariantReader(file_name))
+        return VariantReader(file_name)
     elif mode == 'w':
         if header is None:
             raise Exception("No header provided for VariantWriter creation")
         else:
-            return(VariantWriter(file_name, header))
+            return VariantWriter(file_name, header)
+
 
 # VCF parser class
 class VariantReader:
@@ -28,34 +30,40 @@ class VariantReader:
         self.header = VariantHeader(header)
         linebins = line.strip().split()
         self.samps = linebins[9:]
+
     def __iter__(self):
-        return(self)
-    
+        return self
+
     def __next__(self):
         try:
-            return(VariantRecord(next(self.source), self.samps))
+            return VariantRecord(next(self.source), self.samps)
         except StopIteration:
             raise StopIteration
-    
+
     next = __next__
-    
+
     def close(self):
         self.source.close()
-    
+
+
 # VCF writer class
 class VariantWriter:
     def __init__(self, file_name, header):
         self.write_file = open(file_name, 'w')
         self.write_file.write(str(header))
+
     def writeline(self, vcfLine):
         self.write_file.write(str(vcfLine))
+
     def close(self):
         self.write_file.close()
+
 
 class VariantHeader:
     def __init__(self, in_lines):
         self.headLines = in_lines[:-1]
         self.labelLine = in_lines[-1]
+
     def addLine(self, lineType, label, number='.', Type="String", description="", source="", vNum=""):
         if lineType.upper() == "FORMAT":
             outLine = f'##FORMAT=<ID={label},Number={number},Type={Type},Description="{description}">\n'
@@ -69,8 +77,10 @@ class VariantHeader:
             raise Exception(f"Unrecognized header line type {lineType}.\n")
         # add the line
         self.headLines.append(outLine)
+
     def __str__(self):
-        return(f"{''.join(self.headLines)}{self.labelLine}")
+        return f"{''.join(self.headLines)}{self.labelLine}"
+
 
 # VCF line class
 class VariantRecord:
@@ -95,52 +105,52 @@ class VariantRecord:
         self.samples = OrderedDict(
             (sampleNames[x], OrderedDict(
                 (self.format[y], sampBins[x][y]) for y in range(len(self.format))
-                )) for x in range(len(sampleNames))
-            )
-        
+            )) for x in range(len(sampleNames))
+        )
+
     def __str__(self):
         outStr = [
-            str(self.chrom), 
-            str(self.pos), 
-            str(self.id), 
-            str(self.ref), 
-            ",".join(self.alts), 
-            str(self.qual) if self.qual is not None else '.', 
-            ';'.join(sorted(self.filter)) if len(self.filter) != 0 else '.', 
-            ";".join([f"{x}={self.info[x]}" for x in self.info]) if len(self.info) != 0 else '.', 
+            str(self.chrom),
+            str(self.pos),
+            str(self.id),
+            str(self.ref),
+            ",".join(self.alts),
+            str(self.qual) if self.qual is not None else '.',
+            ';'.join(sorted(self.filter)) if len(self.filter) != 0 else '.',
+            ";".join([f"{x}={self.info[x]}" for x in self.info]) if len(self.info) != 0 else '.',
             ':'.join(self.format)
-            ]
+        ]
         for samp in self.samples:
             outStr.append(':'.join(self.samples[samp][x] for x in self.samples[samp]))
         retStr = '\t'.join(outStr)
-        return(f"{retStr}\n")
-    
+        return f"{retStr}\n"
+
     def add_filter(self, new_filter):
         if new_filter in self.filter:
-            return(False)
+            return False
         else:
             self.filter.append(new_filter)
-            return(True)
-    
+            return True
+
     def get_filters(self):
-        return(self.filter)
-    
+        return self.filter
+
     def has_filter(self, test_filter):
-        return(test_filter in self.filter)
-    
+        return test_filter in self.filter
+
     def remove_filter(self, test_filter):
         if test_filter in self.filter:
             self.filter.remove(test_filter)
-            return(True)
+            return True
         else:
-            return(False)
-    
+            return False
+
     def add_info(self, new_info_tag, new_info_value):
         if new_info_tag in self.info:
             raise Exception
         else:
             self.info[new_info_tag] = new_info_value
-            return(True)
+            return True
             
 def SamHeaderToVcfHeader(inSamHeader, sampName, progName, progVersion, progCmd):
     mydate = datetime.date.today()
@@ -158,7 +168,7 @@ def SamHeaderToVcfHeader(inSamHeader, sampName, progName, progVersion, progCmd):
         elif linebins[0] == '@SQ':
             contigBlock.append(
                 f"##contig=<ID={linebins[1].split(':')[1]},length={linebins[2].split(':')[1]}>\n"
-                )
+            )
         elif linebins[0] == '@PG':
             progHead = None
             progVersion = None

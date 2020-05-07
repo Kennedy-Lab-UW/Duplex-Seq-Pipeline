@@ -6,15 +6,16 @@ from Bio.Blast import NCBIXML
 
 class multiparser:
     def __init__(self, inBam, inXml):
-        self.bamFile=pysam.AlignmentFile(inBam, 'rb')
+        self.bamFile = pysam.AlignmentFile(inBam, 'rb')
         self.xml = NCBIXML.parse(open(inXml))
         self.bamLineNum = 0
         self.xmlLineNum = 0
         self.bamLine = None
         self.xmlLine = None
-        
+
     def __iter__(self):
-        return(self)
+        return self
+
     def __next__(self):
         try:
             if self.bamLine is None and self.xmlLine is None:
@@ -30,12 +31,11 @@ class multiparser:
                 self.xmlLineNum += 1
                 self.bamLine = next(self.bamFile)
                 self.xmlLine = next(self.xml)
-            
-            
+
             if self.bamLine.query_name == self.xmlLine.query.split('/')[0]:
-                return(self.bamLine, self.xmlLine)
+                return self.bamLine, self.xmlLine
             else:
-                return(self.bamLine, None)
+                return self.bamLine, None
         except StopIteration:
             raise StopIteration
         except Exception:
@@ -43,16 +43,18 @@ class multiparser:
             print(self.xmlLine.query)
             raise
 
+
 blastAlignment = namedtuple(
-    "blastAlignment", 
+    "blastAlignment",
     [
         "alnNum",
         "ID",
-        "start", 
+        "start",
         "end",
         "score"
-        ]
-    )
+    ]
+)
+
 
 def extractBlastData(inRecord):
     alignments = []
@@ -61,25 +63,25 @@ def extractBlastData(inRecord):
         for hsp in aln.hsps:
             alignments.append(
                 blastAlignment(
-                    myAlnNum, 
-                    aln.title, 
-                    hsp.sbjct_start, 
-                    hsp.sbjct_end, 
+                    myAlnNum,
+                    aln.title,
+                    hsp.sbjct_start,
+                    hsp.sbjct_end,
                     hsp.expect
-                    )
                 )
+            )
             myAlnNum += 1
     alignments.sort(key=lambda aln: aln.score)
     try:
-        det = {"queryName":inRecord.query}
-        if len(alignments) == 0: 
+        det = {"queryName": inRecord.query}
+        if len(alignments) == 0:
             # Set other alignment fields <---------------------------------------- ***WORK HERE***
             det["t0"] = -3
             det["am"] = 4
             det["MaxAln"] = 0
         else:
             # Modify to deal with having more than two maximum alignments <------- ***WORK HERE***
-            
+
             tieCounter = Counter([x.score for x in alignments])
             tiedAlignments = [alignments[x] for x in range(len(alignments)) if alignments[x].score == min(tieCounter)]
             if len(tiedAlignments) > 1:
@@ -119,7 +121,8 @@ def extractBlastData(inRecord):
         print(tiedAlignments)
         print(len(tiedAlignments))
         raise
-    return(det)
+    return det
+
 
 def main():
     parser = ArgumentParser()
@@ -128,7 +131,7 @@ def main():
     parser.add_argument('outPrefix', action='store')
     o = parser.parse_args()
 
-    myIterator = multiparser(o.inBam,o.inXML)
+    myIterator = multiparser(o.inBam, o.inXML)
     outBam = pysam.AlignmentFile(f"{o.outPrefix}.speciesLabeled.bam", 'wb', template=myIterator.bamFile)
 
     records = 0
@@ -137,11 +140,11 @@ def main():
             print(bamLine.tags)
         if blastLine is not None:
             blastDet = extractBlastData(blastLine)
-            bamLine.set_tag("t0",blastDet["t0"], 'i')
+            bamLine.set_tag("t0", blastDet["t0"], 'i')
             if bamLine.query_name == "TGGATACGGTTGATGGCGAAGTGGTTCTCATG":
                 print(blastDet)
             try:
-                
+
                 for aln in range(blastDet["MaxAln"]):
                     if f"t{aln + 1}" in blastDet:
                         bamLine.set_tag(f"t{aln + 1}", blastDet[f"t{aln + 1}"], 'i')
@@ -155,14 +158,15 @@ def main():
             if "am" in blastDet:
                 bamLine.set_tag("am", blastDet["am"], 'i')
         else:
-            bamLine.set_tag("t0",-4, 'i')
-            bamLine.set_tag("am",4,'i')
+            bamLine.set_tag("t0", -4, 'i')
+            bamLine.set_tag("am", 4, 'i')
         if bamLine.query_name == "TGGATACGGTTGATGGCGAAGTGGTTCTCATG":
             print(bamLine.tags)
         outBam.write(bamLine)
         records += 1
     outBam.close()
     print(records)
+
 
 if __name__ == "__main__":
     main()

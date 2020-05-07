@@ -4,93 +4,158 @@ import pandas as pd
 from snakemake.utils import validate
 
 parser = ArgumentParser()
-parser.add_argument('--config', dest='config', required=True, 
+parser.add_argument('--config', dest='config', required=True,
                     help='Path to DS config file')
 
-o=parser.parse_args()
+o = parser.parse_args()
 
 samples = pd.read_csv(o.config).set_index("sample", drop=False)
 validate(samples, f"{sys.path[0]}/../DS_baseSchema.yaml")
 
 
 def get_sample(sample):
-    return(samples.loc[sample,"sample"])
-def get_rglb(sample):
-    return(samples.loc[sample,"rglb"])
-def get_rgpl(sample):
-    return(samples.loc[sample,"rgpl"])
-def get_rgpu(sample):
-    return(samples.loc[sample,"rgpu"])
-def get_rgsm(sample):
-    return(samples.loc[sample,"rgsm"])
-def get_reference(sample):
-    return(samples.loc[sample,"reference"])
-def get_target_bed(sample):
-    return(samples.loc[sample,"target_bed"])
-def get_blast_db(sample):
-    return(samples.loc[sample,"blast_db"])
-def get_blast_db_path(sample):
-    return(f'{samples.loc[sample,"blast_db"]}.nal')
-def get_target_taxon(sample):
-    return(samples.loc[sample,"targetTaxonId"])
-def get_baseDir(sample):
-    return(samples.loc[sample,"baseDir"])
-def get_in1(sample):
-    return(f'{samples.loc[sample,"baseDir"]}/{samples.loc[sample,"in1"]}')
-def get_in2(sample):
-    return(f'{samples.loc[sample,"baseDir"]}/{samples.loc[sample,"in2"]}')
-def get_mqFilt(sample):
-    return(samples.loc[sample,"mqFilt"])
-def get_minMem(sample):
-    return(samples.loc[sample,"minMem"])
-def get_maxMem(sample):
-    return(samples.loc[sample,"maxMem"])
-def get_cutOff(sample):
-    return(samples.loc[sample,"cutOff"])
-def get_nCutOff(sample):
-    return(samples.loc[sample,"nCutOff"])
-def get_umiLen(sample):
-    return(samples.loc[sample,"umiLen"])
-def get_spacerLen(sample):
-    return(samples.loc[sample,"spacerLen"])
-def get_locLen(sample):
-    return(samples.loc[sample,"locLen"])
-def get_readLen(sample):
-    return(samples.loc[sample,"readLen"])
-def get_clipBegin(sample):
-    return(samples.loc[sample,"clipBegin"])
-def get_clipEnd(sample):
-    return(samples.loc[sample,"clipEnd"])
-def get_runSSCS(sample):
-    return(samples.loc[sample,"runSSCS"])
-def get_runDCS(sample):
-    return(samples.loc[sample,"runDCS"])
-def get_makeDCS(sample):
-    return(samples.loc[sample,"makeDCS"])
-def get_cm_outputs(sample):
-    return(samples.loc[sample,"cm_outputs"])
-def get_cm_sumTypes(sample):
-    return(samples.loc[sample,"cm_sumTypes"])
-def get_minClonal(sample):
-    return(samples.loc[sample,"minClonal"])
-def get_maxClonal(sample):
-    return(samples.loc[sample,"maxClonal"])
-def get_minDepth(sample):
-    return(samples.loc[sample,"minDepth"])
-def get_maxNs(sample):
-    return(samples.loc[sample,"maxNs"])
-def get_cleanup(sample):
-    return(samples.loc[sample,"cleanup"])
-def get_recovery(sample):
-    return(f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[sample,"recovery"]}')
+    return samples.loc[sample, "sample"]
 
+
+def get_rglb(sample):
+    return samples.loc[sample, "rglb"]
+
+
+def get_rgpl(sample):
+    return samples.loc[sample, "rgpl"]
+
+
+def get_rgpu(sample):
+    return samples.loc[sample, "rgpu"]
+
+
+def get_rgsm(sample):
+    return samples.loc[sample, "rgsm"]
+
+
+def get_reference(sample):
+    return samples.loc[sample, "reference"]
+
+
+def get_target_bed(sample):
+    return samples.loc[sample, "target_bed"]
+
+
+def get_blast_db(sample):
+    return samples.loc[sample, "blast_db"]
+
+
+def get_blast_db_path(sample):
+    return f'{samples.loc[sample, "blast_db"]}.nal'
+
+
+def get_target_taxon(sample):
+    return samples.loc[sample, "targetTaxonId"]
+
+
+def get_baseDir(sample):
+    return samples.loc[sample, "baseDir"]
+
+
+def get_in1(sample):
+    return f'{samples.loc[sample, "baseDir"]}/{samples.loc[sample, "in1"]}'
+
+
+def get_in2(sample):
+    return f'{samples.loc[sample, "baseDir"]}/{samples.loc[sample, "in2"]}'
+
+
+def get_mqFilt(sample):
+    return samples.loc[sample, "mqFilt"]
+
+
+def get_minMem(sample):
+    return samples.loc[sample, "minMem"]
+
+
+def get_maxMem(sample):
+    return samples.loc[sample, "maxMem"]
+
+
+def get_cutOff(sample):
+    return samples.loc[sample, "cutOff"]
+
+
+def get_nCutOff(sample):
+    return samples.loc[sample, "nCutOff"]
+
+
+def get_umiLen(sample):
+    return samples.loc[sample, "umiLen"]
+
+
+def get_spacerLen(sample):
+    return samples.loc[sample, "spacerLen"]
+
+
+def get_locLen(sample):
+    return samples.loc[sample, "locLen"]
+
+
+def get_readLen(sample):
+    return samples.loc[sample, "readLen"]
+
+
+def get_clipBegin(sample):
+    return samples.loc[sample, "clipBegin"]
+
+
+def get_clipEnd(sample):
+    return samples.loc[sample, "clipEnd"]
+
+
+def get_runSSCS(sample):
+    return samples.loc[sample, "runSSCS"]
+
+
+def get_runDCS(sample):
+    return samples.loc[sample, "runDCS"]
+
+
+def get_makeDCS(sample):
+    return samples.loc[sample, "makeDCS"]
+
+
+def get_cm_outputs(sample):
+    return samples.loc[sample, "cm_outputs"]
+
+
+def get_cm_sumTypes(sample):
+    return samples.loc[sample, "cm_sumTypes"]
+
+
+def get_minClonal(sample):
+    return samples.loc[sample, "minClonal"]
+
+
+def get_maxClonal(sample):
+    return samples.loc[sample, "maxClonal"]
+
+
+def get_minDepth(sample):
+    return samples.loc[sample, "minDepth"]
+
+
+def get_maxNs(sample):
+    return samples.loc[sample, "maxNs"]
+
+
+def get_cleanup(sample):
+    return samples.loc[sample, "cleanup"]
+
+
+def get_recovery(sample):
+    return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[sample, "recovery"]}'
 
 
 def main():
+    outFile = open(f"{o.config}.summary.csv", 'w')
 
-
-    outFile = open(f"{o.config}.summary.csv",'w')
-        
     outFile.write(
         "RunID,Index,Raw reads,"
         "SSCS reads,Mapped SSCS,"
@@ -107,18 +172,18 @@ def main():
         "A>T,A>C,A>G,T>A,T>C,T>G,"
         "C>A,C>T,C>G,G>A,G>T,G>C,"
         "ins,dels\n"
-        )
+    )
 
     for sampIter in samples.index:
         print(f"Sample {sampIter}")
         print("Reading config")
         # Get the run ID from the config file
-        runID=sampIter
-        c=get_minClonal(sampIter)
-        C=get_minClonal(sampIter)
-        d=get_minDepth(sampIter)
+        runID = sampIter
+        c = get_minClonal(sampIter)
+        C = get_minClonal(sampIter)
+        d = get_minDepth(sampIter)
         baseDir = get_baseDir(sampIter)
-        
+
         print("Getting read counts")
         # get read counts
         # Read tagstats files:
@@ -126,21 +191,21 @@ def main():
         sscsFlagstats = open(f"{baseDir}/Stats/data/{runID}_mem.sscs.sort.flagstats.txt", 'r').readlines()
         dcsFlagstats = open(f"{baseDir}/Stats/data/{runID}_mem.dcs.sort.flagstats.txt", 'r').readlines()
         rawReads = float(rawFlagstats[0].split()[0])
-        #rawReads = float(pysam.flagstat(f"{index}/{runID}.temp.sort.bam").split('\n')[0].split()[0])
-        #sscsFlagstat=pysam.flagstat(f"{index}/{runID}_mem.sscs.sort.bam").split('\n')
-        sscsReads=float(sscsFlagstats[0].split()[0])
-        mappedSscs=float(sscsFlagstats[4].split()[0])
+        # rawReads = float(pysam.flagstat(f"{index}/{runID}.temp.sort.bam").split('\n')[0].split()[0])
+        # sscsFlagstat=pysam.flagstat(f"{index}/{runID}_mem.sscs.sort.bam").split('\n')
+        sscsReads = float(sscsFlagstats[0].split()[0])
+        mappedSscs = float(sscsFlagstats[4].split()[0])
         # ~ dcsFlagstat=pysam.flagstat(f"{index}/{runID}_mem.dcs.sort.bam").split('\n')
-        dcsReads=float(dcsFlagstats[0].split()[0])
-        mappedDcs=float(dcsFlagstats[4].split()[0])
-        
+        dcsReads = float(dcsFlagstats[0].split()[0])
+        mappedDcs = float(dcsFlagstats[4].split()[0])
+
         print("Processing Tagstats")
         # get tagstats numbers
         tagstatsFile = open(f"{baseDir}/Stats/data/{runID}.tagstats.txt", 'r')
-        lastProportion=1
+        lastProportion = 1
         peakProportion = 0
         peakSize = 1
-        maxSize=0
+        maxSize = 0
         for line in tagstatsFile:
             if float(line.split()[2]) <= lastProportion:
                 lastProportion = float(line.split()[2])
@@ -150,8 +215,8 @@ def main():
                 peakProportion = float(line.split()[2])
             maxSize = line.split()[0]
         tagstatsFile.close()
-        sscsOnTarget="NA"
-        
+        sscsOnTarget = "NA"
+
         # read depth file:
         print("Processing Depth")
         depthFile = open(f"{baseDir}/Stats/data/{runID}.dcs.region.mutpos.vcf_depth.txt", 'r')
@@ -163,12 +228,12 @@ def main():
                 totDepth += int(line.split('\t')[3])
                 numLocs += 1
                 dcsMaxDepth = max(dcsMaxDepth, int(line.split('\t')[3]))
-        dcsOnTarget="NA"
+        dcsOnTarget = "NA"
         if numLocs != 0:
-            dcsMeanDepth=totDepth / numLocs
+            dcsMeanDepth = totDepth / numLocs
         else:
-            dcsMeanDepth=0
-        dcsUncovered="NA"
+            dcsMeanDepth = 0
+        dcsUncovered = "NA"
         depthFile.close()
         # insert size file
         print("Processing Insert Size")
@@ -198,81 +263,81 @@ def main():
         sys.stderr.write(f"{baseDir}/{runID}.dcs.filt.no_overlap.region.c{c}-{C}.d{d}.unique.countmuts.txt\n")
 
         cmFile = open(f"{baseDir}/Final/dcs/{runID}.dcs.countmuts.csv", 'r')
-        AsSeq=""
-        AtoT=""
-        AtoC=""
-        AtoG=""
-        TsSeq=""
-        TtoA=""
-        TtoC=""
-        TtoG=""
-        CsSeq=""
-        CtoA=""
-        CtoT=""
-        CtoG=""
-        GsSeq=""
-        GtoA=""
-        GtoT=""
-        GtoC=""
-        totalNt=""
-        totalMuts=""
-        ins=""
-        dels=""
-        
+        AsSeq = ""
+        AtoT = ""
+        AtoC = ""
+        AtoG = ""
+        TsSeq = ""
+        TtoA = ""
+        TtoC = ""
+        TtoG = ""
+        CsSeq = ""
+        CtoA = ""
+        CtoT = ""
+        CtoG = ""
+        GsSeq = ""
+        GtoA = ""
+        GtoT = ""
+        GtoC = ""
+        totalNt = ""
+        totalMuts = ""
+        ins = ""
+        dels = ""
+
         for line in cmFile:
             if "##" not in line and "OVERALL" in line:
                 linebins = line.strip().split(',')
                 if "A>T" in line:
-                    AtoT=linebins[4]
-                    AsSeq=linebins[5]
+                    AtoT = linebins[4]
+                    AsSeq = linebins[5]
                 elif "A>C" in line:
-                    AtoC=linebins[4]
+                    AtoC = linebins[4]
                 elif "A>G" in line:
-                    AtoG=linebins[4]
+                    AtoG = linebins[4]
                 elif "T>A" in line:
-                    TtoA=linebins[4]
-                    TsSeq=linebins[5]
+                    TtoA = linebins[4]
+                    TsSeq = linebins[5]
                 elif "T>C" in line:
-                    TtoC=linebins[4]
+                    TtoC = linebins[4]
                 elif "T>G" in line:
-                    TtoG=linebins[4]
+                    TtoG = linebins[4]
                 elif "C>A" in line:
-                    CtoA=linebins[4]
-                    CsSeq=linebins[5]
+                    CtoA = linebins[4]
+                    CsSeq = linebins[5]
                 elif "C>T" in line:
-                    CtoT=linebins[4]
+                    CtoT = linebins[4]
                 elif "C>G" in line:
-                    CtoG=linebins[4]
+                    CtoG = linebins[4]
                 elif "G>A" in line:
-                    GtoA=linebins[4]
-                    GsSeq=linebins[5]
+                    GtoA = linebins[4]
+                    GsSeq = linebins[5]
                 elif "G>T" in line:
-                    GtoT=linebins[4]
+                    GtoT = linebins[4]
                 elif "G>C" in line:
-                    GtoC=linebins[4]
+                    GtoC = linebins[4]
                 elif "Total" in line and "SNV" in line:
                     totalNt = float(linebins[5])
                     totalMuts = float(linebins[4])
                 elif "Total" in line and "INS" in line:
-                    ins=linebins[4]
+                    ins = linebins[4]
                 elif "Total" in line and "DEL" in line:
-                    dels=linebins[4]
-                
+                    dels = linebins[4]
+
         cmFile.close()
         if sscsReads > 0:
-            percentMappedSSCS = mappedSscs/sscsReads
-            rawPerSSCS = rawReads/sscsReads
+            percentMappedSSCS = mappedSscs / sscsReads
+            rawPerSSCS = rawReads / sscsReads
         else:
             percentMappedSSCS = 0
             rawPerSSCS = 0
         if dcsReads > 0:
-            percentMappedDCS = mappedDcs/dcsReads
-            sscsPerDCS = sscsReads/dcsReads
+            percentMappedDCS = mappedDcs / dcsReads
+            sscsPerDCS = sscsReads / dcsReads
         else:
             percentMappedDCS = 0
             sscsPerDCS = 0
         if totalNt > 0:
-            mutFreq = totalMuts/totalNt
+            mutFreq = totalMuts / totalNt
         else:
             mutFreq = 0
         outFile.write(
@@ -283,9 +348,10 @@ def main():
             f"{dcsMaxDepth},{dcsUncovered},{totalNt},{AsSeq},{TsSeq},{CsSeq},{GsSeq},{totalMuts},{mutFreq},"
             f"{AtoT},{AtoC},{AtoG},{TtoA},{TtoC},{TtoG},{CtoA},{CtoT},{CtoG},{GtoA},"
             f"{GtoT},{GtoC},{ins},{dels}\n"
-            )
-            
+        )
+
     outFile.close()
-            
+
+
 if __name__ == "__main__":
     main()

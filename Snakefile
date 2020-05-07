@@ -1,6 +1,7 @@
 import pandas as pd
 from snakemake.utils import validate
 import multiprocessing as mp
+import sys
 
 configfile: f"{sys.path[0]}/DS_progConfig.yaml"
 # ~ validate(config, "config.schema.yaml")
@@ -16,75 +17,75 @@ config["maxCores"] = min(config["maxCores"], mp.cpu_count())
 #print(config["maxCores"])
 
 def get_sample(wildcards):
-    return(samples.loc[(wildcards.sample),"sample"])
+    return samples.loc[wildcards.sample, "sample"]
 def get_rglb(wildcards):
-    return(samples.loc[(wildcards.sample),"rglb"])
+    return samples.loc[wildcards.sample, "rglb"]
 def get_rgpl(wildcards):
-    return(samples.loc[(wildcards.sample),"rgpl"])
+    return samples.loc[wildcards.sample, "rgpl"]
 def get_rgpu(wildcards):
-    return(samples.loc[(wildcards.sample),"rgpu"])
+    return samples.loc[wildcards.sample, "rgpu"]
 def get_rgsm(wildcards):
-    return(samples.loc[(wildcards.sample),"rgsm"])
+    return samples.loc[wildcards.sample, "rgsm"]
 def get_reference(wildcards):
-    return(samples.loc[(wildcards.sample),"reference"])
+    return samples.loc[wildcards.sample, "reference"]
 def get_target_bed(wildcards):
-    return(samples.loc[(wildcards.sample),"target_bed"])
+    return samples.loc[wildcards.sample, "target_bed"]
 def get_blast_db(wildcards):
-    return(samples.loc[(wildcards.sample),"blast_db"])
+    return samples.loc[wildcards.sample, "blast_db"]
 def get_blast_db_path(wildcards):
-    return(f'{samples.loc[(wildcards.sample),"blast_db"]}.nal')
+    return f'{samples.loc[wildcards.sample, "blast_db"]}.nal'
 def get_target_taxon(wildcards):
-    return(samples.loc[(wildcards.sample),"targetTaxonId"])
+    return samples.loc[wildcards.sample, "targetTaxonId"]
 def get_baseDir(wildcards):
-    return(samples.loc[(wildcards.sample),"baseDir"])
+    return samples.loc[wildcards.sample, "baseDir"]
 def get_in1(wildcards):
-    return(f'{samples.loc[(wildcards.sample),"baseDir"]}/{samples.loc[(wildcards.sample),"in1"]}')
+    return f'{samples.loc[wildcards.sample, "baseDir"]}/{samples.loc[wildcards.sample, "in1"]}'
 def get_in2(wildcards):
-    return(f'{samples.loc[(wildcards.sample),"baseDir"]}/{samples.loc[(wildcards.sample),"in2"]}')
+    return f'{samples.loc[wildcards.sample, "baseDir"]}/{samples.loc[wildcards.sample, "in2"]}'
 def get_mqFilt(wildcards):
-    return(samples.loc[(wildcards.sample),"mqFilt"])
+    return samples.loc[wildcards.sample, "mqFilt"]
 def get_minMem(wildcards):
-    return(samples.loc[(wildcards.sample),"minMem"])
+    return samples.loc[wildcards.sample, "minMem"]
 def get_maxMem(wildcards):
-    return(samples.loc[(wildcards.sample),"maxMem"])
+    return samples.loc[wildcards.sample, "maxMem"]
 def get_cutOff(wildcards):
-    return(samples.loc[(wildcards.sample),"cutOff"])
+    return samples.loc[wildcards.sample, "cutOff"]
 def get_nCutOff(wildcards):
-    return(samples.loc[(wildcards.sample),"nCutOff"])
+    return samples.loc[wildcards.sample, "nCutOff"]
 def get_umiLen(wildcards):
-    return(samples.loc[(wildcards.sample),"umiLen"])
+    return samples.loc[wildcards.sample, "umiLen"]
 def get_spacerLen(wildcards):
-    return(samples.loc[(wildcards.sample),"spacerLen"])
+    return samples.loc[wildcards.sample, "spacerLen"]
 def get_locLen(wildcards):
-    return(samples.loc[(wildcards.sample),"locLen"])
+    return samples.loc[wildcards.sample, "locLen"]
 def get_readLen(wildcards):
-    return(samples.loc[(wildcards.sample),"readLen"])
+    return samples.loc[wildcards.sample, "readLen"]
 def get_clipBegin(wildcards):
-    return(samples.loc[(wildcards.sample),"clipBegin"])
+    return samples.loc[wildcards.sample, "clipBegin"]
 def get_clipEnd(wildcards):
-    return(samples.loc[(wildcards.sample),"clipEnd"])
+    return samples.loc[wildcards.sample, "clipEnd"]
 def get_runSSCS(wildcards):
-    return(samples.loc[(wildcards.sample),"runSSCS"])
+    return samples.loc[wildcards.sample, "runSSCS"]
 def get_runDCS(wildcards):
-    return(samples.loc[(wildcards.sample),"runDCS"])
+    return samples.loc[wildcards.sample, "runDCS"]
 def get_makeDCS(wildcards):
-    return(samples.loc[(wildcards.sample),"makeDCS"])
+    return samples.loc[wildcards.sample, "makeDCS"]
 def get_cm_outputs(wildcards):
-    return(samples.loc[(wildcards.sample),"cm_outputs"])
+    return samples.loc[wildcards.sample, "cm_outputs"]
 def get_cm_sumTypes(wildcards):
-    return(samples.loc[(wildcards.sample),"cm_sumTypes"])
+    return samples.loc[wildcards.sample, "cm_sumTypes"]
 def get_minClonal(wildcards):
-    return(samples.loc[(wildcards.sample),"minClonal"])
+    return samples.loc[wildcards.sample, "minClonal"]
 def get_maxClonal(wildcards):
-    return(samples.loc[(wildcards.sample),"maxClonal"])
+    return samples.loc[wildcards.sample, "maxClonal"]
 def get_minDepth(wildcards):
-    return(samples.loc[(wildcards.sample),"minDepth"])
+    return samples.loc[wildcards.sample, "minDepth"]
 def get_maxNs(wildcards):
-    return(samples.loc[(wildcards.sample),"maxNs"])
+    return samples.loc[wildcards.sample, "maxNs"]
 def get_cleanup(wildcards):
-    return(samples.loc[(wildcards.sample),"cleanup"])
+    return samples.loc[wildcards.sample, "cleanup"]
 def get_recovery(wildcards):
-    return(f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[(wildcards.sample),"recovery"]}')
+    return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
 
 def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
     outList = []
@@ -107,7 +108,7 @@ def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
                 f"{prefix}"
                 f"{sampIter}.{sampType}{suffix}"
                 )
-    return(outList)
+    return outList
     
     
 def get_outCountMuts(sampType="dcs"):
@@ -125,7 +126,7 @@ def get_outCountMuts(sampType="dcs"):
                 f"Final/{sampType}/"
                 f"{sampIter}.{sampType}.countmuts.csv"
                 )
-    return(outList)
+    return outList
 def get_outMems(sampType="dcs"):
     outList = []
     for sampIter in samples.index:
@@ -134,9 +135,9 @@ def get_outMems(sampType="dcs"):
             f"Stats/data/"
             f"{sampIter}_mem.{sampType}.sort.flagstats.txt"
             )
-    return(outList)
+    return outList
 def getOutConfig(wildcards):
-    return(f'{samples.loc[(wildcards.sample),"baseDir"]}/{samples.loc[(wildcards.sample),"baseDir"]}_config.sh')
+    return f'{samples.loc[wildcards.sample, "baseDir"]}/{samples.loc[wildcards.sample, "baseDir"]}_config.sh'
 
 def get_outMutPos(sampType="dcs"):
     outList = []
@@ -154,7 +155,7 @@ def get_outMutPos(sampType="dcs"):
                 )
         # ~ else:
             # ~ print("RunSSCS False")
-    return(outList)
+    return outList
 
 def get_outOnTarget():
     outList = []
@@ -164,7 +165,7 @@ def get_outOnTarget():
             f"Stats/data/"
             f"{sampIter}_onTargetCount.txt"
             )
-    return(outList)
+    return outList
 
 def getDepthFiles():
     outList = []
@@ -174,7 +175,7 @@ def getDepthFiles():
             f"Stats/plots/"
             f"{sampIter}.dcs.targetCoverage.png"
             )
-    return(outList)
+    return outList
 
 def getInsertFiles():
     outList = []
@@ -184,7 +185,7 @@ def getInsertFiles():
             f"Stats/plots/"
             f"{sampIter}.dcs.iSize_Histogram.png"
             )
-    return(outList)
+    return outList
 
 def getMutsByCycFiles():
     outList = []
@@ -194,7 +195,7 @@ def getMutsByCycFiles():
             f"Stats/data/"
             f"{sampIter}.dcs_MutsPerCycle.dat.csv"
             )
-    return(outList)
+    return outList
 
 def getFamSizeFiles():
     outList = []
@@ -203,76 +204,76 @@ def getFamSizeFiles():
             f"{samples.loc[sampIter,'baseDir']}/"
             f"Stats/data/{sampIter}.tagstats.txt"
             )
-    return(outList)
+    return outList
     
 def getReportInput(wildcards):
     outArgs = []
     # Raw read stats files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
     #'Consensus Maker Stats File
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}.tagstats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_cmStats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}_family_size.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}_fam_size_relation.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.tagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_cmStats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}_family_size.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}_fam_size_relation.png')
     #'SSCS Alignment Stats File
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt')
     #'BLAST Filtering Stats File
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_dcs.speciesComp.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_dcs.speciesComp.txt')
     #'Clipping Stats files
     #'Mutations Stats Files
     #'Final stats files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosWithoutNs.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.mutsPerRead.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosWithoutNs.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.mutsPerRead.png')
     #'Final files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt')
-    return(outArgs)
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt')
+    return outArgs
 
 def getReportInput_noBlast(wildcards):
     outArgs = []
     # Raw read stats files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
     #'Consensus Maker Stats File
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}.tagstats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_cmStats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}_family_size.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}_fam_size_relation.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.tagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_cmStats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}_family_size.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}_fam_size_relation.png')
     #'SSCS Alignment Stats File
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt')
     #'Clipping Stats files
     #'Mutations Stats Files
     #'Final stats files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosWithoutNs.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.mutsPerRead.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosWithoutNs.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.mutsPerRead.png')
     #'Final files
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
-    outArgs.append(f'{samples.loc[(wildcards.sample),"baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
-    return(outArgs)
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
+    return outArgs
 
 
 def get_reports():
@@ -282,7 +283,7 @@ def get_reports():
             f"{samples.loc[sampIter,'baseDir']}/Final/"
             f"{sampIter}.report.html"
             )
-    return(outList)
+    return outList
 
 def getSummaryInput():
     outFiles = []
@@ -302,7 +303,7 @@ def getSummaryInput():
     outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".vcf"))
     outFiles.extend(get_outFiles(prefix="Stats/data/", sampType="dcs", suffix=".region.mutpos.vcf_depth.txt"))
     outFiles.extend(get_reports())
-    return(outFiles)
+    return outFiles
 
 wildcard_constraints:
     sampType="(sscs)|(dcs)",

@@ -7,6 +7,7 @@ standard error.
 """
 import sys
 
+
 def main():
     """main function"""
     iterations = 0
@@ -23,6 +24,7 @@ def main():
             sys.stderr.write(f"{iterations} reads processed\n\t{hits} hits\n")
             reported_iteration = True
         sys.stdout.write(line)
+
 
 if __name__ == "__main__":
     main()
