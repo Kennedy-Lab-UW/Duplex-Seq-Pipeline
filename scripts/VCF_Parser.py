@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import datetime
 
 
 # VCF file function
@@ -63,11 +64,11 @@ class VariantHeader:
         self.headLines = in_lines[:-1]
         self.labelLine = in_lines[-1]
 
-    def addLine(self, lineType, label, number='.', Type="String", description=""):
+    def addLine(self, lineType, label, number='.', Type="String", description="", source="", vNum=""):
         if lineType.upper() == "FORMAT":
             outLine = f'##FORMAT=<ID={label},Number={number},Type={Type},Description="{description}">\n'
         elif lineType.upper() == "INFO":
-            outLine = f'##INFO=<ID={label},Number={number},Type={Type},Description="{description}">\n'
+            outLine = f'##INFO=<ID={label},Number={number},Type={Type},Description="{description}",Source="{source}",Version="{vNum}">\n'
         elif lineType.upper() == "FILTER":
             outLine = f'##FILTER=<ID={label},Description="{description}">\n'
         elif lineType.upper() == "ALT":
@@ -150,3 +151,43 @@ class VariantRecord:
         else:
             self.info[new_info_tag] = new_info_value
             return True
+            
+def SamHeaderToVcfHeader(inSamHeader, sampName, progName, progVersion, progCmd):
+    mydate = datetime.date.today()
+    headLines = [
+        "##fileformat=VCFv4.3\n", 
+        f"##filedate={mydate.year}{mydate.month:02d}{mydate.day:02d}\n"
+        ]
+    contigBlock = []
+    programBlock = []
+    
+    for line in str(inSamHeader).split('\n'):
+        linebins = line.strip().split('\t')
+        if linebins[0] == '@HD':
+            pass
+        elif linebins[0] == '@SQ':
+            contigBlock.append(
+                f"##contig=<ID={linebins[1].split(':')[1]},length={linebins[2].split(':')[1]}>\n"
+            )
+        elif linebins[0] == '@PG':
+            progHead = None
+            progVersion = None
+            progCL = None
+            for binIter in range(len(linebins)):
+                if 'ID' in linebins[binIter]:
+                    progHead = f"##{linebins[binIter].split(':')[1].split()[0]}"
+                elif 'VN' in linebins[binIter]:
+                    progVersion = linebins[binIter].split(':')[1]
+                elif 'CL' in linebins[binIter]:
+                    progCL = " :".join(linebins[binIter:]).split(':')[1]
+            if progHead is not None:
+                if progVersion is not None:
+                    programBlock.append(f"{progHead}Version={progVersion}")
+                if progCL is not None:
+                    programBlock.append(f"{progHead}Command={progCL}")
+    headLines.extend(programBlock)
+    headLines.append(f"##{progName}Version={progVersion}\n")
+    headLines.append(f"##{progName}Command={progCmd}\n")
+    headLines.extend(contigBlock)
+    headLines.append(f'#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{sampName}\n')
+    return VariantHeader(headLines)
