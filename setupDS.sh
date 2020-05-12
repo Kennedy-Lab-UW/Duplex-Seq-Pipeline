@@ -51,6 +51,15 @@ echo "inConfig=\"\$1\"" >> DS-dag
 echo "snakemake -s ${snakeDir}/Snakefile --use-conda -j ${maxCores} --dag --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\" -- | dot -Tpdf > \${inConfig}_dag.pdf" >> DS-dag
 chmod a+x DS-dag
 
+echo "Creating unlock script"
+echo "#!/bin/bash" > DS-unlock
+echo "" >> DS-unlock
+echo "# This is an unlock script for the DS snakemake pipeline" >> DS-unlock
+echo "# Run this if the pipeline gets stuck locked for some reason" >> DS-unlock
+echo "inConfig=\"\$1\"" >> DS-unlock
+echo "snakemake --unlock -s ${snakeDir}/Snakefile --use-conda -j 1 --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\"" >> DS-unlock
+chmod a+x DS-unlock
+
 currentDate=$(date +%F)
 echo "Adding DS to path"
 if [ -e ~/.bashrc ]
