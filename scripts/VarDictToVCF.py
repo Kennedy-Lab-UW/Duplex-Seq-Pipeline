@@ -34,7 +34,7 @@ def varDictLine2vcfLine (inVarDictLine, inSampName):
         f"{inVarDictLine['QMean']}:"
         f"{inVarDictLine['MQ']}:"
         f"{inVarDictLine['NM']}"
-        )
+    )
     return VariantRecord(recordStr, [inSampName])
 
 def extractVariant(inVarLine):
@@ -46,16 +46,13 @@ def extractVariant(inVarLine):
     lenOfVar = math.ceil(1.1 * max([len(inVarLine.ref),len(inVarLine.alts[0])]))
     outStart = inVarLine.pos - lenOfVar
     outStop  = inVarLine.pos + lenOfVar
-    return(outStr,inVarLine.chrom, outStart,outStop)
+    return outStr,inVarLine.chrom, outStart,outStop
 
 indelRegion = namedtuple(
     "IndelRegion", 
-    [
-        "chrom",
-        "start",
-        "stop"
-        ]
-    )
+    ["chrom",
+     "start",
+     "stop"])
 
 def main():
     parser = ArgumentParser()
@@ -65,27 +62,24 @@ def main():
         action='store', 
         dest='Fin', 
         help=(f"An input single-sample VarDict output file without Ns "
-              f"included in the depth to process"
-              ), 
+              f"included in the depth to process"), 
         required=True
-        )
+    )
     parser.add_argument(
         '-n', '--in_Nfile', 
         action='store', 
         dest='Nin', 
         help=(f"An input single-sample VarDict output file with Ns "
-              f"included in the depth to process"
-              ), 
+              f"included in the depth to process"), 
         required=True
-        )
+    )
     parser.add_argument(
         '-b', '--in_bam_file', 
         action='store', 
         dest='Bin', 
-        help=(f"An input bam file used to generate both VarDict inputs"
-              ), 
+        help=(f"An input bam file used to generate both VarDict inputs"), 
         required=True
-        )
+    )
     ##  Output VCF file
     parser.add_argument(
         '-o', '--out_file', 
@@ -93,7 +87,7 @@ def main():
         dest='Fout', 
         help='An name for the output VCF file including depth and SNP filtering', 
         required=True
-        )
+    )
     ##  Output SNP file
     parser.add_argument(
         '-s', '--snp_file', 
@@ -101,7 +95,7 @@ def main():
         dest='Fsnp', 
         help='An name for the output VCF file including only SNPs', 
         required=True
-        )
+    )
     ##  minimum depth for good variant detection
     parser.add_argument(
         '-d', '--min_depth', 
@@ -110,14 +104,14 @@ def main():
         help='The minimum depth required to avoid being filtered', 
         default=100,
         type=int
-        )
+    )
     parser.add_argument(
         '--samp_name', 
         action='store',
         dest='sampName', 
         help='A name for this sample.  ', 
         default="SAMPLE"
-        )
+    )
     # logLevel (hidden argument)
     parser.add_argument(
         '--logLevel', 
@@ -126,7 +120,7 @@ def main():
         default="INFO",
         help=argparse.SUPPRESS, 
         choices={'INFO', 'DEBUG', 'WARNING', 'ERROR', 'CRITICAL'}
-        )
+    )
     # parse arguments
     o = parser.parse_args()
     
@@ -137,7 +131,7 @@ def main():
     logging.basicConfig(
         format='%(levelname)s: %(message)s', 
         level=numeric_level, 
-        )
+    )
     # SWITCH THIS LINE IN BEFORE DEPLOYMENT; it will get the current version from VERSION
     # pipelineVersion=open(f"{sys.path[0]}/../VERSION", 'r').readline().strip()
     pipelineVersion="2.0.0b"
@@ -148,8 +142,7 @@ def main():
             o.sampName,
             "VarDictToVCF", 
             pipelineVersion,
-            cmd
-            )
+            cmd)
     # Numbers: #, A, R, G, .
     # Types (Format): Integer, Float, Character, String
     # Types (Info): Integer, Float, Flag, Character, String
@@ -160,116 +153,99 @@ def main():
                      Type="Character",
                      description="Target name from the provided bed file",
                      source="VarDict-Java",
-                     vNum=vardictVersion
-                     )
+                     vNum=vardictVersion)
     myHeader.addLine(lineType="INFO",
                      label="MSI",
                      number="1",
                      Type="Integer",
                      description="MicroSatellite. > 1 indicates MSI",
                      source="VarDict-Java",
-                     vNum=vardictVersion
-                     )
+                     vNum=vardictVersion)
     myHeader.addLine(lineType="INFO",
                      label="MSINT",
                      number="1",
                      Type="Integer",
                      description="MicroSatellite unit length in bp`",
                      source="VarDict-Java",
-                     vNum=vardictVersion
-                     )
+                     vNum=vardictVersion)
     myHeader.addLine(lineType="INFO",
                      label="5pFlank",
                      number="1",
                      Type="Character",
                      description="Neighboring reference sequence to 5\' end",
                      source="VarDict-Java",
-                     vNum=vardictVersion
-                     )
+                     vNum=vardictVersion)
     myHeader.addLine(lineType="INFO",
                      label="3pFlank",
                      number="1",
                      Type="Character",
                      description="Neighboring reference sequence to 3\' end",
                      source="VarDict-Java",
-                     vNum=vardictVersion
-                     )
+                     vNum=vardictVersion)
     myHeader.addLine(lineType="INFO",
                      label="VARTYPE",
                      number="1",
                      Type="Character",
                      description="Variant type",
                      source="VarDict-Java",
-                     vNum=vardictVersion
-                     )
+                     vNum=vardictVersion)
     myHeader.addLine(lineType="INFO",
                      label="VarDesc",
                      number="1",
                      Type="Character",
                      description="Variant description string, from VarDict Genotype field",
                      source="VarDict-Java",
-                     vNum=vardictVersion
-                     )
+                     vNum=vardictVersion)
     myHeader.addLine(lineType="FORMAT",
                      label="AD",
                      number="R",
                      Type="Integer",
-                     description="Depth contribution of each allele"
-                     )
+                     description="Depth contribution of each allele")
     myHeader.addLine(lineType="FORMAT",
                      label="DP",
                      number="1",
                      Type="Integer",
-                     description="Total depth"
-                     )
+                     description="Total depth")
     myHeader.addLine(lineType="FORMAT",
                      label="AF",
                      number="R",
                      Type="Float",
-                     description="Fraction of total depth accounted for by each allele"
-                     )
+                     description="Fraction of total depth accounted for by each allele")
     myHeader.addLine(lineType="FORMAT",
                      label="NC",
                      number="1",
                      Type="Integer",
-                     description="Number of Ns at this position"
-                     )
+                     description="Number of Ns at this position")
     myHeader.addLine(lineType="FORMAT",
                      label="AFC",
                      number="A",
                      Type="Integer",
-                     description="The number of reads for each allele that are forward mapping"
-                     )
+                     description="The number of reads for each allele that are forward mapping")
     myHeader.addLine(lineType="FORMAT",
                      label="ARC",
                      number="A",
                      Type="Integer",
-                     description="The number of reads for each allele that are reverse mapping"
-                     )
+                     description="The number of reads for each allele that are reverse mapping")
     myHeader.addLine(lineType="FORMAT",
                      label="PM",
                      number="1",
                      Type="Float",
-                     description="Mean position of the alt allele in the read"
-                     )
+                     description="Mean position of the alt allele in the read")
     myHeader.addLine(lineType="FORMAT",
                      label="QM",
                      number="1",
                      Type="Float",
-                     description="Mean quality score of data at this position"
-                     )
+                     description="Mean quality score of data at this position")
     myHeader.addLine(lineType="FORMAT",
                      label="MQ",
                      number="1",
                      Type="Float",
-                     description="Mean mapping quality of reads covering this position"
-                     )
+                     description="Mean mapping quality of reads covering this position")
     myHeader.addLine(lineType="FORMAT",
                      label="NM",
                      number="1",
                      Type="Float",
-                     description="Average number of mismatches for reads containing the ALT allele"
-                     )
+                     description="Average number of mismatches for reads containing the ALT allele")
     # read in non-Ns vardict file and sort it
     try:
         vardict_vars = pd.read_csv(o.Fin, sep='\t', header=0).sort_values(['Chr','Start'])
@@ -300,11 +276,9 @@ def main():
     # create array of VCF lines for vardict lines
     myVariants = []
     for index, rowIter in vardict_vars.iterrows():
-        if (
-                rowIter["AltDepth"] > 0 
+        if (rowIter["AltDepth"] > 0 
                 and 'N' not in rowIter['Ref'] 
-                and 'N' not in rowIter['Alt']
-                ):
+                and 'N' not in rowIter['Alt']):
             myVariants.append(varDictLine2vcfLine(rowIter, o.sampName))
     mySnps = []
     indels = {}
@@ -312,26 +286,22 @@ def main():
     myHeader.addLine(
         lineType="FILTER", 
         label="SNP", 
-        description=f"This variant is probably a SNP, and not a somatic variant."
-        )
+        description=f"This variant is probably a SNP, and not a somatic variant.")
     # add low-depth filter to header
     myHeader.addLine(
         lineType="FILTER", 
         label="low_depth", 
-        description=f"Sample depth at this locus is < {o.min_depth}."
-        )
+        description=f"Sample depth at this locus is < {o.min_depth}.")
     # add near-indel filter to header
     myHeader.addLine(
         lineType="FILTER", 
         label="near_indel", 
-        description=f"This variant may be suspecious because it is near an indel."
-        )
+        description=f"This variant may be suspecious because it is near an indel.")
     # add cluster filter to header
     myHeader.addLine(
         lineType="FILTER", 
         label="clustered", 
-        description=f"This variant is part of a cluster of variants (nearest variant is within 10 bp)."
-        )
+        description=f"This variant is part of a cluster of variants (nearest variant is within 10 bp).")
     # Get set of SNP loci and indel loci, and add low_depth and SNP filters
     for varLine in myVariants:
         if int(varLine.samples[o.sampName]["DP"]) < o.min_depth: 
@@ -355,8 +325,7 @@ def main():
                     and vcfLine.pos >= indels[indelIter].start
                     and vcfLine.pos <= indels[indelIter].stop 
                     and len(vcfLine.ref) == 1
-                    and len(vcfLine.alts[0]) == 1
-                    ):
+                    and len(vcfLine.alts[0]) == 1):
                 nearIndel = True
             if nearIndel:
                 vcfLine.add_filter("near_indel")
@@ -366,23 +335,19 @@ def main():
         if vcfIter == 0 and len(myVariants) > 1:
             if (
                     myVariants[vcfIter].chrom == myVariants[vcfIter + 1].chrom
-                    and myVariants[vcfIter].pos + 10 >= myVariants[vcfIter + 1].pos
-                    ):
+                    and myVariants[vcfIter].pos + 10 >= myVariants[vcfIter + 1].pos):
                 clusteredVariant = True
         elif vcfIter == len(myVariants) - 1 and len(myVariants) > 1:
             if (
                     myVariants[vcfIter].chrom == myVariants[vcfIter - 1].chrom
-                    and myVariants[vcfIter].pos - 10 <= myVariants[vcfIter - 1].pos
-                    ):
+                    and myVariants[vcfIter].pos - 10 <= myVariants[vcfIter - 1].pos):
                 clusteredVariant = True
         else:
             if ((
                     myVariants[vcfIter].chrom == myVariants[vcfIter - 1].chrom
-                    and myVariants[vcfIter].pos - 10 <= myVariants[vcfIter - 1].pos
-                    ) or (
+                    and myVariants[vcfIter].pos - 10 <= myVariants[vcfIter - 1].pos) or (
                     myVariants[vcfIter].chrom == myVariants[vcfIter + 1].chrom
-                    and myVariants[vcfIter].pos + 10 >= myVariants[vcfIter + 1].pos
-                    )):
+                    and myVariants[vcfIter].pos + 10 >= myVariants[vcfIter + 1].pos)):
                 clusteredVariant = True
         if clusteredVariant:
             myVariants[vcfIter].add_filter("clustered")
