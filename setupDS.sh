@@ -25,6 +25,12 @@ echo "Creating progConfig file"
 echo "gatk3:" > DS_progConfig.yaml
 echo "samples: test/testConfig.csv" >> DS_progConfig.yaml
 echo "maxCores: ${maxCores}" >> DS_progConfig.yaml
+echo "vardict_f: .0000001" >> DS_progConfig.yaml
+echo "vardict_nmfreq: .0000001" >> DS_progConfig.yaml
+echo "vardict_r: 1" >> DS_progConfig.yaml
+echo "vardict_V: 0.00000000001" >> DS_progConfig.yaml
+echo "vardict_adaptor: GCTCTTCCGATCT,CTCTTCCGATCT,TCTTCCGATCT,CTTCCGATCT,TTCCGATCT,TCCGATCT,CCGATCT,CGATCT" >> DS_progConfig.yaml
+
 
 echo "Configuring snakemake"
 snakemake --cores 1 --use-conda --conda-prefix ${snakeDir}/.snakemake --config gatk3=${1} -- initializeEnvs
