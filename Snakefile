@@ -33,7 +33,10 @@ def get_target_bed(wildcards):
 def get_blast_db(wildcards):
     return samples.loc[wildcards.sample, "blast_db"]
 def get_blast_db_path(wildcards):
-    return f'{samples.loc[wildcards.sample, "blast_db"]}.nal'
+    if samples.loc[wildcards.sample, "blast_db"].upper() == "NONE":
+        return "NONE.nal"
+    else:
+        return f'{samples.loc[wildcards.sample, "blast_db"]}.nal'
 def get_target_taxon(wildcards):
     return samples.loc[wildcards.sample, "targetTaxonId"]
 def get_baseDir(wildcards):
@@ -86,6 +89,48 @@ def get_cleanup(wildcards):
     return samples.loc[wildcards.sample, "cleanup"]
 def get_recovery(wildcards):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
+
+def get_endClipDCS_bam(wildcards):
+    if wildcards.sampType == 'dcs':
+        if get_blast_db_path(wildcards) == "NONE.nal":
+            output=(f"{wildcards.runPath}/"
+                f"{wildcards.sample}_mem"
+                f".dcs.sort.bam"
+                )
+        else:
+            output=(f"{wildcards.runPath}/"
+                f"{wildcards.sample}_dcs"
+                f".postRecovery.recovered.temp.bam"
+                )
+    elif wildcards.sampType == 'sscs':
+        output=(f"{wildcards.runPath}/"
+                f"{wildcards.sample}_mem"
+                f".sscs.sort.bam"
+                )
+    else:
+        raise Exception("Wrong sampType")
+    return output
+
+def get_endClipDCS_bai(wildcards):
+    if wildcards.sampType == 'dcs':
+        if get_blast_db_path(wildcards) == "NONE.nal":
+            output=(f"{wildcards.runPath}/"
+                f"{wildcards.sample}_mem"
+                f".dcs.sort.bam.bai"
+                )
+        else:
+            output=(f"{wildcards.runPath}/"
+                f"{wildcards.sample}_dcs"
+                f".postRecovery.recovered.temp.bam.bai"
+                )
+    elif wildcards.sampType == 'sscs':
+        output=(f"{wildcards.runPath}/"
+                f"{wildcards.sample}_mem"
+                f".sscs.sort.bam.bai"
+                )
+    else:
+        raise Exception("Wrong sampType")
+    return output
 
 def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
     outList = []
@@ -207,7 +252,30 @@ def getFamSizeFiles():
     return outList
     
 def getReportInput(wildcards):
+    # BLAST switch:
+    if get_blast_db_path(wildcards) == "NONE.nal":
+        withBlast = False
+    else:
+        withBlast = True
     outArgs = []
+    # Post-CM checkpoint files
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read1_sscs.fq.gz')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read2_sscs.fq.gz')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read1_dcs.fq.gz')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read2_dcs.fq.gz')
+    if withBlast:
+        # post-BLAST checkpoint files:
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/{wildcards.sample}_dcs.blast.xml')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/{wildcards.sample}_dcs.preBlast.mutated.bam')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/{wildcards.sample}_dcs.preBlast.unmutated.bam')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.bai')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai')
+        #'BLAST Filtering Stats File
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_dcs.speciesComp.txt')
+        # Ambiguity stats file
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt')
     # Raw read stats files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
@@ -219,10 +287,14 @@ def getReportInput(wildcards):
     #'SSCS Alignment Stats File
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt')
-    #'BLAST Filtering Stats File
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_dcs.speciesComp.txt')
+    # Final BAM files
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
     #'Clipping Stats files
     #'Mutations Stats Files
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
     #'Final stats files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
@@ -230,18 +302,8 @@ def getReportInput(wildcards):
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosWithoutNs.png')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.mutsPerRead.png')
-    #'Final files
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.bai')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt')
+    
     return outArgs
 
 def getReportInput_noBlast(wildcards):
@@ -770,6 +832,7 @@ rule BLAST:
     threads: config["maxCores"]
     input:
         inBam1="{runPath}/Intermediate/postBlast/{sample}_dcs.preBlast.mutated.bam",
+        inBlastDbPath = get_blast_db_path
     output:
         outXML = "{runPath}/Intermediate/postBlast/{sample}_dcs.blast.xml",
     conda:
@@ -933,50 +996,7 @@ rule CountAmbig:
         cd ../
         """
 
-# Apply fixed end clipping to SSCS (with no BLAST)
-rule endClipSscs:
-    params:
-        sample = get_sample,
-        clip5 = get_clipBegin,
-        clip3 = get_clipEnd,
-        basePath = sys.path[0],
-        runPath = get_baseDir
-    input:
-        inBam = "{runPath}/{sample}_mem.sscs.sort.bam",
-        inBai = "{runPath}/{sample}_mem.sscs.sort.bam.bai",
-        inRef = get_reference
-    output:
-        outBam = temp("{runPath}/{sample}.sscs.filt.clipped.bam"),
-        outBai = temp("{runPath}/{sample}.sscs.filt.clipped.bai"),
-        clippingMetrics = touch("{runPath}/Stats/data/{sample}.sscs.filt.clipped.metrics.txt")
-    conda:
-       "envs/DS_env_full.yaml"
-    log:
-         "{runPath}/logs/{sample}_endclip_sscs.log"
-
-    shell:
-        """
-        if [ "$(( {params.clip5}+{params.clip3} ))" -gt "0" ]
-        then
-        cd {params.runPath}
-        fgbio ClipBam \
-        -i ../{input.inBam} \
-        -o ../{output.outBam} \
-        -r {input.inRef} \
-        -c Soft \
-        --read-one-five-prime {params.clip5} \
-        --read-one-three-prime {params.clip3} \
-        --read-two-five-prime {params.clip5} \
-        --read-two-three-prime {params.clip3} \
-        -m ../{output.clippingMetrics}
-        cd ../
-        else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
-        fi
-        """
-
-# Apply fixed end clipping to DCS (with BLAST)
+# Apply fixed end clipping to DCS
 rule endClipDcs:
     params:
         sample = get_sample,
@@ -985,60 +1005,17 @@ rule endClipDcs:
         basePath = sys.path[0],
         runPath = get_baseDir
     input:
-        inBam = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam",
-        inBai = "{runPath}/{sample}_dcs.postRecovery.recovered.temp.bam.bai",
+        inBam = get_endClipDCS_bam, 
+        inBai = get_endClipDCS_bai,
         inRef = get_reference, 
     output:
-        outBam = temp("{runPath}/{sample}.dcs.filt.clipped.bam"),
-        outBai = temp("{runPath}/{sample}.dcs.filt.clipped.bai"),
-        clippingMetrics = touch("{runPath}/Stats/data/{sample}.dcs.filt.clipped.metrics.txt")
+        outBam = temp("{runPath}/{sample}.{sampType}.filt.clipped.bam"),
+        outBai = temp("{runPath}/{sample}.{sampType}.filt.clipped.bai"),
+        clippingMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.filt.clipped.metrics.txt")
     conda:
        "envs/DS_env_full.yaml"
     log:
-         "{runPath}/logs/{sample}_endclip_dcs.log"
-
-    shell:
-        """
-        if [ "$(( {params.clip5}+{params.clip3} ))" -gt "0" ]
-        then
-        cd {params.runPath}
-        fgbio ClipBam \
-        -i ../{input.inBam} \
-        -o ../{output.outBam} \
-        -r {input.inRef} \
-        -c Soft \
-        --read-one-five-prime {params.clip5} \
-        --read-one-three-prime {params.clip3} \
-        --read-two-five-prime {params.clip5} \
-        --read-two-three-prime {params.clip3} \
-        -m ../{output.clippingMetrics}
-        cd ../
-        else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
-        fi
-        """
-
-# Apply fixed end clipping to DCS (with no BLAST)
-rule endClipDcs_noBlast:
-    params:
-        sample = get_sample,
-        clip5 = get_clipBegin,
-        clip3 = get_clipEnd,
-        basePath = sys.path[0],
-        runPath = get_baseDir
-    input:
-        inBam="{runPath}/{sample}_mem.dcs.sort.bam",
-        inBai="{runPath}/{sample}_mem.dcs.sort.bam.bai",
-        inRef = get_reference
-    output:
-        outBam = temp("{runPath}/{sample}.dcs.filt.clipped.bam"),
-        outBai = temp("{runPath}/{sample}.dcs.filt.clipped.bai"),
-        clippingMetrics = touch("{runPath}/Stats/data/{sample}.dcs.filt.clipped.metrics.txt")
-    conda:
-       "envs/DS_env_full.yaml"
-    log:
-         "{runPath}/logs/{sample}_endclip_dcs.log"
+         "{runPath}/logs/{sample}_endclip_{sampType}.log"
 
     shell:
         """
@@ -1532,7 +1509,7 @@ rule makeSummaryFamilySize:
         {params.configPath}
         """
 
-# make per-sample report file (with BLAST)
+# make per-sample report file
 rule makeReport:
     params:
         sample = get_sample,
@@ -1564,8 +1541,7 @@ rule makeReport:
         contaminantDb = get_blast_db, 
         version = next(open(f"{sys.path[0]}/VERSION",'r')).strip()
     input:
-        getReportInput, 
-        get_blast_db_path
+        getReportInput
     output:
         touch("{runPath}/Stats/{sample}.report.ipynb")
     run:
@@ -1726,318 +1702,39 @@ import numpy as np
             f"| Raw/SSCS | {round(raw_sscs, 2)} |  \n"
             f"| SSCS/DCS | {round(sscs_dcs, 2)} |  \n"
             ))
-        # BLAST Statitics:
-        # Table of species (taxIDs)
-        blastSpecSrc = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_dcs.speciesComp.txt", 'r').readlines()
-        blastSpecTab = [
-            "| TaxID | Number Reads |  ",
-            "| ----- | ------------ |  "
-            ]
-        for line in blastSpecSrc:
-            linebins = line.strip().split()
-            blastSpecTab.append(f"| {linebins[0]} | {linebins[1]} |  ")
-        blastSpec = "\n".join(blastSpecTab)
-        # Ambiguity Composition
-        inAmbigs = "  \n".join([x.strip() for x in open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt", 'r').readlines()])
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##BLAST Statistics:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"###Species Composition:  \n"
-            f"To look up taxIDs, use [NCBI taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy)  \n"
-            f" * TaxIDs of -1 are assigned to between species BLAST ties. \n"
-            f" * TaxIDs of -3 are assigned to records with no BLAST results. \n"
-            f" * TaxIDs of -4 are assigned to records which were submitted to BLAST, for which BLAST did not attempt alignment.  \n"
-            f"  \n{blastSpec}\n"
-            f"###Ambiguity Composition:  \n"
-            f"```\n{inAmbigs}```"
-            ))
-        # Insert size graph
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##Insert size graph:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            ))
-        # ~ myCells.append(nbf.v4.new_code_cell(
-            # ~ f'from IPython.display import IFrame\n'
-            # ~ f'IFrame(f"{wildcards.sample}.dcs.iSize_Histogram.pdf",600,600)\n'
-            # ~ ))
-        myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}.dcs.iSize_Histogram.png")'
-            ))
-
-        # Depth statistics
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##Depth per Target:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            ))
-        myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}.dcs.targetCoverage.png")'
-            ))
-
-        # Muts per read pos statistics
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##Muts per Cycle:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            ))
-        myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}.dcs_BasePerPosWithoutNs.png")'
-            ))
-
-        # Mutation statistics
-        cmTable1 = [
-            "| Parameter | Value |  \n", 
-            "| --------- | ----- |  \n"
-            ]
-        cmTable2  = [
-            "| MUTATION_TYPE | MUTATION_CLASS | COUNT | DENOMINATOR | FREQUENCY |  \n",
-            "| ------------- | -------------- | ----- | ----------- | --------- |  \n"
-            ]
-        cmFile = open(f"{wildcards.runPath}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv", 'r')
-        for line in cmFile:
-            if "##" in line:
-                linebins = line.strip().split('\t')
-                if "Input file:" in line:
-                    cmTable1.append(
-                        f"| Input file | {linebins[1]} |  \n"
-                        )
-                elif "Input reference:" in line:
-                    cmTable1.append(
-                        f"| Input reference | {linebins[1]} |  \n"
-                        )
-                elif "Input bed:" in line:
-                    cmTable1.append(
-                        f"| Input bed | {linebins[1]} |  \n"
-                        )
-                elif "Minimum Depth" in line:
-                    cmTable1.append(
-                        f"| Minimum Depth | {linebins[1]} |  \n"
-                        )
-                elif "Clonality" in line: 
-                    cmTable1.append(
-                        f"| Clonality | {linebins[1]} |  \n"
-                        )
-                elif "Unique" in line:
-                    cmTable1.append(
-                        f"| Unique | True |  \n"
-                        )
-            elif "#" not in line:
-                if "OVERALL" in line:
-                    cmTable2.append(
-                        f"| {' | '.join([x for x in line.strip().split(',')[2:]])} |  \n"
-                        )
-        cmFile.close()
-        
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##Countmuts output:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"###Parameters:  \n"
-            f"{''.join(cmTable1)}"
-            f"  \n"
-            f"###Overall Mutation Counts:  \n"
-            f"{''.join(cmTable2)}"
-            ))
-
-        nb['cells'] = myCells
-        nbf.write(nb, f"{wildcards.runPath}/Stats/{wildcards.sample}.report.ipynb")
-
-# make per-sample report file (without BLAST)
-rule makeReport_noBlast:
-    params:
-        sample = get_sample,
-        rglb = get_rglb,
-        rgpl = get_rgpl,
-        rgsm = get_rgsm,
-        rgpu = get_rgpu,
-        reference = get_reference,
-        target_bed = get_target_bed,
-        baseDir = get_baseDir,
-        in1 = get_in1,
-        in2 = get_in2,
-        mqFilt = get_mqFilt,
-        minMem = get_minMem,
-        maxMem = get_maxMem,
-        cutOff = get_cutOff,
-        nCutOff = get_nCutOff,
-        umiLen = get_umiLen,
-        spacerLen = get_spacerLen,
-        locLen = get_locLen,
-        clipBegin = get_clipBegin,
-        clipEnd = get_clipEnd,
-        minClonal = get_minClonal,
-        maxClonal = get_maxClonal,
-        minDepth = get_minDepth,
-        maxNs = get_maxNs,
-        outConfig = getOutConfig,
-        rLen = get_readLen,
-        contaminantDb = get_blast_db, 
-        version = next(open(f"{sys.path[0]}/VERSION",'r')).strip()
-    input:
-        getReportInput_noBlast
-    output:
-        touch("{runPath}/Stats/{sample}.report.ipynb")
-    run:
-        import nbformat as nbf
-        #from matplotlib import pyplot as plt
-        import numpy as np
-        nb = nbf.v4.new_notebook()
-        myCells = []
-        myCells.append(nbf.v4.new_code_cell("""\
-%pylab inline
-#import matplotlib.pyplot as plt
-#import matplotlib.image as mpimg
-from IPython.display import Image
-import numpy as np
-"""))
-        myCells.append(nbf.v4.new_markdown_cell("""\
-#Duplex Sequencing Summary"""
-            ))
-
-        # ToC
-        myCells.append(nbf.v4.new_markdown_cell("""\
-##Table of Contents:
-[Top](#Duplex-Sequencing-Summary)  
-1. [Table of Contents](#Table-of-Contents:)
-2. [Glosary](#Glosary:)  
-3. [Parameters](#Parameters:)
-4. [Consensus Maker Statistics](#Consensus-Maker-Statistics:)
-5. [Family Size Plots](#Family-Size-Plots:)
-6. [Read Statistics](#Read-Statistics:)
-7. [Alignment Statistics](#Alignment-Statistics:)
-8. [Consensus Making Ratios](#Consensus-Making-Ratios:)
-9. [BLAST Statistics](#BLAST-Statistics:)
-10. [Insert Size Graph](#Insert-size-graph:)
-11. [Depth per Target](#Depth-per-Target:)
-12. [Muts per Cycle](#Muts-per-Cycle:)
-13. [Countmuts output](#Countmuts-output:)
-"""
-            ))
-        # Glossary
-        myCells.append(nbf.v4.new_markdown_cell(
-            f'##Glosary:  \n'
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f'###Read:  \n'
-            f'A single DNA sequence; one half of an Illumina paired-end read.  \n'
-            f'###Paired-end read:  \n'
-            f'A pair of DNA sequences from the same molecule in the final library; analogous to cluster. Most sequencing facilities will refer to paired-end reads as reads.  \n'
-            f'###Family:  \n'
-            f'A group of reads originating from the same end of the same strand of the same original (pre-library preperation) DNA molecule.  \n'
-            f'###SSCS:  \n'
-            f'A consensus sequence made by comparing all reads in a family at each base, and selecting the most common base at each position for the consensus base if it matches the stringency requirement of what proportion of reads match the base.  \n'
-            f'###DCS:  \n'
-            f'A consensus made by comparing two SSCS from the same end of the same molecule; each SSCS molecule represents one strand of the molecule.  \n'
-            f'###Depth:  \n'
-            f'The number of DCS reads, present at a given position in the reference genome; equivalent to the number of original molecules sequenced.  \n'
-            ))
-
-        # Parameters
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##Parameters:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"  \n"
-            f"| Parameter | Value |  \n"
-            f"| --------- | ----- |  \n"
-            f"|Version|{params.version}|  \n"
-            f"|RunID |{wildcards.sample}|  \n"
-            f"|Run Directory | {wildcards.runPath} |  \n"
-            f"|Inputs| |  \n"
-            f"|R1| {params.in1}|  \n"
-            f"|R2| {params.in2}|  \n"
-            f"|Read Length| {params.rLen}|  \n"
-            f"|UMI Length| {params.umiLen}|  \n"
-            f"|Spacer Length| {params.spacerLen}|  \n"
-            f"|Localization Length| {params.locLen}|  \n"
-            f"|Minimum family size| {params.minMem}|  \n"
-            f"|Maximum family size| {params.maxMem}|  \n"
-            f"|Consensus Making Stringency| {params.cutOff}|  \n"
-            f"|Max proportion Ns per DCS| {params.nCutOff}|  \n"
-            f"|Genome| {params.reference}|  \n"
-            f"|Bed File| {params.target_bed}|  \n"
-            f"|Contaminant_filter DB| {params.contaminantDb}|  \n"
-            f"|RGSM| {params.rgsm}|  \n"
-            f"|RGLB| {params.rglb}|  \n"
-            f"|RGPL| {params.rgpl}|  \n"
-            f"|RGPU| {params.rgpu}|  \n"
-            f"|Clipping |  \n"
-            f"|5' | {params.clipBegin}|  \n"
-            f"|3' | {params.clipEnd}|"
-            ))
-        # Read Consensus Maker statistics:
-        cmStats = '  \n'.join([x.strip() for x in open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_cmStats.txt", 'r').readlines()[1:]])
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##Consensus Maker Statistics:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"```\n{cmStats}```"
-            ))
-        # import family size plots
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"###Family Size Plots:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            ))
-        myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}_family_size.png")'
-            ))
-        myCells.append(nbf.v4.new_code_cell(
-            f'Image(f"plots/{wildcards.sample}_fam_size_relation.png")'
-            ))
-        # Raw Read Counts:
-        rawFlagstats = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt", 'r').readlines()
-        sscsFlagstats = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt", 'r').readlines()
-        dcsFlagstats = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt", 'r').readlines()
-        rawTarget = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_onTargetCount.txt", 'r').readlines()
-        # Alignment Statistics:
-        rawReads = int(rawFlagstats[0].split()[0])
-        sscsReads=int(sscsFlagstats[0].split()[0])
-        mappedSscs=int(sscsFlagstats[4].split()[0])
-        dcsReads=int(dcsFlagstats[0].split()[0])
-        mappedDcs=int(dcsFlagstats[4].split()[0])
-        if int(rawTarget[1].split()[0]) == 0:
-            rawOnTarget=0
+        if params.contaminantDb.upper() != "NONE":
+            # BLAST Statitics:
+            # Table of species (taxIDs)
+            blastSpecSrc = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_dcs.speciesComp.txt", 'r').readlines()
+            blastSpecTab = [
+                "| TaxID | Number Reads |  ",
+                "| ----- | ------------ |  "
+                ]
+            for line in blastSpecSrc:
+                linebins = line.strip().split()
+                blastSpecTab.append(f"| {linebins[0]} | {linebins[1]} |  ")
+            blastSpec = "\n".join(blastSpecTab)
+            # Ambiguity Composition
+            inAmbigs = "  \n".join([x.strip() for x in open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt", 'r').readlines()])
+            myCells.append(nbf.v4.new_markdown_cell(
+                f"##BLAST Statistics:  \n"
+                f"[Top](#Duplex-Sequencing-Summary)  \n"
+                f"###Species Composition:  \n"
+                f"To look up taxIDs, use [NCBI taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy)  \n"
+                f" * TaxIDs of -1 are assigned to between species BLAST ties. \n"
+                f" * TaxIDs of -3 are assigned to records with no BLAST results. \n"
+                f" * TaxIDs of -4 are assigned to records which were submitted to BLAST, for which BLAST did not attempt alignment.  \n"
+                f"  \n{blastSpec}\n"
+                f"###Ambiguity Composition:  \n"
+                f"```\n{inAmbigs}```"
+                ))
         else:
-            rawOnTarget=int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0])
-        if sscsReads == 0:
-            sscsMapped=0
-            raw_sscs=0
-        else:
-            sscsMapped=mappedSscs/sscsReads
-            raw_sscs=rawReads/sscsReads
-        if dcsReads == 0:
-            dcsMapped=0
-            sscs_dcs=0
-        else:
-            dcsMapped=mappedDcs/dcsReads
-            sscs_dcs=sscsReads/dcsReads
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##Read Statistics:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"  \n"
-            f"| | |  \n"
-            f"| --- | --- |  \n"
-            f"| Raw Reads | {rawReads} |  \n"
-            f"| SSCS Reads: | {sscsReads} |  \n"
-            f"| Mapped SSCS Reads: | {mappedSscs} |  \n"
-            f"| DCS Reads: | {dcsReads} |  \n"
-            f"| Mapped DCS Reads: | {mappedDcs} |  \n"
-            f"##Alignment Statistics:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"  \n"
-            f"| | |  \n"
-            f"| --- | --- |  \n"
-            f"| Raw on target | {round(rawOnTarget,4)*100}% |  \n"
-            f"| SSCS Mapped | {round(sscsMapped, 4)*100}% |  \n"
-            f"| DCS Mapped | {round(dcsMapped, 4)*100}% |  \n"
-            f"##Consensus Making Ratios:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"  \n"
-            f"| | |  \n"
-            f"| --- | --- |  \n"
-            f"| Raw/SSCS | {round(raw_sscs, 2)} |  \n"
-            f"| SSCS/DCS | {round(sscs_dcs, 2)} |  \n"
-            ))
-        # BLAST Statitics:
-        myCells.append(nbf.v4.new_markdown_cell(
-            f"##BLAST Statistics:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"No blast was run on this sample.  \n"
-            ))
+            # BLAST Statitics:
+            myCells.append(nbf.v4.new_markdown_cell(
+                f"##BLAST Statistics:  \n"
+                f"[Top](#Duplex-Sequencing-Summary)  \n"
+                f"No blast was run on this sample.  \n"
+                ))
         # Insert size graph
         myCells.append(nbf.v4.new_markdown_cell(
             f"##Insert size graph:  \n"
@@ -2148,5 +1845,3 @@ ruleorder: PreBlastFilter > makeBai
 ruleorder: PreBlastProcessing1 > makeBai
 ruleorder: PreBlastProcessing3 > makeBai
 ruleorder: makeTempBai > makeBai
-ruleorder: endClipDcs > endClipDcs_noBlast
-ruleorder: makeReport > makeReport_noBlast
