@@ -5,30 +5,35 @@ set -e
 set -o pipefail
 set -u
 
-#checking that input is a valid gatk 3.8 jar file
-jar_version=$(java -jar "${1}" --version | grep -oEi '[0-9]\.[0-9]' | grep -oEim 1 '[0-9]\.[0-9]')
-if [[ "$jar_version" != "3.8" ]]; then
-    echo "This file is not version 3.8, but $jar_version.  Download GATK 3.8.1 and try again."
-    exit 1
-fi
+#~ #checking that input is a valid gatk 3.8 jar file
+#~ jar_version=$(java -jar "${1}" --version | grep -oEi '[0-9]\.[0-9]' | grep -oEim 1 '[0-9]\.[0-9]')
+#~ if [[ "$jar_version" != "3.8" ]]; then
+    #~ echo "This file is not version 3.8, but $jar_version.  Download GATK 3.8.1 and try again."
+    #~ exit 1
+#~ fi
 
 snakeDir=$(pwd)
-maxCores="${2}"
+maxCores="${1}"
 
 # Setup test case
 echo "Creating test config file"
-echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,runSSCS,recovery" > test/testConfig.csv
-echo "test,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery_noSynLink.sh" >> test/testConfig.csv
+echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,runSSCS,recovery"> test/testConfig.csv
+echo "test1,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery.sh" >> test/testConfig.csv
+echo "test2,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverAmbig.sh" >> test/testConfig.csv
+echo "test3,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverWrongSpecies.sh" >> test/testConfig.csv
+echo "test4,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverAll.sh" >> test/testConfig.csv
+echo "test5,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery.sh" >> test/testConfig.csv
+
 
 # Set up progConfig file
 echo "Creating progConfig file"
 echo "gatk3:" > DS_progConfig.yaml
 echo "samples: test/testConfig.csv" >> DS_progConfig.yaml
 echo "maxCores: ${maxCores}" >> DS_progConfig.yaml
-echo "vardict_f: .0000001" >> DS_progConfig.yaml
-echo "vardict_nmfreq: .0000001" >> DS_progConfig.yaml
-echo "vardict_r: 1" >> DS_progConfig.yaml
-echo "vardict_V: 0.00000000001" >> DS_progConfig.yaml
+echo "vardict_f: \".0000001\"" >> DS_progConfig.yaml
+echo "vardict_nmfreq: \".0000001\"" >> DS_progConfig.yaml
+echo "vardict_r: \"1\"" >> DS_progConfig.yaml
+echo "vardict_V: \"0.00000000001\"" >> DS_progConfig.yaml
 echo "vardict_adaptor: GCTCTTCCGATCT,CTCTTCCGATCT,TCTTCCGATCT,CTTCCGATCT,TTCCGATCT,TCCGATCT,CCGATCT,CGATCT" >> DS_progConfig.yaml
 
 

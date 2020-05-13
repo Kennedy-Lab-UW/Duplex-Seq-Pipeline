@@ -3,6 +3,7 @@
 .snakemake/
 DS
 DS-dag
+DS-unlock
 DS_progConfig.yaml
 .env_initialized
 scripts/__pycache__
@@ -17,6 +18,7 @@ scripts/RecoveryScripts/*
 
 # Test files #
 ##############
+test/testConfig.csv
 test/testData/*/
 test/testData/testData_config.sh
 test/testConfig.csv.*

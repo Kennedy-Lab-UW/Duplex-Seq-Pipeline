@@ -90,7 +90,7 @@ def get_cleanup(wildcards):
 def get_recovery(wildcards):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
 
-def get_endClipDCS_bam(wildcards):
+def getVarDictBam(wildcards):
     if wildcards.sampType == 'dcs':
         if get_blast_db_path(wildcards) == "NONE.nal":
             output=(f"{wildcards.runPath}/"
@@ -106,27 +106,6 @@ def get_endClipDCS_bam(wildcards):
         output=(f"{wildcards.runPath}/"
                 f"{wildcards.sample}_mem"
                 f".sscs.sort.bam"
-                )
-    else:
-        raise Exception("Wrong sampType")
-    return output
-
-def get_endClipDCS_bai(wildcards):
-    if wildcards.sampType == 'dcs':
-        if get_blast_db_path(wildcards) == "NONE.nal":
-            output=(f"{wildcards.runPath}/"
-                f"{wildcards.sample}_mem"
-                f".dcs.sort.bam.bai"
-                )
-        else:
-            output=(f"{wildcards.runPath}/"
-                f"{wildcards.sample}_dcs"
-                f".postRecovery.recovered.temp.bam.bai"
-                )
-    elif wildcards.sampType == 'sscs':
-        output=(f"{wildcards.runPath}/"
-                f"{wildcards.sample}_mem"
-                f".sscs.sort.bam.bai"
                 )
     else:
         raise Exception("Wrong sampType")
@@ -155,7 +134,6 @@ def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
                 )
     return outList
     
-    
 def get_outCountMuts(sampType="dcs"):
     outList = []
     for sampIter in samples.index:
@@ -172,6 +150,7 @@ def get_outCountMuts(sampType="dcs"):
                 f"{sampIter}.{sampType}.countmuts.csv"
                 )
     return outList
+
 def get_outMems(sampType="dcs"):
     outList = []
     for sampIter in samples.index:
@@ -181,6 +160,7 @@ def get_outMems(sampType="dcs"):
             f"{sampIter}_mem.{sampType}.sort.flagstats.txt"
             )
     return outList
+
 def getOutConfig(wildcards):
     return f'{samples.loc[wildcards.sample, "baseDir"]}/{samples.loc[wildcards.sample, "baseDir"]}_config.sh'
 
@@ -306,38 +286,6 @@ def getReportInput(wildcards):
     
     return outArgs
 
-def getReportInput_noBlast(wildcards):
-    outArgs = []
-    # Raw read stats files
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
-    #'Consensus Maker Stats File
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.tagstats.txt')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_cmStats.txt')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}_family_size.png')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}_fam_size_relation.png')
-    #'SSCS Alignment Stats File
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt')
-    #'Clipping Stats files
-    #'Mutations Stats Files
-    #'Final stats files
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam.bai')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosInclNs.png')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs_BasePerPosWithoutNs.png')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.mutsPerRead.png')
-    #'Final files
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.targetCoverage.png')
-    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
-    return outArgs
-
-
 def get_reports():
     outList = []
     for sampIter in samples.index:
@@ -363,13 +311,14 @@ def getSummaryInput():
     outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".mutated.bam"))
     outFiles.extend(get_outFiles(prefix="Final/sscs/", sampType="sscs", suffix=".vcf"))
     outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".vcf"))
-    outFiles.extend(get_outFiles(prefix="Stats/data/", sampType="dcs", suffix=".region.mutpos.vcf_depth.txt"))
+    outFiles.extend(get_outFiles(prefix="Stats/data/", sampType="dcs", suffix=".depth.txt"))
     outFiles.extend(get_reports())
     return outFiles
 
 wildcard_constraints:
     sampType="(sscs)|(dcs)",
-    sample="|".join([f"({x})" for x in samples.index])
+    sample="|".join([f"({x})" for x in samples.index]),
+    runPath="|".join([f"({samples.loc[x, 'baseDir']})" for x in samples.index])
 
 # Run all steps of the pipeline
 rule all:
@@ -418,54 +367,18 @@ rule initializeEnvs:
         """
         touch "{output}"
         """
-if config["gatk3"] is None:
-    rule initializeGatkEnv:
-        output:
-            temp("gatk.initialized")
-        conda:
-            "envs/gatk3_env.yaml"
-        shell:
-            """
-            touch gatk.initialized
-            """
-    rule initializeFullEnv:
-        output:
-            temp("full.initialized")
-        conda:
-            "envs/DS_env_full.yaml"
-        shell:
-            """
-            touch full.initialized
-            """
-else:
-    rule initializeGatkEnv:
-        output:
-            temp("gatk.initialized")
-        params:
-            gatkPath=config["gatk3"]
-        conda:
-            "envs/gatk3_env.yaml"
-        shell:
-            """
-            echo {params.gatkPath}
-            gatk3-register {params.gatkPath}
-            touch gatk.initialized
-            """
-    rule initializeFullEnv:
-        output:
-            temp("full.initialized")
-        params:
-            gatkPath=config["gatk3"], 
-            basePath = sys.path[0]
-        conda:
-            "envs/DS_env_full.yaml"
-        shell:
-            """
-            echo {params.gatkPath}
-            gatk3-register {params.gatkPath}
-            # ~ Rscript {params.basePath}/scripts/setupR.R
-            touch full.initialized
-            """
+
+rule initializeFullEnv:
+    output:
+        temp("full.initialized")
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch full.initialized
+        """
+
 rule initializeDS_env:
     output:
         temp("DS.initialized")
@@ -996,148 +909,133 @@ rule CountAmbig:
         cd ../
         """
 
-# Apply fixed end clipping to DCS
-rule endClipDcs:
+rule makePreVariantCallCp:
     params:
-        sample = get_sample,
+    input:
+        inBam = getVarDictBam,
+    output:
+        outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam"
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        cp {input.inBam} {output.outBam}
+        """
+
+rule varDict:
+    params:
         clip5 = get_clipBegin,
         clip3 = get_clipEnd,
+        readLength = get_readLen,
+        umiLen = get_umiLen,
+        spacerLen = get_spacerLen,
+        sampName = get_rgsm, 
         basePath = sys.path[0],
-        runPath = get_baseDir
+        vardict_f = config["vardict_f"],
+        vardict_nmfreq = config["vardict_nmfreq"],
+        vardict_r = config["vardict_r"],
+        vardict_V = config["vardict_V"],
+        vardict_adaptor=config["vardict_adaptor"]
     input:
-        inBam = get_endClipDCS_bam, 
-        inBai = get_endClipDCS_bai,
-        inRef = get_reference, 
-    output:
-        outBam = temp("{runPath}/{sample}.{sampType}.filt.clipped.bam"),
-        outBai = temp("{runPath}/{sample}.{sampType}.filt.clipped.bai"),
-        clippingMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.filt.clipped.metrics.txt")
-    conda:
-       "envs/DS_env_full.yaml"
-    log:
-         "{runPath}/logs/{sample}_endclip_{sampType}.log"
-
-    shell:
-        """
-        if [ "$(( {params.clip5}+{params.clip3} ))" -gt "0" ]
-        then
-        cd {params.runPath}
-        fgbio ClipBam \
-        -i ../{input.inBam} \
-        -o ../{output.outBam} \
-        -r {input.inRef} \
-        -c Soft \
-        --read-one-five-prime {params.clip5} \
-        --read-one-three-prime {params.clip3} \
-        --read-two-five-prime {params.clip5} \
-        --read-two-three-prime {params.clip3} \
-        -m ../{output.clippingMetrics}
-        cd ../
-        else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
-        fi
-        """
-
-# Run GATK3-based local realignment
-rule localRealign:
-    params:
-        sample = get_sample,
-        basePath = sys.path[0],
-        runPath = get_baseDir
-    input:
-        inBam = "{runPath}/{sample}.{sampType}.filt.clipped.bam",
-        inBai = "{runPath}/{sample}.{sampType}.filt.clipped.bai",
+        inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
+        inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
+        inBed = get_target_bed,
         inRef = get_reference
     output:
-        outIntervals = temp("{runPath}/{sample}.{sampType}.filt.clipped.intervals"),
-        outBam = temp("{runPath}/{sample}.{sampType}.filt.realign.bam"),
-        outBai = temp("{runPath}/{sample}.{sampType}.filt.realign.bai")
+        outVars = temp("{runPath}/{sample}.{sampType}.varDict.txt"), 
     conda:
-       "envs/DS_env_full.yaml"
-    log:
-         "{runPath}/logs/{sample}_realign_{sampType}.log"
+        "envs/DS_env_full.yaml"
     shell:
         """
-        cd {params.runPath}
-        gatk3 -Xmx8G -T RealignerTargetCreator \
-        -dfrac 1 \
-        -R {input.inRef} \
-        -I ../{input.inBam} \
-        -o ../{output.outIntervals} \
-        --allow_potentially_misencoded_quality_scores
-        gatk3 -Xmx8G -T IndelRealigner \
-        -dfrac 1 \
-        -R {input.inRef} \
-        -I ../{input.inBam} \
-        -targetIntervals ../{output.outIntervals} \
-        --maxReadsForRealignment 1000000 \
-        -o ../{output.outBam} \
-        --allow_potentially_misencoded_quality_scores
-        cd ../
+        cd {wildcards.runPath}
+        vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
+        -UN -P {params.clip5} \
+        -T $(( {params.readLength}-{params.umiLen}-{params.spacerLen}-{params.clip3} )) \
+        -f {params.vardict_f} -p \
+        -G {input.inRef} \
+        -nmfreq {params.vardict_nmfreq} \
+        -N {params.sampName} \
+        -r {params.vardict_r} \
+        -v -c 1 -S 2 -E 3 -U -g 4 \
+        {input.inBed} \
+        -h -V {params.vardict_V} \
+        --adaptor {params.vardict_adaptor} \
+        > {wildcards.sample}.{wildcards.sampType}.varDict.txt
+        cd ..
         """
 
-# Clip overlapping reads
-rule overlapClip:
+rule varDict_Ns:
     params:
-        sample = get_sample,
+        clip5 = get_clipBegin,
+        clip3 = get_clipEnd,
+        readLength = get_readLen,
+        umiLen = get_umiLen,
+        spacerLen = get_spacerLen,
+        sampName = get_rgsm, 
         basePath = sys.path[0],
-        runPath = get_baseDir
+        vardict_f = config["vardict_f"],
+        vardict_nmfreq = config["vardict_nmfreq"],
+        vardict_r = config["vardict_r"],
+        vardict_V = config["vardict_V"],
+        vardict_adaptor=config["vardict_adaptor"]
     input:
-        inBam = "{runPath}/{sample}.{sampType}.filt.realign.bam",
-        inBai = "{runPath}/{sample}.{sampType}.filt.realign.bai",
+        inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
+        inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
+        inBed = get_target_bed,
         inRef = get_reference
     output:
-        outBam = "{runPath}/Intermediate/PreVariantCallsCp/{sampType}/{sample}.{sampType}.clipped.bam",
-        outBai = "{runPath}/Intermediate/PreVariantCallsCp/{sampType}/{sample}.{sampType}.clipped.bai",
-        clippingMetrics = "{runPath}/Stats/data/{sample}.{sampType}.clipped.metrics.txt"
+        outVars = temp("{runPath}/{sample}.{sampType}.varDict.Ns.txt"), 
     conda:
-       "envs/DS_env_full.yaml"
-    log:
-         "{runPath}/logs/{sample}_clipOverlap_{sampType}.log"
+        "envs/DS_env_full.yaml"
     shell:
         """
-        cd {params.runPath}
-        fgbio ClipBam \
-        -i ../{input.inBam} \
-        -o ../{output.outBam} \
-        -r {input.inRef} \
-        -c Soft \
-        --clip-overlapping-reads true \
-        -m ../{output.clippingMetrics}
-        cd ../
+        cd {wildcards.runPath}
+        vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
+        -UN -P {params.clip5} \
+        -T $(( {params.readLength}-{params.umiLen}-{params.spacerLen}-{params.clip3} )) \
+        -f {params.vardict_f} -p -K \
+        -G {input.inRef} \
+        -nmfreq {params.vardict_nmfreq} \
+        -N {params.sampName} \
+        -r {params.vardict_r} \
+        -v -c 1 -S 2 -E 3 -U -g 4 \
+        {input.inBed} \
+        -h -V {params.vardict_V} \
+        --adaptor {params.vardict_adaptor} \
+        > {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt
+        cd ..
         """
 
-# Filter reads to only reads that overlap the provided bed file
-rule FinalFilter:
+rule varDict2VCF:
     params:
-        runPath = get_baseDir,
-        inBed = get_target_bed
+        basePath = sys.path[0],
+        sampName = get_rgsm, 
+        minDepth = get_minDepth, 
     input:
-        inBam = "{runPath}/Intermediate/PreVariantCallsCp/{sampType}/{sample}.{sampType}.clipped.bam",
-        inBai = "{runPath}/Intermediate/PreVariantCallsCp/{sampType}/{sample}.{sampType}.clipped.bai"
+        inVarDict = "{runPath}/{sample}.{sampType}.varDict.txt", 
+        inVarDict_Ns = "{runPath}/{sample}.{sampType}.varDict.Ns.txt", 
+        inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
+        inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
     output:
-        outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
+        outVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
+        outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
     conda:
-         "envs/DS_env_full.yaml"
-    log:
-         "{runPath}/logs/{sample}_finalFilter_{sampType}.log"
+        "envs/DS_env_full.yaml"
     shell:
         """
-        set -x
-
-        cd {params.runPath}
-
-        samtools view -b -L {params.inBed} \
-        Intermediate/PreVariantCallsCp/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.clipped.bam \
-        > Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam
-
-
-        cd ../
+        cd {wildcards.runPath}
+        python {params.basePath}/scripts/varDictToVCF.py \
+        -i {wildcards.sample}.{wildcards.sampType}.varDict.txt \
+        -n {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt \
+        -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
+        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
+        -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
+        --samp_name {params.sampName} \
+        -d {params.minDepth}
+        cd ..
         """
 
-# Create VCF output
-rule makeVCF:
+rule makeDepth:
     params:
         basePath = sys.path[0],
         runPath = get_baseDir,
@@ -1147,94 +1045,21 @@ rule makeVCF:
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
         inRef = get_reference
     output:
-        outTmpVCF = temp("{runPath}/{sample}.{sampType}.region.mutpos.vcf"),
-        outDepth = "{runPath}/Stats/data/{sample}.{sampType}.region.mutpos.vcf_depth.txt"
+        outDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt"
     conda:
         "envs/DS_env_full.yaml"
     log:
-         "{runPath}/logs/{sample}_makeVCF_{sampType}.log"
+         "{runPath}/logs/{sample}_makeDepth_{sampType}.log"
     shell:
         """
         cd {params.runPath}
-        python {params.basePath}/scripts/BamToMutposVCF.py \
+        python {params.basePath}/scripts/makeDepthFile.py \
         -i ../{input.inBam} \
         -f {input.inRef} \
-        -o {wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf \
+        -o {wildcards.sample}.{wildcards.sampType}.depth.txt \
         --samp_name {params.sampName}
         
-        mv {wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf_depth.txt Stats/data/{wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf_depth.txt
-        cd ..
-        """
-
-# get SNPs from VCF
-rule getSnps:
-    params:
-        basePath = sys.path[0],
-        runPath = get_baseDir,
-        minDepth = get_minDepth,
-    input:
-        inVCF = "{runPath}/{sample}.{sampType}.region.mutpos.vcf"
-    output:
-        outVCF = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf"),
-        outSnps = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.region.snps.vcf"),
-    conda:
-        "envs/DS_env_full.yaml"
-    shell:
-        """
-        cd {params.runPath}
-        python3 {params.basePath}/scripts/SNP_finder.py \
-        --in_file {wildcards.sample}.{wildcards.sampType}.region.mutpos.vcf\
-        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf \
-        -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.snps.vcf \
-        --min_depth {params.minDepth}
-        cd ..
-        """
-
-# filter VCF to only variants covered by the provided bed file
-rule positionFilterVCF:
-    params:
-        runPath = get_baseDir,
-    input:
-        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.Marked.mutpos.vcf", 
-        inBed = get_target_bed
-    output:
-        outVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
-    conda:
-        "envs/DS_env_full.yaml"
-    log:
-        
-    shell:
-        """
-        cd {params.runPath}
-        bcftools filter \
-        -T {input.inBed} \
-        -O v \
-        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
-        Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.Marked.mutpos.vcf
-        cd ..
-        """
-
-# filter SNPs VCF to only SNPs covered by the provided bed file
-rule positionFilterSnpsVCF:
-    params:
-        runPath = get_baseDir,
-    input:
-        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.snps.vcf", 
-        inBed = get_target_bed
-    output:
-        outVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
-    conda:
-        "envs/DS_env_full.yaml"
-    log:
-        
-    shell:
-        """
-        cd {params.runPath}
-        bcftools filter \
-        -T {input.inBed} \
-        -O v \
-        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
-        Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.snps.vcf
+        mv {wildcards.sample}.{wildcards.sampType}.depth.txt Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.txt
         cd ..
         """
 
@@ -1348,7 +1173,7 @@ rule PlotCoverage:
         basePath = sys.path[0],
     input:
         inBed = get_target_bed,
-        inDepth = "{runPath}/Stats/data/{sample}.{sampType}.region.mutpos.vcf_depth.txt",
+        inDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt",
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
         temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff")
@@ -1377,7 +1202,7 @@ rule MutsPerCycle:
         inRef = get_reference,
         inFinal = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
         inFinalBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.region.snps.vcf"
+        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
     output:
         outBam2 = "{runPath}/Final/{sampType}/{sample}.{sampType}.mutated.bam",
         outErrPerCyc2_WN = "{runPath}/Stats/plots/{sample}.{sampType}_BasePerPosInclNs.png",
@@ -1394,7 +1219,7 @@ rule MutsPerCycle:
         cd {params.runPath}
         python3 {params.basePath}/scripts/countMutsPerCycle.py  \
         --inFile Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        --inSnps Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.region.snps.vcf \
+        --inSnps Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         -o {wildcards.sample}.{wildcards.sampType} \
         -l {params.readLength} -b -t 0 -c --text_file
         
@@ -1404,8 +1229,6 @@ rule MutsPerCycle:
         mv {wildcards.sample}.{wildcards.sampType}.badReads.t0.bam Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.mutated.bam
         cd ../
         """
-
-
 
 # Convert TIFF figures created by R into PNG figures
 # We implemented this due to artifacts in the raw PNG output produced by

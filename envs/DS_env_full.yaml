@@ -29,3 +29,4 @@ dependencies:
   - r-gridbase
   - icu=64.*
   - pillow
+  - vardict-java=1.7.0
