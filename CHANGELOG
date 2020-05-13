@@ -1,4 +1,7 @@
 CHANGELOG
+v1.1.1:
+Bugfix: SNPs VCF file wasn't being preserved.  This fixes that issue.  
+
 v1.1.0: 
 Bugfixes:
     Add testConfig.csv file, which was accidentally omitted in the 1.0.0 release
