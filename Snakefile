@@ -309,6 +309,8 @@ def getSummaryInput():
     outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".mutated.bam"))
     outFiles.extend(get_outFiles(prefix="Final/sscs/", sampType="sscs", suffix=".vcf"))
     outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".vcf"))
+    outFiles.extend(get_outFiles(prefix="Final/sscs/", sampType="sscs", suffix=".snps.vcf"))
+    outFiles.extend(get_outFiles(prefix="Final/dcs/", sampType="dcs", suffix=".snps.vcf"))
     outFiles.extend(get_outFiles(prefix="Stats/data/", sampType="dcs", suffix=".region.mutpos.vcf_depth.txt"))
     outFiles.extend(get_reports())
     return(outFiles)
