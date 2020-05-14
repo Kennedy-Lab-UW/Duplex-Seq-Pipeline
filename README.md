@@ -36,30 +36,27 @@ A construct created by comparing two SSCSs.
 A group of reads that shares the same tag sequence.
 
 ## 2: Dependencies:
-This pipeline is known to work with the following minimum versions of the follow required programs:
+This pipeline is known to work with the following minimum versions of 
+the follow required programs:
 
 * Python3.6+
 * Snakemake=5.5.\*
 * Pandas
 * Miniconda/Anaconda=4.7.\*
-* A GATK3.8.1 .jar file
 * bwa=0.7.17.* (for genome setup)
 * ncbi-blast=>2.6.0 (installed separately, for contaminant database setup)
 * wget (on macOS, install using homebrew; present by default on linux)
 
 Once Python3.6 is installed, snakemake and pandas can be installed using 
-pip3 or using whatever package manager you're using.  GATK3.8.1 can be 
-downloaded from 
-https://console.cloud.google.com/storage/browser/_details/gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2.  
-**We need to use GATK3.8.1 since it is the last version of GATK that 
-includes the IndelRealigner functionality; this part was removed in 
-GATK4**.  Blast can be downloaded in any of several ways, including some 
-package managers (Ubuntu: sudo apt-get install ncbi-blast+).  It can 
-also be installed using conda if desired.  
+pip3 or using whatever package manager you're using.  Blast can be 
+downloaded in any of several ways, including some package managers 
+(Ubuntu: sudo apt-get install ncbi-blast+).  It can also be installed 
+using conda if desired.  
 
 ## 3: Setup: 
 
-Find the location where you want the pipeline to be located and clone the pipeline using git:
+Find the location where you want the pipeline to be located and clone the 
+pipeline using git:
 
 ```bash
 git clone https://github.com/KennedyLabUW/Duplex-Seq-Pipeline.git
@@ -68,22 +65,31 @@ git clone https://github.com/KennedyLabUW/Duplex-Seq-Pipeline.git
 change into the directory, and run:
 
 ```bash
-bash setupDS.sh GATK_JAR_PATH MAX_CORES
+bash setupDS.sh MAX_CORES
 ```
 
-where GATK_JAR_PATH is the path to your pre-downloaded GATK jar, and MAX_CORES is the maximum number of cores you want the pipeline to be able to use. After this, with the exception of setting up the Genomes (See Section 4) and the (optional) blast contamination database (See Section 5), you should be able to run the Duplex-Seq pipeline using 
+where MAX_CORES is the maximum number of cores you want the pipeline to 
+be able to use. After this, with the exception of setting up the Genomes 
+(See Section 4) and the (optional) blast contamination database (See 
+Section 5), you should be able to run the Duplex-Seq pipeline using 
 
 ```bash
 DS CONFIG_CSV.csv
 ```
 
-where CONFIG_CSV.csv is a configuration CSV file generated as described below.  
+where CONFIG_CSV.csv is a configuration CSV file generated as described 
+below.  
 
 ## 4: Genome setup
 
-Put genomes in an easily findable location, such as our references directory (i.e. ~/bioinformatics/reference). 
+Put genomes in an easily findable location, such as our references 
+directory (i.e. ~/bioinformatics/reference). 
 
-Many genomes can be downloaded from UCSC (http://hgdownload.soe.ucsc.edu/downloads.html).  In order to download genomes from there, you will need to download the twoBitToFa program from the appropriate Utilities directory.  twoBitToFa has the following syntax (Copied from UCSC):
+Many genomes can be downloaded from UCSC 
+(http://hgdownload.soe.ucsc.edu/downloads.html).  In order to download 
+genomes from there, you will need to download the twoBitToFa program from 
+the appropriate Utilities directory.  twoBitToFa has the following syntax 
+(Copied from UCSC):
 
 ```
 twoBitToFa - Convert all or part of .2bit file to fasta
@@ -111,7 +117,12 @@ Sequence and range may also be specified as part of the input file name using th
       /path/input.2bit:name:start-end
 ```
 
-Once you have downloaded a genome and converted it into FASTA format, it needs to be indexed.  To do this, open a terminal and navigate to your the directory containing your genome.  Note that in the following commands, the word "genome.fasta" should be replaced with the file name of your genome. These commands **must** be run in the same directory as the reference genome
+Once you have downloaded a genome and converted it into FASTA format, it 
+needs to be indexed.  To do this, open a terminal and navigate to your 
+the directory containing your genome.  Note that in the following commands, 
+the word "genome.fasta" should be replaced with the file name of your 
+genome. These commands **must** be run in the same directory as the 
+reference genome
 
 ```
     bwa index genome.fasta  
@@ -124,8 +135,12 @@ Once you have downloaded a genome and converted it into FASTA format, it needs t
 At the moment, this pipeline does not support compressed genomes.
 
 ## 5: Contaminant Database Setup:
-The Duplex-Seq pipeline is designed to use a local NCBI Blast instance to detect and remove potential contamination from non-target species and identify issues arising from pseudogenes.
-*This step is optional, but requires a non valid NCBI Blast database file name. We recommend either a dummy path and file name or '.' to be present in the blast_db field in the config.csv file. Blank entries will result in pipeline failure.*
+The Duplex-Seq pipeline is designed to use a local NCBI Blast instance 
+to detect and remove potential contamination from non-target species and 
+identify issues arising from pseudogenes.
+*This step is optional, but requires a non valid NCBI Blast database file 
+name. To run without BLAST, enter "NONE" (with any capitalization) 
+in the blast_db field in the config.csv file. *
  
 To construct your contaminant database, if desired, first decide on a 
 list of species you want to monitor for contaminants.  A suggested 
@@ -157,7 +172,9 @@ website (https://www.ncbi.nlm.nih.gov/taxonomy).  This is done by running:
 python3 AddTaxonID.py GENOME.fa TAXID GENOME_taxID.fa
 ```
 
-where GENOME.fa is the input fasta file with the genome, TAXID is the NCBI taxonomy ID for the species associated with the genome, and GENOME_taxID.fa is the output labeled genome.  
+where GENOME.fa is the input fasta file with the genome, TAXID is the 
+NCBI taxonomy ID for the species associated with the genome, and 
+GENOME_taxID.fa is the output labeled genome.  
 
  2. Sub-database Creation: 
 
@@ -217,41 +234,43 @@ does support blocks as described in the bed spec.**
 
 ## 7: Configuration file creation:
 
-Use the ConfigTemplate to create a new file with the appropriate headers.  For each row, fill in the information about a particular sample:
+Use the ConfigTemplate to create a new file with the appropriate headers. 
+For each row, fill in the information about a particular sample:
 
-| Header           | Required or Default | Information |
-| ---------------- | ------------------- | ----------- |
-| sample           | Required        | A unique identifier for a sample; this will be used to name all output files for this sample |
-| rglb             | Required        | Read Group Library Identifier |
-| rgpl             | Required        | Read Group Platform; usually illumina |
-| rgpu             | Required        | Read Group Platform Unit |
-| rgsm             | Required        | Read Group Sample |
-| reference        | Required        | The path to the prepared reference genome to use with this sample.  |
-| target_bed       | Required        | A bed file showing where the targets are for this particular sample |  
-| blast_db         | Required        | The blast database to use for contaminant filtering; must include your target genome.  |
-| targetTaxonId    | Required        | The taxon ID of the species you are expecting to be present in the sample.  |
-| baseDir          | Required        | The directory the input files are in, and where the output files will be created. |
-| in1              | Required        | The read1 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.  |
-| in2              | Required        | The read2 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.   |
-| mqFilt           | 0               | A threshold for mapping quality filtering, if desired. |
-| minMem           | 0               | The minimum number of reads that must be in a family for consensus making |
-| maxMem           | 200             | The maximum number of reads in a family the consensus maker should consider. |
-| cutOff           | 0.9             | The threshold for consensus making; the consensus maker will require at least this much agreement on a per base pair level. |
-| nCutOff          | 1               | The maximum proportion of N bases in an output consensus sequence. |
-| umiLen           | 8               | The length of the UMI in this sample |
-| spacerLen        | 1               | The length of the spacer sequence in this sample |
-| locLen           | 10              | The localization length to use for this sample |
-| readLen          | 101             | The length of a read for this sample |
-| clipBegin        | 7               | How many bases to clip off the 5' end of the read |
-| clipEnd          | 0               | How many bases to clip off the 3' end of the read |
-| minClonal        | 0               | The minimum clonality to use for count_muts generation |
-| maxClonal        | 0.1             | The maximum clonality to use for count_muts generation |
-| minDepth         | 100             | The minimum depth to use for count_muts generation |
-| maxNs            | 1               | The maximum proportion of N bases to use for count_muts generation |
-| cm_outputs       | "GB"            | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
-| cm_sumTypes      | "GT"            | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
-| runSSCS          | false           | true or false; whether to do full analysis for SSCS data.  | 
-| recovery         | "noRecovery_noSynLink.sh" | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
+| Header           | Required or Default    | Information |
+| ---------------- | ---------------------- | ----------- |
+| sample           | Required               | A unique identifier for a sample; this will be used to name all output files for this sample |
+| rglb             | Required               | Read Group Library Identifier |
+| rgpl             | Required               | Read Group Platform; usually illumina |
+| rgpu             | Required               | Read Group Platform Unit |
+| rgsm             | Required               | Read Group Sample |
+| reference        | Required               | The path to the prepared reference genome to use with this sample.  |
+| target_bed       | Required               | A bed file showing where the targets are for this particular sample |  
+| blast_db         | Required               | The blast database to use for contaminant filtering; must include your target genome.  |
+| targetTaxonId    | Required               | The taxon ID of the species you are expecting to be present in the sample.  |
+| baseDir          | Required               | The directory the input files are in, and where the output files will be created. |
+| in1              | Required               | The read1 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.  |
+| in2              | Required               | The read2 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.   |
+| mqFilt           | 0                      | A threshold for mapping quality filtering, if desired. |
+| minMem           | 0                      | The minimum number of reads that must be in a family for consensus making |
+| maxMem           | 200                    | The maximum number of reads in a family the consensus maker should consider. |
+| cutOff           | 0.9                    | The threshold for consensus making; the consensus maker will require at least this much agreement on a per base pair level. |
+| nCutOff          | 1                      | The maximum proportion of N bases in an output consensus sequence. |
+| umiLen           | 8                      | The length of the UMI in this sample |
+| spacerLen        | 1                      | The length of the spacer sequence in this sample |
+| locLen           | 10                     | The localization length to use for this sample |
+| readLen          | 101                    | The length of a read for this sample |
+| clipBegin        | 7                      | How many bases to clip off the 5' end of the read |
+| clipEnd          | 0                      | How many bases to clip off the 3' end of the read |
+| minClonal        | 0                      | The minimum clonality to use for count_muts generation |
+| maxClonal        | 0.1                    | The maximum clonality to use for count_muts generation |
+| minDepth         | 100                    | The minimum depth to use for count_muts generation |
+| maxNs            | 1                      | The maximum proportion of N bases to use for count_muts generation |
+| cm_outputs       | "GB"                   | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
+| cm_sumTypes      | "GT"                   | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
+| runSSCS          | false                  | true or false; whether to do full analysis for SSCS data.  | 
+| recovery         | "noRecovery.sh"        | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
+| rerun_type       | 0 (Required for rerun) | What type of rerun you want to do.  0 -> no rerun;  1 -> rerun variant caller;  2 -> rerun postBlastRecovery; 3 -> rerun BLAST and alignment;  4 -> rerun consensus maker.  |  
 
 Save the file as a .csv file with unix line endings (LF).
 
@@ -313,7 +332,12 @@ This directory structure looks like this:
 └── SAMP_DIR
    ├── Final
    │   ├── dcs
-   │   │   ├── SAMPLE.dcs.countmuts.txt
+   │   │   ├── FilteredReads
+   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
+   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
+   │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
+   │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
+   │   │   ├── SAMPLE.dcs.countmuts.csv
    │   │   ├── SAMPLE.dcs.final.bam
    │   │   ├── SAMPLE.dcs.final.bam.bai
    │   │   ├── SAMPLE.dcs.mutated.bam
@@ -322,8 +346,13 @@ This directory structure looks like this:
    │   │   └── SAMPLE.dcs.vcf
    │   ├── SAMPLE.report.html
    │   └── sscs
+   │       ├── SAMPLE.sscs.countmuts.csv
    │       ├── SAMPLE.sscs.final.bam
-   │       └── SAMPLE.sscs.final.bam.bai
+   │       ├── SAMPLE.sscs.final.bam.bai
+   │       ├── SAMPLE.sscs.mutated.bam
+   │       ├── SAMPLE.sscs.mutated.bam.bai
+   │       ├── SAMPLE.sscs.snps.vcf
+   │       └── SAMPLE.sscs.vcf
    ├── Intermediate
    │   ├── ConsensusMakerOutputs
    │   │   ├── SAMPLE_aln_seq1.fq.gz
@@ -332,46 +361,33 @@ This directory structure looks like this:
    │   │   ├── SAMPLE_read1_sscs.fq.gz
    │   │   ├── SAMPLE_read2_dcs.fq.gz
    │   │   └── SAMPLE_read2_sscs.fq.gz
-   │   ├── postBlast
-   │   │   ├── FilteredReads
-   │   │   │   ├── SAMPLE_dcs.ambig.sort.bam
-   │   │   │   ├── SAMPLE_dcs.ambig.sort.bam.bai
-   │   │   │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
-   │   │   │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
-   │   │   ├── SAMPLE_dcs.blast.xml
-   │   │   ├── SAMPLE_dcs.preBlast.mutated.bam
-   │   │   └── SAMPLE_dcs.preBlast.unmutated.bam
-   │   └── PreVariantCallsCp
-   │       ├── dcs
-   │       │   ├── SAMPLE.dcs.clipped.bai
-   │       │   └── SAMPLE.dcs.clipped.bam
-   │       └── sscs
-   │           ├── SAMPLE.sscs.clipped.bai
-   │           └── SAMPLE.sscs.clipped.bam
+   │   └── postBlast
+   │       ├── FilteredReads
+   │       │   ├── SAMPLE_dcs.ambig.sort.bam
+   │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
+   │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
+   │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
+   │       ├── SAMPLE_dcs.blast.xml
+   │       ├── SAMPLE_dcs.preBlast.mutated.bam
+   │       └── SAMPLE_dcs.preBlast.unmutated.bam
    ├── logs
    │   └── Log Files
-   ├── SAMPLE_config.sh
    ├── SAMPLE_seq1.fastq.gz
    ├── SAMPLE_seq2.fastq.gz
    └── Stats
        ├── data
        │   ├── SAMPLE_cmStats.txt
        │   ├── SAMPLE.dcs_ambiguity_counts.txt
-       │   ├── SAMPLE.dcs.clipped.metrics.txt
-       │   ├── SAMPLE.dcs.filt.clipped.metrics.txt
-       │   ├── SAMPLE.dcs.filt.no_overlap.metrics.txt
        │   ├── SAMPLE.dcs.iSize_Metrics.txt
        │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
        │   ├── SAMPLE.dcs.mutsPerRead.txt
-       │   ├── SAMPLE.dcs.region.mutpos.vcf_depth.txt
-       │   ├── SAMPLE.dcs.region.snpFiltered.mutsPerRead.txt
+       │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
+       │   ├── SAMPLE.sscs.mutsPerRead.txt
+       │   ├── SAMPLE.dcs.depth.txt
        │   ├── SAMPLE_dcs.speciesComp.txt
        │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
        │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
        │   ├── SAMPLE_onTargetCount.txt
-       │   ├── SAMPLE.sscs.clipped.metrics.txt
-       │   ├── SAMPLE.sscs.filt.clipped.metrics.txt
-       │   ├── SAMPLE.sscs.filt.no_overlap.metrics.txt
        │   ├── SAMPLE.tagstats.txt
        │   └── SAMPLE.temp.sort.flagstats.txt
        ├── SAMPLE.report.ipynb
@@ -380,8 +396,10 @@ This directory structure looks like this:
            ├── SAMPLE.dcs_BasePerPosWithoutNs.png
            ├── SAMPLE.dcs.iSize_Histogram.png
            ├── SAMPLE.dcs.mutsPerRead.png
-           ├── SAMPLE.dcs.region.snpFiltered.mutsPerRead.png
            ├── SAMPLE.dcs.targetCoverage.png
+           ├── SAMPLE.sscs_BasePerPosInclNs.png
+           ├── SAMPLE.sscs_BasePerPosWithoutNs.png
+           ├── SAMPLE.sscs.mutsPerRead.png
            ├── SAMPLE_family_size.png
            └── SAMPLE_fam_size_relation.png
 ```
@@ -390,12 +408,16 @@ File descriptions are as follows:
 
 | Directory | File name | Description | When Generated |  
 | --------- | ------------ | -------------- | -------- |  
-| . | SAMPLE_config.sh | Per-sample config file, showing run parameters for this sample.   | Always |  
 | . | SAMPLE_seq1.fastq.gz | Input read 1 file | Input |  
 | . | SAMPLE_seq2.fastq.gz | Input read 2 file | Input |  
 | . | Final | Directory containing final bam and vcf files | Always |  
 | Final | dcs | Directory containing final dcs files | Always |  
-| Final/dcs | SAMPLE.dcs.countmuts.txt |  Countmuts file, showing a summary of mutation data for DCS reads.   | Always |  
+| Final/dcs | FilteredReads | Directory containing reads still filtered after postBlastRecovery | blast_db!=NONE |  
+| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.ambig.bam | File containing reads still considered ambiguous after postBlastRecovery.  May be empty.  | blast_db!=NONE |  
+| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.ambig.bam.bai | Index for SAMPLE.dcs.postRecovery.ambig.bam | blast_db!=NONE |  
+| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.wrongSpecies.bam | File containing reads still considered ambiguous after postBlastRecovery. May be empty. | blast_db!=NONE |  
+| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.wrongSpecies.bam.bai | Index for SAMPLE.dcs.postRecovery.wrongSpecies.bam | blast_db!=NONE |  
+| Final/dcs | SAMPLE.dcs.countmuts.csv |  Countmuts file, showing a summary of mutation data for DCS reads.   | Always |  
 | Final/dcs | SAMPLE.dcs.final.bam | Final file for DCS reads, including all reads that overlap the bed file.   | Always |  
 | Final/dcs | SAMPLE.dcs.final.bam.bai | Index for final DCS reads.   | Always |  
 | Final/dcs | SAMPLE.dcs.mutated.bam | File containing DCS reads with non-SNP mutations | Always |  
@@ -404,7 +426,7 @@ File descriptions are as follows:
 | Final/dcs | SAMPLE.dcs.vcf | VCF file containing all variants overlapping bed file in DCS. | Always |  
 | Final | SAMPLE.report.html | Summary report for this sample | Always |  
 | Final | sscs | Directory containing final SSCS files | Always |  
-|  | SAMPLE.sscs.countmuts.txt |  Countmuts file, showing a summary of mutation data for SSCS reads.   |  |  
+| Final/sscs | SAMPLE.sscs.countmuts.csv |  Countmuts file, showing a summary of mutation data for SSCS reads.   | runSscs=True |  
 | Final/sscs | SAMPLE.sscs.final.bam | Final file for SSCS reads, including all reads that overlap the bed file.   | Always |  
 | Final/sscs | SAMPLE.sscs.final.bam.bai | Index for final SSCS reads.   | Always |  
 | Final/sscs | SAMPLE.sscs.mutated.bam | File containing SSCS reads with non-SNP mutations | runSscs=True |  
@@ -428,33 +450,21 @@ File descriptions are as follows:
 | Intermediate/postBlast | SAMPLE_dcs.blast.xml | BLAST xml output | Always |  
 | Intermediate/postBlast | SAMPLE_dcs.preBlast.mutated.bam | DCS with potential non-SNP variants that were submitted to BLAST. | Always |  
 | Intermediate/postBlast | SAMPLE_dcs.preBlast.unmutated.bam | DCS reads without non-SNP variants.   | Always |  
-| Intermediate | PreVariantCallsCp | Directory for final checkpoint, immediately before variant calling.   | Always |  
-| Intermediate/PreVariantCallsCp | dcs | Directory containing final checkpoint DCS bam files | Always |  
-| Intermediate/PreVariantCallsCp/dcs | SAMPLE.dcs.clipped.bai | Final file containing all DCS reads, including those that don’t overlap the bed file.   | Always |  
-| Intermediate/PreVariantCallsCp/dcs | SAMPLE.dcs.clipped.bam | Final file containing all DCS reads, including those that don’t overlap the bed file.   | Always |  
-| Intermediate/PreVariantCallsCp | sscs | Directory containing final checkpoint SSCS bam files | Always |  
-| Intermediate/PreVariantCallsCp/sscs | SAMPLE.sscs.clipped.bai | Index for final file containing all SSCS reads, including those that don’t overlap the bed file.   | Always |  
-| Intermediate/PreVariantCallsCp/sscs | SAMPLE.sscs.clipped.bam | Final file containing all SSCS reads, including those that don’t overlap the bed file.   | Always |  
 | . | logs | Directory containing log files for this sample.   | Always |  
 | . | Stats | Directory containing statistics files | Always |  
 | Stats | data | Directory containing statistics data files.   | Always |  
 | Stats/data | SAMPLE_cmStats.txt | Statistics from the Consensus Maker | Always |  
 | Stats/data | SAMPLE.dcs_ambiguity_counts.txt | Statistics on ambiguity counts | Always |  
-| Stats/data | SAMPLE.dcs.clipped.metrics.txt | Statistics on fixed end clipping in DCS | Always |  
-| Stats/data | SAMPLE.dcs.filt.clipped.metrics.txt | Statistics on overlap clipping in DCS | Always |  
 | Stats/data | SAMPLE.dcs.iSize_Metrics.txt | Statistics on insert size in DCS | Always |  
 | Stats/data | SAMPLE.dcs_MutsPerCycle.dat.csv | Statistics file for non-SNP mutations per cycle in DCS reads | Always |  
 | Stats/data | SAMPLE.dcs.mutsPerRead.txt | Statistics file for non-SNP mutations per read in DCS reads | Always |  
-| Stats/data | SAMPLE.dcs.region.mutpos.vcf_depth.txt | Per-base coverage and N counts for final DCS  | Always |  
+| Stats/data | SAMPLE.dcs.depth.txt | Per-base coverage and N counts for final DCS  | Always |  
 | Stats/data | SAMPLE_dcs.speciesComp.txt | File containing species assignment data for DCS reads | Always |  
 | Stats/data | SAMPLE_mem.dcs.sort.flagstats.txt | Initial alignment statistics for DCS reads | Always |  
 | Stats/data | SAMPLE_mem.sscs.sort.flagstats.txt | Initial alignment statistics for SSCS reads | Always |  
 | Stats/data | SAMPLE_onTargetCount.txt | Raw on target statistics | Always |  
-| Stats/data | SAMPLE.sscs.clipped.metrics.txt | Statistics on fixed end clipping in SSCS | Always |  
-| Stats/data | SAMPLE.sscs.filt.clipped.metrics.txt | Statistics on overlap clipping in SSCS | Always |  
 | Stats/data | SAMPLE.sscs_MutsPerCycle.dat.csv |  Text data of error rate per cycle in unclipped SSCS  | runSscs=True |  
 | Stats/data | SAMPLE.sscs.mutsPerRead.txt | Statistics file for non-SNP mutations per read in SSCS reads | runSscs=True |  
-| Stats/data | SAMPLE.sscs.region.mutpos.vcf_depth.txt | Per-base coverage and N counts for final SSCS  | runSscs=True |  
 | Stats/data | SAMPLE.tagstats.txt |  Family size data (in text form)  | Always |  
 | Stats/data | SAMPLE.temp.sort.flagstats.txt | Statistics on initial read counts | Always |  
 | Stats | SAMPLE.report.ipynb | iPython notebook for the HTML report | Always |  
@@ -472,22 +482,47 @@ File descriptions are as follows:
 
 ## 11: Testing the pipeline
 
-The newly setup pipeline can be tested using provided data and files located in the 'test' directory. 
-To test the pipeline, change into the 'test' directory and invoking at the command prompt: 
+The newly setup pipeline can be tested using provided data and files 
+located in the 'test' directory. To test the pipeline, change into the 
+'test' directory and invoking at the command prompt: 
 
 ```bash
 DS testConfig.csv
 ```
-A final expected output report can be found in the testData/Final directory and be compared to the expected_report.html file
-located in the parent test directory.
+A final output report can be found in the testData/Final directory and 
+be compared to the reports in the ExpectedReports directory located in 
+the parent test directory.
 
 ## 12: Full and partial reruns
 
-Sometimes it may be necessary to rerun all or part of the pipeline for various reasons.  The following table lists some of the reasons you might want to rerun all or part of the pipeline, how much of the pipeline you want to rerun in those cases, and how to carry out the rerun.  
+Sometimes it may be necessary to rerun all or part of the pipeline for 
+various reasons.  In order to facilitate this, we have provided a script 
+(DS-clean) which will prepare samples to rerun based on the "rerun_type" 
+column in the config file.  
 
-| Issue | Amount to rerun | Preparation steps |  
+The following table lists some of the reasons you might want to rerun all 
+or part of the pipeline, and how much of the pipeline you want to rerun 
+in those cases.  
+!!!!WORK HERE!!!
+| Issue | Amount to rerun | rerun_type |  
 | ----- | --------------- | ----------------- |  
-| Wrong bed file used | From pre-variant calling | Remove the following files: <ul><li>summary.csv</li><li>summaryMutsByCycle.pdf</li><li>summaryDepth.pdf</li><li>summaryFamilySize.pdf</li><li>summaryInsertSize.pdf</li><li>All _config.sh files for samples that you want to force a rerun of</li></ul>Remove the following directories: <ul><li>All Final directories in samples that you want to force a rerun of.  </li></ul> |
-| <ul><li>Wrong clipping parameters used</li><li>Wrong target taxon ID used</li></ul> | From post-blast | Remove the following files: <ul><li>summary.csv</li><li>summaryMutsByCycle.pdf</li><li>summaryDepth.pdf</li><li>summaryFamilySize.pdf</li><li>summaryInsertSize.pdf</li><li>All _config.sh files for samples that you want to force a rerun of</li></ul>Remove the following directories: <ul><li>All Final directories in samples that you want to force a rerun of.  </li><li>All Intermediate/PreVariantCallsCp directories in samples that you want to force a rerun of</li></ul> |
-| <ul><li>Wrong contaminant db used</li><li>Wrong reference genome used</li></ul> | From post-Consensus Maker | Remove the following files: <ul><li>summary.csv</li><li>summaryMutsByCycle.pdf</li><li>summaryDepth.pdf</li><li>summaryFamilySize.pdf</li><li>summaryInsertSize.pdf</li><li>All _config.sh files for samples that you want to force a rerun of</li></ul>Remove the following directories: <ul><li>All Final directories in samples that you want to force a rerun of.  </li><li>All Intermediate/PreVariantCallsCp directories in samples that you want to force a rerun of</li><li>All Intermediate/postBlast directories in samples that you want to force a rerun of</li></ul> |
-| Wrong consensus making parameters used | From beginning | Remove the following files: <ul><li>summary.csv</li><li>summaryMutsByCycle.pdf</li><li>summaryDepth.pdf</li><li>summaryFamilySize.pdf</li><li>summaryInsertSize.pdf</li><li>All _config.sh files for samples that you want to force a rerun of</li></ul>Remove the following directories: <ul><li>All Final directories in samples that you want to force a rerun of.  </li><li>All Intermediate directories in samples that you want to force a rerun of</li><li>All Stats directories in samples that you want to force a rerun of</li></ul>
+| <ul><li>Wrong bed file used</li><li>Wrong clipping parameters used</li></ul> | From pre-variant calling | 1 |  
+| Wrong target taxon ID used | From post-blast | 2 |  
+| <ul><li>Wrong contaminant db used</li><li>Wrong reference genome used</li></ul> | From post-Consensus Maker | 3 |  
+| Wrong consensus making parameters used | From beginning | 4 |  
+
+To finish preparing for and executing a rerun, run:
+
+```bash
+DS-clean CONFIG_CSV.csv
+DS CONFIG_CSV.csv
+```
+
+## 13: Unlocking following a power failure
+In the event that pipeline execution is interupted by a power failure, 
+the directory can be unlocked in order to restart using the provided 
+DS-unlock script:
+
+```bash 
+DS-unlock CONFIG_CSV.csv
+```

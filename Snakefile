@@ -254,6 +254,11 @@ def getReportInput(wildcards):
         outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai')
         #'BLAST Filtering Stats File
         outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_dcs.speciesComp.txt')
+        # Filtered DCS Final files
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.ambig.bam')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.ambig.bam.bai')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam.bai')
         # Ambiguity stats file
         outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs_ambiguity_counts.txt')
     # Raw read stats files
@@ -267,14 +272,20 @@ def getReportInput(wildcards):
     #'SSCS Alignment Stats File
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt')
-    # Final BAM files
+    # Final DCS BAM files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.final.bam.bai')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
-    #'Clipping Stats files
     #'Mutations Stats Files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
+    # SSCS-only files
+    if get_runSSCS(wildcards):
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.countmuts.csv')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.mutated.bam')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.mutated.bam.bai')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.snps.vcf')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.vcf')
     #'Final stats files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
@@ -417,9 +428,7 @@ rule makeDirs:
         mkdir -p Intermediate/ConsensusMakerOutputs \
         Intermediate/postBlast/FilteredReads \
         Final/dcs Final/sscs Final/dcs/FilteredReads \
-        Stats/data Stats/plots \
-        Intermediate/PreVariantCallsCp/sscs \
-        Intermediate/PreVariantCallsCp/dcs
+        Stats/data Stats/plots 
         cd ../
         """
 

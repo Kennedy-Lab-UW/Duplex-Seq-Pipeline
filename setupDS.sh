@@ -23,6 +23,7 @@ echo "test2,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/
 echo "test3,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverWrongSpecies.sh" >> test/testConfig.csv
 echo "test4,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverAll.sh" >> test/testConfig.csv
 echo "test5,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery.sh" >> test/testConfig.csv
+echo "test6,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,TRUE,noRecovery.sh" >> test/testConfig.csv
 
 
 # Set up progConfig file
@@ -64,6 +65,15 @@ echo "# Run this if the pipeline gets stuck locked for some reason" >> DS-unlock
 echo "inConfig=\"\$1\"" >> DS-unlock
 echo "snakemake --unlock -s ${snakeDir}/Snakefile --use-conda -j 1 --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\"" >> DS-unlock
 chmod a+x DS-unlock
+
+echo "Creating rerun prep script"
+echo "#!/bin/bash" > DS-clean
+echo "" >> DS-clean
+echo "# This is an unlock script for the DS snakemake pipeline" >> DS-clean
+echo "# Run this if the pipeline gets stuck locked for some reason" >> DS-clean
+echo "inConfig=\"\$1\"" >> DS-clean
+echo "snakemake -s ${snakeDir}/ResetSnakefile --use-conda -j 1 --config samples=\"\${inConfig}\"" >> DS-clean
+chmod a+x DS-clean
 
 currentDate=$(date +%F)
 echo "Adding DS to path"

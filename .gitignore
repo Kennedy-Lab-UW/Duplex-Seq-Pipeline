@@ -4,6 +4,7 @@
 DS
 DS-dag
 DS-unlock
+DS-clean
 DS_progConfig.yaml
 .env_initialized
 scripts/__pycache__
