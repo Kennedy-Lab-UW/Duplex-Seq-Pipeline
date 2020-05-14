@@ -4,7 +4,7 @@ Bugfixes:
     Add testConfig.csv file, which was accidentally omitted in the 1.0.0 release
     Fix bug with depth plots where zero-depth positions could accidentally be labeled as having non-zero depth
     Fix crashes from running samples that produce no DCS data
-    Change the default recovery script to avoid synlinks
+    Change the default recovery script to avoid symlinks
 New Features: 
     Additional output options for the bamToCountmuts program
         Allow summing total and genes by gene or by block
@@ -14,7 +14,7 @@ New Features:
     Add ability to set maximum number of cores to use during setup.
 Internal changes:
     Simplify bed file column naming in depth plotting script
-    Separate mutanal steps into different snakemake rules
+    Separate mutation analysis steps into different snakemake rules
     General code cleanup
     
 V1.0.0:

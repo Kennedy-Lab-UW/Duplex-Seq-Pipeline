@@ -157,14 +157,14 @@ starting list is:
  
 **It is important that any genome you plan to use for alignment be included in this database, 
 in the same version (e.g. if your alignment genome uses UCSC chromosome 
-names, your genome in the database cannot use NCBI chromosme names, but 
+names, your genome in the database cannot use NCBI chromosome names, but 
 must also use UCSC chromosome names)**.  
 
 Database setup consists of three steps:
 
  1. Genome labeling:
 
-Label each record in the genome with the ncbi taxID for the species the 
+Label each record in the genome with the NCBI taxon ID for the species the 
 genome is associated with.  TaxIDs can be found using the NCBI taxonomy 
 website (https://www.ncbi.nlm.nih.gov/taxonomy).  This is done by running:
 
@@ -241,7 +241,7 @@ For each row, fill in the information about a particular sample:
 | ---------------- | ---------------------- | ----------- |
 | sample           | Required               | A unique identifier for a sample; this will be used to name all output files for this sample |
 | rglb             | Required               | Read Group Library Identifier |
-| rgpl             | Required               | Read Group Platform; usually illumina |
+| rgpl             | Required               | Read Group Platform; usually Illumina |
 | rgpu             | Required               | Read Group Platform Unit |
 | rgsm             | Required               | Read Group Sample |
 | reference        | Required               | The path to the prepared reference genome to use with this sample.  |
@@ -289,7 +289,7 @@ functionality may be changed in the future.  In general, these scripts must:
 4. take a name base for output files as $4
 5. take a basePath for location of script files as $5
 
-The script must create the folowing output files: 
+The script must create the following output files: 
 
  * ${4}.recovered.temp.bam
  * ${4}.ambig.bam
@@ -299,7 +299,7 @@ All script files must be stored in scripts/RecoveryScripts.
 
 Note that if you decide to write your own recovery scripts, you are 
 responsible for ensuring that your recovery scripts actually work as 
-intended, and do not break your computer.  We are unable to guarentee 
+intended, and do not break your computer.  We are unable to guarantee 
 that any sample run with a recovery script other than one of the ones 
 provided with the pipeline will produce accurate data.  
 
@@ -519,7 +519,7 @@ DS CONFIG_CSV.csv
 ```
 
 ## 13: Unlocking following a power failure
-In the event that pipeline execution is interupted by a power failure, 
+In the event that pipeline execution is interrupted by a power failure, 
 the directory can be unlocked in order to restart using the provided 
 DS-unlock script:
 
