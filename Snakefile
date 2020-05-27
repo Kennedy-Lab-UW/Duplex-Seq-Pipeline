@@ -94,7 +94,12 @@ def get_final_length(wildcards):
     myLen -= int(samples.loc[wildcards.sample, "umiLen"])
     myLen -= int(samples.loc[wildcards.sample, "spacerLen"])
     return myLen
-    
+def get_snps_threshold(wildcards):
+    snpsLevel = min([
+        float(samples.loc[wildcards.sample, "maxClonal"]),
+        0.4])
+    return snpsLevel
+
 def getVarDictBam(wildcards):
     if wildcards.sampType == 'dcs':
         if get_blast_db_path(wildcards) == "NONE.nal":
@@ -1025,6 +1030,7 @@ rule varDict2VCF:
         basePath = sys.path[0],
         sampName = get_rgsm, 
         minDepth = get_minDepth, 
+        snpLevel = get_snps_threshold
     input:
         inVarDict = "{runPath}/{sample}.{sampType}.varDict.txt", 
         inVarDict_Ns = "{runPath}/{sample}.{sampType}.varDict.Ns.txt", 
@@ -1045,6 +1051,7 @@ rule varDict2VCF:
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
         -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         --samp_name {params.sampName} \
+        --snp_threshold {params.snpLevel} \
         -d {params.minDepth}
         cd ..
         """
