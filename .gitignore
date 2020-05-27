@@ -9,6 +9,7 @@ scripts/__pycache__
 
 # Test files #
 ##############
+test/testConfig.csv
 test/testData/*/
 test/testData/testData_config.sh
 test/testConfig.csv.*
