@@ -6,8 +6,6 @@ dependencies:
   - python=3.6.*
   - bwa=0.7.17.*
   - samtools=1.9.*
-  - gatk=3.8.*
-  - fgbio=1.0.*
   - picard=2.20.*
   - pysam=0.15.3
   - snakemake=5.*
@@ -18,7 +16,6 @@ dependencies:
   - numpy
   - matplotlib
   - regex
-  - kraken
   - biopython
   - blast
   - jupyterlab
