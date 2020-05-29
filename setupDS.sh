@@ -5,13 +5,6 @@ set -e
 set -o pipefail
 set -u
 
-#~ #checking that input is a valid gatk 3.8 jar file
-#~ jar_version=$(java -jar "${1}" --version | grep -oEi '[0-9]\.[0-9]' | grep -oEim 1 '[0-9]\.[0-9]')
-#~ if [[ "$jar_version" != "3.8" ]]; then
-    #~ echo "This file is not version 3.8, but $jar_version.  Download GATK 3.8.1 and try again."
-    #~ exit 1
-#~ fi
-
 snakeDir=$(pwd)
 maxCores="${1}"
 
@@ -28,8 +21,7 @@ echo "test6,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/
 
 # Set up progConfig file
 echo "Creating progConfig file"
-echo "gatk3:" > DS_progConfig.yaml
-echo "samples: test/testConfig.csv" >> DS_progConfig.yaml
+echo "samples: test/testConfig.csv" > DS_progConfig.yaml
 echo "maxCores: ${maxCores}" >> DS_progConfig.yaml
 echo "vardict_f: \".0000001\"" >> DS_progConfig.yaml
 echo "vardict_nmfreq: \".0000001\"" >> DS_progConfig.yaml
@@ -39,7 +31,7 @@ echo "vardict_adaptor: GCTCTTCCGATCT,CTCTTCCGATCT,TCTTCCGATCT,CTTCCGATCT,TTCCGAT
 
 
 echo "Configuring snakemake"
-snakemake --cores 1 --use-conda --conda-prefix ${snakeDir}/.snakemake --config gatk3=${1} -- initializeEnvs
+snakemake --cores 1 --use-conda --conda-prefix ${snakeDir}/.snakemake -- initializeEnvs
 
 echo "Creating run script"
 echo "#!/bin/bash" > DS
