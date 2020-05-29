@@ -375,7 +375,8 @@ rule rerun:
 # Implemented to save time at run-time on environment setup
 rule initializeEnvs:
     input:
-        "full.initialized"
+        "full.initialized",
+        "recovery.initialized"
         #~ "gatk.initialized",
         #~ "DS.initialized",
         #~ "bwa.initialized",
@@ -398,6 +399,17 @@ rule initializeFullEnv:
         """
         echo "Initializing envs"
         touch full.initialized
+        """
+
+rule initializeRecoveryEnv:
+    output:
+        temp("recovery.initialized")
+    conda:
+        "envs/DS_env_recovery.yaml"
+    shell:
+        """
+        echo "Initializing recovery environment"
+        touch recovery.initialized
         """
 
 rule initializeDS_env:
@@ -887,7 +899,7 @@ rule postBlastRecovery:
         outAmbigBam = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.ambig.bam",
         outWrongSpeciesBam = "{runPath}/Final/dcs/FilteredReads/{sample}_dcs.postRecovery.wrongSpecies.bam"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_env_recovery.yaml"
     log:
         "{runPath}/logs/{sample}_postBlast2_dcs.log"
     shell:
