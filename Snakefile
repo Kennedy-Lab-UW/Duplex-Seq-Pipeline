@@ -362,29 +362,16 @@ rule all:
         """
         
 
-rule rerun:
-    input:
-        ".rerunPrepDone",
-        ".ruleAllFinished"
-    shell:
-        """
-        rm .rerunPrepDone
-        """
-
 # Environment set up rules
 # Implemented to save time at run-time on environment setup
 rule initializeEnvs:
     input:
         "full.initialized",
         "recovery.initialized"
-        #~ "gatk.initialized",
-        #~ "DS.initialized",
-        #~ "bwa.initialized",
-        #~ "fgbio.initialized"
     params:
         basePath = sys.path[0]
     output:
-        ".env_initialized",
+        temp(".env_initialized"),
     shell:
         """
         touch "{output}"
@@ -410,34 +397,6 @@ rule initializeRecoveryEnv:
         """
         echo "Initializing recovery environment"
         touch recovery.initialized
-        """
-
-rule initializeDS_env:
-    output:
-        temp("DS.initialized")
-    conda:
-        "envs/DS_env.yaml"
-    shell:
-        """
-        touch DS.initialized
-        """
-rule initialize bwa_env:
-    output:
-        temp("bwa.initialized")
-    conda:
-        "envs/bwa_env.yaml"
-    shell:
-        """
-        touch bwa.initialized
-        """
-rule initialize fgbio_env:
-    output:
-        temp("fgbio.initialized")
-    conda:
-        "envs/fgbio_env.yaml"
-    shell:
-        """
-        touch fgbio.initialized
         """
 
 # Setup output directories
