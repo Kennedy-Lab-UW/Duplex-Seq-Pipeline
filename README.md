@@ -503,7 +503,7 @@ column in the config file.
 The following table lists some of the reasons you might want to rerun all 
 or part of the pipeline, and how much of the pipeline you want to rerun 
 in those cases.  
-!!!!WORK HERE!!!
+
 | Issue | Amount to rerun | rerun_type |  
 | ----- | --------------- | ----------------- |  
 | <ul><li>Wrong bed file used</li><li>Wrong clipping parameters used</li></ul> | From pre-variant calling | 1 |  

@@ -209,13 +209,13 @@ starting list is:</p>
 </ul>
 <p><strong>It is important that any genome you plan to use for alignment be included in this database,
 in the same version (e.g. if your alignment genome uses UCSC chromosome
-names, your genome in the database cannot use NCBI chromosme names, but
+names, your genome in the database cannot use NCBI chromosome names, but
 must also use UCSC chromosome names)</strong>.</p>
 <p>Database setup consists of three steps:</p>
 <ol>
 <li>Genome labeling:</li>
 </ol>
-<p>Label each record in the genome with the ncbi taxID for the species the
+<p>Label each record in the genome with the NCBI taxon ID for the species the
 genome is associated with.  TaxIDs can be found using the NCBI taxonomy
 website (<a href="https://www.ncbi.nlm.nih.gov/taxonomy" rel="nofollow">https://www.ncbi.nlm.nih.gov/taxonomy</a>).  This is done by running:</p>
 <pre><code>python3 AddTaxonID.py GENOME.fa TAXID GENOME_taxID.fa
@@ -292,7 +292,7 @@ For each row, fill in the information about a particular sample:</p>
 <tr>
 <td>rgpl</td>
 <td>Required</td>
-<td>Read Group Platform; usually illumina</td>
+<td>Read Group Platform; usually Illumina</td>
 </tr>
 <tr>
 <td>rgpu</td>
@@ -458,7 +458,7 @@ functionality may be changed in the future.  In general, these scripts must:</p>
 <li>take a name base for output files as $4</li>
 <li>take a basePath for location of script files as $5</li>
 </ol>
-<p>The script must create the folowing output files:</p>
+<p>The script must create the following output files:</p>
 <ul>
 <li>${4}.recovered.temp.bam</li>
 <li>${4}.ambig.bam</li>
@@ -467,7 +467,7 @@ functionality may be changed in the future.  In general, these scripts must:</p>
 <p>All script files must be stored in scripts/RecoveryScripts.</p>
 <p>Note that if you decide to write your own recovery scripts, you are
 responsible for ensuring that your recovery scripts actually work as
-intended, and do not break your computer.  We are unable to guarentee
+intended, and do not break your computer.  We are unable to guarantee
 that any sample run with a recovery script other than one of the ones
 provided with the pipeline will produce accurate data.</p>
 <h2>
@@ -1039,8 +1039,7 @@ various reasons.  In order to facilitate this, we have provided a script
 column in the config file.</p>
 <p>The following table lists some of the reasons you might want to rerun all
 or part of the pipeline, and how much of the pipeline you want to rerun
-in those cases.<br>
-!!!!WORK HERE!!!</p>
+in those cases.</p>
 <table>
 <thead>
 <tr>
@@ -1083,7 +1082,7 @@ in those cases.<br>
 DS CONFIG_CSV.csv</pre></div>
 <h2>
 <a id="user-content-13-unlocking-following-a-power-failure" class="anchor" href="#13-unlocking-following-a-power-failure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>13: Unlocking following a power failure</h2>
-<p>In the event that pipeline execution is interupted by a power failure,
+<p>In the event that pipeline execution is interrupted by a power failure,
 the directory can be unlocked in order to restart using the provided
 DS-unlock script:</p>
 <div class="highlight highlight-source-shell"><pre>DS-unlock CONFIG_CSV.csv</pre></div>
