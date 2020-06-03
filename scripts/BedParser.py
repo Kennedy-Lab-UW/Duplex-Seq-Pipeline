@@ -68,7 +68,9 @@ class Bed_Line:
             self.blockStarts = [0]
         else:
             self.blockStarts = list(filter([int(x) for x in blockStarts.split(',')]))
-    
+        assert self.blockCount == len(self.blockSizes)
+        assert self.blockCount == len(self.blockStarts)
+
     def samtoolsStr(self):
         return(f"{self.chrom}:{self.startPos}:{self.endPos}")
     
