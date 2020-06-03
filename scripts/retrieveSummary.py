@@ -219,7 +219,7 @@ def main():
 
         # read depth file:
         print("Processing Depth")
-        depthFile = open(f"{baseDir}/Stats/data/{runID}.dcs.region.mutpos.vcf_depth.txt", 'r')
+        depthFile = open(f"{baseDir}/Stats/data/{runID}.dcs.depth.txt", 'r')
         totDepth = 0
         numLocs = 0
         dcsMaxDepth = 0

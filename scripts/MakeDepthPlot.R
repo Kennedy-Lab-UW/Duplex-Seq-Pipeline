@@ -15,7 +15,7 @@ library(readr)
 #        "{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.png"
 
 myBed <- read_table2(inBed, col_names = FALSE)
-myFName = paste("Stats/data/",inSampName, ".region.mutpos.vcf_depth.txt", sep="")
+myFName = paste("Stats/data/",inSampName, ".depth.txt", sep="")
 depth <- read_delim(myFName,
                     "\t", escape_double = FALSE, trim_ws = TRUE, 
                     col_types="cicii") 

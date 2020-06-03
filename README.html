@@ -110,39 +110,45 @@ simple majority.</p>
 <p>A group of reads that shares the same tag sequence.</p>
 <h2>
 <a id="user-content-2-dependencies" class="anchor" href="#2-dependencies" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>2: Dependencies:</h2>
-<p>This pipeline is known to work with the following minimum versions of the follow required programs:</p>
+<p>This pipeline is known to work with the following minimum versions of
+the follow required programs:</p>
 <ul>
 <li>Python3.6+</li>
 <li>Snakemake=5.5.*</li>
 <li>Pandas</li>
 <li>Miniconda/Anaconda=4.7.*</li>
-<li>A GATK3.8.1 .jar file</li>
 <li>bwa=0.7.17.* (for genome setup)</li>
 <li>ncbi-blast=&gt;2.6.0 (installed separately, for contaminant database setup)</li>
 <li>wget (on macOS, install using homebrew; present by default on linux)</li>
 </ul>
 <p>Once Python3.6 is installed, snakemake and pandas can be installed using
-pip3 or using whatever package manager you're using.  GATK3.8.1 can be
-downloaded from
-<a href="https://console.cloud.google.com/storage/browser/_details/gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2" rel="nofollow">https://console.cloud.google.com/storage/browser/_details/gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2</a>.<br>
-<strong>We need to use GATK3.8.1 since it is the last version of GATK that
-includes the IndelRealigner functionality; this part was removed in
-GATK4</strong>.  Blast can be downloaded in any of several ways, including some
-package managers (Ubuntu: sudo apt-get install ncbi-blast+).  It can
-also be installed using conda if desired.</p>
+pip3 or using whatever package manager you're using.  Blast can be
+downloaded in any of several ways, including some package managers
+(Ubuntu: sudo apt-get install ncbi-blast+).  It can also be installed
+using conda if desired.</p>
 <h2>
 <a id="user-content-3-setup" class="anchor" href="#3-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>3: Setup:</h2>
-<p>Find the location where you want the pipeline to be located and clone the pipeline using git:</p>
+<p>Find the location where you want the pipeline to be located and clone the
+pipeline using git:</p>
 <div class="highlight highlight-source-shell"><pre>git clone https://github.com/KennedyLabUW/Duplex-Seq-Pipeline.git</pre></div>
 <p>change into the directory, and run:</p>
-<div class="highlight highlight-source-shell"><pre>bash setupDS.sh GATK_JAR_PATH MAX_CORES</pre></div>
-<p>where GATK_JAR_PATH is the path to your pre-downloaded GATK jar, and MAX_CORES is the maximum number of cores you want the pipeline to be able to use. After this, with the exception of setting up the Genomes (See Section 4) and the (optional) blast contamination database (See Section 5), you should be able to run the Duplex-Seq pipeline using</p>
+<div class="highlight highlight-source-shell"><pre>bash setupDS.sh MAX_CORES</pre></div>
+<p>where MAX_CORES is the maximum number of cores you want the pipeline to
+be able to use. After this, with the exception of setting up the Genomes
+(See Section 4) and the (optional) blast contamination database (See
+Section 5), you should be able to run the Duplex-Seq pipeline using</p>
 <div class="highlight highlight-source-shell"><pre>DS CONFIG_CSV.csv</pre></div>
-<p>where CONFIG_CSV.csv is a configuration CSV file generated as described below.</p>
+<p>where CONFIG_CSV.csv is a configuration CSV file generated as described
+below.</p>
 <h2>
 <a id="user-content-4-genome-setup" class="anchor" href="#4-genome-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>4: Genome setup</h2>
-<p>Put genomes in an easily findable location, such as our references directory (i.e. ~/bioinformatics/reference).</p>
-<p>Many genomes can be downloaded from UCSC (<a href="http://hgdownload.soe.ucsc.edu/downloads.html" rel="nofollow">http://hgdownload.soe.ucsc.edu/downloads.html</a>).  In order to download genomes from there, you will need to download the twoBitToFa program from the appropriate Utilities directory.  twoBitToFa has the following syntax (Copied from UCSC):</p>
+<p>Put genomes in an easily findable location, such as our references
+directory (i.e. ~/bioinformatics/reference).</p>
+<p>Many genomes can be downloaded from UCSC
+(<a href="http://hgdownload.soe.ucsc.edu/downloads.html" rel="nofollow">http://hgdownload.soe.ucsc.edu/downloads.html</a>).  In order to download
+genomes from there, you will need to download the twoBitToFa program from
+the appropriate Utilities directory.  twoBitToFa has the following syntax
+(Copied from UCSC):</p>
 <pre><code>twoBitToFa - Convert all or part of .2bit file to fasta
 usage:
    twoBitToFa input.2bit output.fa
@@ -167,7 +173,12 @@ Sequence and range may also be specified as part of the input file name using th
    or
       /path/input.2bit:name:start-end
 </code></pre>
-<p>Once you have downloaded a genome and converted it into FASTA format, it needs to be indexed.  To do this, open a terminal and navigate to your the directory containing your genome.  Note that in the following commands, the word "genome.fasta" should be replaced with the file name of your genome. These commands <strong>must</strong> be run in the same directory as the reference genome</p>
+<p>Once you have downloaded a genome and converted it into FASTA format, it
+needs to be indexed.  To do this, open a terminal and navigate to your
+the directory containing your genome.  Note that in the following commands,
+the word "genome.fasta" should be replaced with the file name of your
+genome. These commands <strong>must</strong> be run in the same directory as the
+reference genome</p>
 <pre><code>    bwa index genome.fasta  
     samtools faidx genome.fasta  
     # /Path/To/PicardTools should be the path to wherever you put your picard tools jar file.    
@@ -177,8 +188,12 @@ Sequence and range may also be specified as part of the input file name using th
 <p>At the moment, this pipeline does not support compressed genomes.</p>
 <h2>
 <a id="user-content-5-contaminant-database-setup" class="anchor" href="#5-contaminant-database-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>5: Contaminant Database Setup:</h2>
-<p>The Duplex-Seq pipeline is designed to use a local NCBI Blast instance to detect and remove potential contamination from non-target species and identify issues arising from pseudogenes.
-<em>This step is optional, but requires a non valid NCBI Blast database file name. We recommend either a dummy path and file name or '.' to be present in the blast_db field in the config.csv file. Blank entries will result in pipeline failure.</em></p>
+<p>The Duplex-Seq pipeline is designed to use a local NCBI Blast instance
+to detect and remove potential contamination from non-target species and
+identify issues arising from pseudogenes.
+*This step is optional, but requires a non valid NCBI Blast database file
+name. To run without BLAST, enter "NONE" (with any capitalization)
+in the blast_db field in the config.csv file. *</p>
 <p>To construct your contaminant database, if desired, first decide on a
 list of species you want to monitor for contaminants.  A suggested
 starting list is:</p>
@@ -194,18 +209,20 @@ starting list is:</p>
 </ul>
 <p><strong>It is important that any genome you plan to use for alignment be included in this database,
 in the same version (e.g. if your alignment genome uses UCSC chromosome
-names, your genome in the database cannot use NCBI chromosme names, but
+names, your genome in the database cannot use NCBI chromosome names, but
 must also use UCSC chromosome names)</strong>.</p>
 <p>Database setup consists of three steps:</p>
 <ol>
 <li>Genome labeling:</li>
 </ol>
-<p>Label each record in the genome with the ncbi taxID for the species the
+<p>Label each record in the genome with the NCBI taxon ID for the species the
 genome is associated with.  TaxIDs can be found using the NCBI taxonomy
 website (<a href="https://www.ncbi.nlm.nih.gov/taxonomy" rel="nofollow">https://www.ncbi.nlm.nih.gov/taxonomy</a>).  This is done by running:</p>
 <pre><code>python3 AddTaxonID.py GENOME.fa TAXID GENOME_taxID.fa
 </code></pre>
-<p>where GENOME.fa is the input fasta file with the genome, TAXID is the NCBI taxonomy ID for the species associated with the genome, and GENOME_taxID.fa is the output labeled genome.</p>
+<p>where GENOME.fa is the input fasta file with the genome, TAXID is the
+NCBI taxonomy ID for the species associated with the genome, and
+GENOME_taxID.fa is the output labeled genome.</p>
 <ol start="2">
 <li>Sub-database Creation:</li>
 </ol>
@@ -251,7 +268,8 @@ like.  <strong>This pipeline does not currently support overlapping intervals,
 does support blocks as described in the bed spec.</strong></p>
 <h2>
 <a id="user-content-7-configuration-file-creation" class="anchor" href="#7-configuration-file-creation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>7: Configuration file creation:</h2>
-<p>Use the ConfigTemplate to create a new file with the appropriate headers.  For each row, fill in the information about a particular sample:</p>
+<p>Use the ConfigTemplate to create a new file with the appropriate headers.
+For each row, fill in the information about a particular sample:</p>
 <table>
 <thead>
 <tr>
@@ -274,7 +292,7 @@ does support blocks as described in the bed spec.</strong></p>
 <tr>
 <td>rgpl</td>
 <td>Required</td>
-<td>Read Group Platform; usually illumina</td>
+<td>Read Group Platform; usually Illumina</td>
 </tr>
 <tr>
 <td>rgpu</td>
@@ -413,8 +431,13 @@ does support blocks as described in the bed spec.</strong></p>
 </tr>
 <tr>
 <td>recovery</td>
-<td>"noRecovery_noSynLink.sh"</td>
+<td>"noRecovery.sh"</td>
 <td>The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.</td>
+</tr>
+<tr>
+<td>rerun_type</td>
+<td>0 (Required for rerun)</td>
+<td>What type of rerun you want to do.  0 -&gt; no rerun;  1 -&gt; rerun variant caller;  2 -&gt; rerun postBlastRecovery; 3 -&gt; rerun BLAST and alignment;  4 -&gt; rerun consensus maker.</td>
 </tr>
 </tbody>
 </table>
@@ -435,7 +458,7 @@ functionality may be changed in the future.  In general, these scripts must:</p>
 <li>take a name base for output files as $4</li>
 <li>take a basePath for location of script files as $5</li>
 </ol>
-<p>The script must create the folowing output files:</p>
+<p>The script must create the following output files:</p>
 <ul>
 <li>${4}.recovered.temp.bam</li>
 <li>${4}.ambig.bam</li>
@@ -444,7 +467,7 @@ functionality may be changed in the future.  In general, these scripts must:</p>
 <p>All script files must be stored in scripts/RecoveryScripts.</p>
 <p>Note that if you decide to write your own recovery scripts, you are
 responsible for ensuring that your recovery scripts actually work as
-intended, and do not break your computer.  We are unable to guarentee
+intended, and do not break your computer.  We are unable to guarantee
 that any sample run with a recovery script other than one of the ones
 provided with the pipeline will produce accurate data.</p>
 <h2>
@@ -490,7 +513,12 @@ well as a file directory structure for each sample.  The summary files are:</p>
 └── SAMP_DIR
    ├── Final
    │   ├── dcs
-   │   │   ├── SAMPLE.dcs.countmuts.txt
+   │   │   ├── FilteredReads
+   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
+   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
+   │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
+   │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
+   │   │   ├── SAMPLE.dcs.countmuts.csv
    │   │   ├── SAMPLE.dcs.final.bam
    │   │   ├── SAMPLE.dcs.final.bam.bai
    │   │   ├── SAMPLE.dcs.mutated.bam
@@ -499,8 +527,13 @@ well as a file directory structure for each sample.  The summary files are:</p>
    │   │   └── SAMPLE.dcs.vcf
    │   ├── SAMPLE.report.html
    │   └── sscs
+   │       ├── SAMPLE.sscs.countmuts.csv
    │       ├── SAMPLE.sscs.final.bam
-   │       └── SAMPLE.sscs.final.bam.bai
+   │       ├── SAMPLE.sscs.final.bam.bai
+   │       ├── SAMPLE.sscs.mutated.bam
+   │       ├── SAMPLE.sscs.mutated.bam.bai
+   │       ├── SAMPLE.sscs.snps.vcf
+   │       └── SAMPLE.sscs.vcf
    ├── Intermediate
    │   ├── ConsensusMakerOutputs
    │   │   ├── SAMPLE_aln_seq1.fq.gz
@@ -509,46 +542,33 @@ well as a file directory structure for each sample.  The summary files are:</p>
    │   │   ├── SAMPLE_read1_sscs.fq.gz
    │   │   ├── SAMPLE_read2_dcs.fq.gz
    │   │   └── SAMPLE_read2_sscs.fq.gz
-   │   ├── postBlast
-   │   │   ├── FilteredReads
-   │   │   │   ├── SAMPLE_dcs.ambig.sort.bam
-   │   │   │   ├── SAMPLE_dcs.ambig.sort.bam.bai
-   │   │   │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
-   │   │   │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
-   │   │   ├── SAMPLE_dcs.blast.xml
-   │   │   ├── SAMPLE_dcs.preBlast.mutated.bam
-   │   │   └── SAMPLE_dcs.preBlast.unmutated.bam
-   │   └── PreVariantCallsCp
-   │       ├── dcs
-   │       │   ├── SAMPLE.dcs.clipped.bai
-   │       │   └── SAMPLE.dcs.clipped.bam
-   │       └── sscs
-   │           ├── SAMPLE.sscs.clipped.bai
-   │           └── SAMPLE.sscs.clipped.bam
+   │   └── postBlast
+   │       ├── FilteredReads
+   │       │   ├── SAMPLE_dcs.ambig.sort.bam
+   │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
+   │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
+   │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
+   │       ├── SAMPLE_dcs.blast.xml
+   │       ├── SAMPLE_dcs.preBlast.mutated.bam
+   │       └── SAMPLE_dcs.preBlast.unmutated.bam
    ├── logs
    │   └── Log Files
-   ├── SAMPLE_config.sh
    ├── SAMPLE_seq1.fastq.gz
    ├── SAMPLE_seq2.fastq.gz
    └── Stats
        ├── data
        │   ├── SAMPLE_cmStats.txt
        │   ├── SAMPLE.dcs_ambiguity_counts.txt
-       │   ├── SAMPLE.dcs.clipped.metrics.txt
-       │   ├── SAMPLE.dcs.filt.clipped.metrics.txt
-       │   ├── SAMPLE.dcs.filt.no_overlap.metrics.txt
        │   ├── SAMPLE.dcs.iSize_Metrics.txt
        │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
        │   ├── SAMPLE.dcs.mutsPerRead.txt
-       │   ├── SAMPLE.dcs.region.mutpos.vcf_depth.txt
-       │   ├── SAMPLE.dcs.region.snpFiltered.mutsPerRead.txt
+       │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
+       │   ├── SAMPLE.sscs.mutsPerRead.txt
+       │   ├── SAMPLE.dcs.depth.txt
        │   ├── SAMPLE_dcs.speciesComp.txt
        │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
        │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
        │   ├── SAMPLE_onTargetCount.txt
-       │   ├── SAMPLE.sscs.clipped.metrics.txt
-       │   ├── SAMPLE.sscs.filt.clipped.metrics.txt
-       │   ├── SAMPLE.sscs.filt.no_overlap.metrics.txt
        │   ├── SAMPLE.tagstats.txt
        │   └── SAMPLE.temp.sort.flagstats.txt
        ├── SAMPLE.report.ipynb
@@ -557,8 +577,10 @@ well as a file directory structure for each sample.  The summary files are:</p>
            ├── SAMPLE.dcs_BasePerPosWithoutNs.png
            ├── SAMPLE.dcs.iSize_Histogram.png
            ├── SAMPLE.dcs.mutsPerRead.png
-           ├── SAMPLE.dcs.region.snpFiltered.mutsPerRead.png
            ├── SAMPLE.dcs.targetCoverage.png
+           ├── SAMPLE.sscs_BasePerPosInclNs.png
+           ├── SAMPLE.sscs_BasePerPosWithoutNs.png
+           ├── SAMPLE.sscs.mutsPerRead.png
            ├── SAMPLE_family_size.png
            └── SAMPLE_fam_size_relation.png</pre></div>
 <p>File descriptions are as follows:</p>
@@ -572,12 +594,6 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>.</td>
-<td>SAMPLE_config.sh</td>
-<td>Per-sample config file, showing run parameters for this sample.</td>
-<td>Always</td>
-</tr>
 <tr>
 <td>.</td>
 <td>SAMPLE_seq1.fastq.gz</td>
@@ -604,7 +620,37 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 <tr>
 <td>Final/dcs</td>
-<td>SAMPLE.dcs.countmuts.txt</td>
+<td>FilteredReads</td>
+<td>Directory containing reads still filtered after postBlastRecovery</td>
+<td>blast_db!=NONE</td>
+</tr>
+<tr>
+<td>Final/dcs/FilteredReads</td>
+<td>SAMPLE.dcs.postRecovery.ambig.bam</td>
+<td>File containing reads still considered ambiguous after postBlastRecovery.  May be empty.</td>
+<td>blast_db!=NONE</td>
+</tr>
+<tr>
+<td>Final/dcs/FilteredReads</td>
+<td>SAMPLE.dcs.postRecovery.ambig.bam.bai</td>
+<td>Index for SAMPLE.dcs.postRecovery.ambig.bam</td>
+<td>blast_db!=NONE</td>
+</tr>
+<tr>
+<td>Final/dcs/FilteredReads</td>
+<td>SAMPLE.dcs.postRecovery.wrongSpecies.bam</td>
+<td>File containing reads still considered ambiguous after postBlastRecovery. May be empty.</td>
+<td>blast_db!=NONE</td>
+</tr>
+<tr>
+<td>Final/dcs/FilteredReads</td>
+<td>SAMPLE.dcs.postRecovery.wrongSpecies.bam.bai</td>
+<td>Index for SAMPLE.dcs.postRecovery.wrongSpecies.bam</td>
+<td>blast_db!=NONE</td>
+</tr>
+<tr>
+<td>Final/dcs</td>
+<td>SAMPLE.dcs.countmuts.csv</td>
 <td>Countmuts file, showing a summary of mutation data for DCS reads.</td>
 <td>Always</td>
 </tr>
@@ -657,10 +703,10 @@ well as a file directory structure for each sample.  The summary files are:</p>
 <td>Always</td>
 </tr>
 <tr>
-<td></td>
-<td>SAMPLE.sscs.countmuts.txt</td>
+<td>Final/sscs</td>
+<td>SAMPLE.sscs.countmuts.csv</td>
 <td>Countmuts file, showing a summary of mutation data for SSCS reads.</td>
-<td></td>
+<td>runSscs=True</td>
 </tr>
 <tr>
 <td>Final/sscs</td>
@@ -801,48 +847,6 @@ well as a file directory structure for each sample.  The summary files are:</p>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate</td>
-<td>PreVariantCallsCp</td>
-<td>Directory for final checkpoint, immediately before variant calling.</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Intermediate/PreVariantCallsCp</td>
-<td>dcs</td>
-<td>Directory containing final checkpoint DCS bam files</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Intermediate/PreVariantCallsCp/dcs</td>
-<td>SAMPLE.dcs.clipped.bai</td>
-<td>Final file containing all DCS reads, including those that don’t overlap the bed file.</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Intermediate/PreVariantCallsCp/dcs</td>
-<td>SAMPLE.dcs.clipped.bam</td>
-<td>Final file containing all DCS reads, including those that don’t overlap the bed file.</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Intermediate/PreVariantCallsCp</td>
-<td>sscs</td>
-<td>Directory containing final checkpoint SSCS bam files</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Intermediate/PreVariantCallsCp/sscs</td>
-<td>SAMPLE.sscs.clipped.bai</td>
-<td>Index for final file containing all SSCS reads, including those that don’t overlap the bed file.</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Intermediate/PreVariantCallsCp/sscs</td>
-<td>SAMPLE.sscs.clipped.bam</td>
-<td>Final file containing all SSCS reads, including those that don’t overlap the bed file.</td>
-<td>Always</td>
-</tr>
-<tr>
 <td>.</td>
 <td>logs</td>
 <td>Directory containing log files for this sample.</td>
@@ -874,18 +878,6 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 <tr>
 <td>Stats/data</td>
-<td>SAMPLE.dcs.clipped.metrics.txt</td>
-<td>Statistics on fixed end clipping in DCS</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
-<td>SAMPLE.dcs.filt.clipped.metrics.txt</td>
-<td>Statistics on overlap clipping in DCS</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
 <td>SAMPLE.dcs.iSize_Metrics.txt</td>
 <td>Statistics on insert size in DCS</td>
 <td>Always</td>
@@ -904,7 +896,7 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 <tr>
 <td>Stats/data</td>
-<td>SAMPLE.dcs.region.mutpos.vcf_depth.txt</td>
+<td>SAMPLE.dcs.depth.txt</td>
 <td>Per-base coverage and N counts for final DCS</td>
 <td>Always</td>
 </tr>
@@ -934,18 +926,6 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 <tr>
 <td>Stats/data</td>
-<td>SAMPLE.sscs.clipped.metrics.txt</td>
-<td>Statistics on fixed end clipping in SSCS</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
-<td>SAMPLE.sscs.filt.clipped.metrics.txt</td>
-<td>Statistics on overlap clipping in SSCS</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
 <td>SAMPLE.sscs_MutsPerCycle.dat.csv</td>
 <td>Text data of error rate per cycle in unclipped SSCS</td>
 <td>runSscs=True</td>
@@ -954,12 +934,6 @@ well as a file directory structure for each sample.  The summary files are:</p>
 <td>Stats/data</td>
 <td>SAMPLE.sscs.mutsPerRead.txt</td>
 <td>Statistics file for non-SNP mutations per read in SSCS reads</td>
-<td>runSscs=True</td>
-</tr>
-<tr>
-<td>Stats/data</td>
-<td>SAMPLE.sscs.region.mutpos.vcf_depth.txt</td>
-<td>Per-base coverage and N counts for final SSCS</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
@@ -1050,54 +1024,43 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </table>
 <h2>
 <a id="user-content-11-testing-the-pipeline" class="anchor" href="#11-testing-the-pipeline" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>11: Testing the pipeline</h2>
-<p>The newly setup pipeline can be tested using provided data and files located in the 'test' directory.
-To test the pipeline, change into the 'test' directory and invoking at the command prompt:</p>
+<p>The newly setup pipeline can be tested using provided data and files
+located in the 'test' directory. To test the pipeline, change into the
+'test' directory and invoking at the command prompt:</p>
 <div class="highlight highlight-source-shell"><pre>DS testConfig.csv</pre></div>
-<p>A final expected output report can be found in the testData/Final directory and be compared to the expected_report.html file
-located in the parent test directory.</p>
+<p>A final output report can be found in the testData/Final directory and
+be compared to the reports in the ExpectedReports directory located in
+the parent test directory.</p>
 <h2>
 <a id="user-content-12-full-and-partial-reruns" class="anchor" href="#12-full-and-partial-reruns" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>12: Full and partial reruns</h2>
-<p>Sometimes it may be necessary to rerun all or part of the pipeline for various reasons.  The following table lists some of the reasons you might want to rerun all or part of the pipeline, how much of the pipeline you want to rerun in those cases, and how to carry out the rerun.</p>
+<p>Sometimes it may be necessary to rerun all or part of the pipeline for
+various reasons.  In order to facilitate this, we have provided a script
+(DS-clean) which will prepare samples to rerun based on the "rerun_type"
+column in the config file.</p>
+<p>The following table lists some of the reasons you might want to rerun all
+or part of the pipeline, and how much of the pipeline you want to rerun
+in those cases.</p>
 <table>
 <thead>
 <tr>
 <th>Issue</th>
 <th>Amount to rerun</th>
-<th>Preparation steps</th>
+<th>rerun_type</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Wrong bed file used</td>
+<td><ul>
+<li>Wrong bed file used</li>
+<li>Wrong clipping parameters used</li>
+</ul></td>
 <td>From pre-variant calling</td>
-<td>Remove the following files: <ul>
-<li>summary.csv</li>
-<li>summaryMutsByCycle.pdf</li>
-<li>summaryDepth.pdf</li>
-<li>summaryFamilySize.pdf</li>
-<li>summaryInsertSize.pdf</li>
-<li>All _config.sh files for samples that you want to force a rerun of</li>
-</ul>Remove the following directories: <ul><li>All Final directories in samples that you want to force a rerun of.  </li></ul>
-</td>
+<td>1</td>
 </tr>
 <tr>
-<td><ul>
-<li>Wrong clipping parameters used</li>
-<li>Wrong target taxon ID used</li>
-</ul></td>
+<td>Wrong target taxon ID used</td>
 <td>From post-blast</td>
-<td>Remove the following files: <ul>
-<li>summary.csv</li>
-<li>summaryMutsByCycle.pdf</li>
-<li>summaryDepth.pdf</li>
-<li>summaryFamilySize.pdf</li>
-<li>summaryInsertSize.pdf</li>
-<li>All _config.sh files for samples that you want to force a rerun of</li>
-</ul>Remove the following directories: <ul>
-<li>All Final directories in samples that you want to force a rerun of.  </li>
-<li>All Intermediate/PreVariantCallsCp directories in samples that you want to force a rerun of</li>
-</ul>
-</td>
+<td>2</td>
 </tr>
 <tr>
 <td><ul>
@@ -1105,39 +1068,24 @@ located in the parent test directory.</p>
 <li>Wrong reference genome used</li>
 </ul></td>
 <td>From post-Consensus Maker</td>
-<td>Remove the following files: <ul>
-<li>summary.csv</li>
-<li>summaryMutsByCycle.pdf</li>
-<li>summaryDepth.pdf</li>
-<li>summaryFamilySize.pdf</li>
-<li>summaryInsertSize.pdf</li>
-<li>All _config.sh files for samples that you want to force a rerun of</li>
-</ul>Remove the following directories: <ul>
-<li>All Final directories in samples that you want to force a rerun of.  </li>
-<li>All Intermediate/PreVariantCallsCp directories in samples that you want to force a rerun of</li>
-<li>All Intermediate/postBlast directories in samples that you want to force a rerun of</li>
-</ul>
-</td>
+<td>3</td>
 </tr>
 <tr>
 <td>Wrong consensus making parameters used</td>
 <td>From beginning</td>
-<td>Remove the following files: <ul>
-<li>summary.csv</li>
-<li>summaryMutsByCycle.pdf</li>
-<li>summaryDepth.pdf</li>
-<li>summaryFamilySize.pdf</li>
-<li>summaryInsertSize.pdf</li>
-<li>All _config.sh files for samples that you want to force a rerun of</li>
-</ul>Remove the following directories: <ul>
-<li>All Final directories in samples that you want to force a rerun of.  </li>
-<li>All Intermediate directories in samples that you want to force a rerun of</li>
-<li>All Stats directories in samples that you want to force a rerun of</li>
-</ul>
-</td>
+<td>4</td>
 </tr>
 </tbody>
 </table>
+<p>To finish preparing for and executing a rerun, run:</p>
+<div class="highlight highlight-source-shell"><pre>DS-clean CONFIG_CSV.csv
+DS CONFIG_CSV.csv</pre></div>
+<h2>
+<a id="user-content-13-unlocking-following-a-power-failure" class="anchor" href="#13-unlocking-following-a-power-failure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>13: Unlocking following a power failure</h2>
+<p>In the event that pipeline execution is interrupted by a power failure,
+the directory can be unlocked in order to restart using the provided
+DS-unlock script:</p>
+<div class="highlight highlight-source-shell"><pre>DS-unlock CONFIG_CSV.csv</pre></div>
 
               </article>
             </div>
