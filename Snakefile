@@ -1081,7 +1081,7 @@ rule makeCountMuts:
         """
         cd {params.runPath}
         # BamToCountMuts:
-        python {params.basePath}/scripts/bamToCountMuts.py \
+        python {params.basePath}/scripts/MutationFreqFromVCF.py \
         --samp_name {params.sampName} \
         -i ../{input.inBam} \
         -f {input.inRef} \
