@@ -89,27 +89,27 @@ class Bed_Line:
         assert self.blockCount == len(self.blockStarts)
 
     def samtoolsStr(self):
-        return(f"{self.chrom}:{self.startPos}:{self.endPos}")
+        return f"{self.chrom}:{self.startPos}:{self.endPos}"
     
     def get_subregions(self):
         if self.strand == '+':
-            return([Bed_Line(
+            return [Bed_Line(
                 self.chrom, 
                 self.startPos + self.blockStarts[x], 
                 self.startPos + self.blockStarts[x] + self.blockSizes[x], 
                 f"{self.name}_block{x + 1}", 
                 self.score, 
                 self.strand
-                ) for x in range(len(self.blockStarts))])
+                ) for x in range(len(self.blockStarts))]
         elif self.strand == '-':
-            return([Bed_Line(
+            return [Bed_Line(
                 self.chrom, 
                 self.startPos + self.blockStarts[-x - 1], 
                 self.startPos + self.blockStarts[-x - 1] + self.blockSizes[-x - 1], 
                 f"{self.name}_block{x + 1}", 
                 self.score, 
                 self.strand
-                ) for x in range(len(self.blockStarts))])
+                ) for x in range(len(self.blockStarts))]
         
     def contains(self, inChr, inPos):
         if (
@@ -117,9 +117,9 @@ class Bed_Line:
                 and inPos >= self.startPos
                 and inPos < self.endPos
                 ):
-            return(True)
+            return True
         else:
-            return(False)
+            return False
     
     def __len__(self):
         return self.endPos - self.startPos - 1
