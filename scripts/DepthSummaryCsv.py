@@ -105,7 +105,7 @@ def main():
         # Iterate through the regions and blocks
         for regIter in bed_dict:
             # Count the line in any region that contains it
-            if regIter["region"].contains(line.Chrom, line.Pos - 1):
+            if regIter["region"].contains(line.Chrom, int(line.Pos) - 1):
                 regIter["depths"].append(int(line.DP))
 
     # Close input file
