@@ -1,7 +1,15 @@
 import logging
 import sys
 
-class Bed_File:
+def Bed_File(fName, mode='r'):
+    if mode == 'r':
+        return Bed_Reader(fName)
+    elif mode == 'w':
+        return Bed_Writer(fName)
+    else:
+        raise ValueError(f"Invalid mode: {mode}")
+
+class Bed_Reader:
     def __init__(self, inFile):
         self.file = open(inFile, 'r')
         
@@ -14,7 +22,16 @@ class Bed_File:
             return(Bed_Line(*myLine.strip().split()))
         else:
             raise StopIteration
-            
+
+class Bed_Writer:
+    def __init__(self, fName):
+        self.file = open(fName, 'w')
+    def writeline(self, line):
+        if type(line) == Bed_Line:
+            self.file.write(f"{str(line)}")
+        else:
+            raise TypeError("Anything written to a bed file must be a Bed_Line")
+
 class Bed_Line:
     def __init__(self, 
                  chrom, 
