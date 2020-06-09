@@ -130,7 +130,6 @@ class Bed_Line:
     def __str__(self):
         bSizes = ",".join(self.blockSizes)
         bStarts = ",".join(self.bStarts)
-        if self.strand == '-':
         outString = (
             f"{self.chrom}\t{self.startPos}\t{self.endPos}\t"
             f"{self.name}\t{self.score}\t{self.strans}\t{self.thickStart}\t"
