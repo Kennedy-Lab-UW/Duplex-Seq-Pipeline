@@ -3,6 +3,7 @@ import logging
 import sys
 from argparse import ArgumentParser
 from collections import namedtuple
+import statistics
 from BedParser import *
 
 Depth_Line = namedtuple(
@@ -77,12 +78,12 @@ def main():
             {"region": line,
              "depths": [], 
              "class": "Bed_Line",
-             "min": 0
-             "mean": 0
-             "median": 0
+             "min": 0,
+             "mean": 0,
+             "median": 0,
              "max": 0})
         # Add subregions, if they differ from the main region
-        sugregs = line.get_subregions()
+        subregs = line.get_subregions()
         if subregs[0].samtoolsStr() != line.samtoolsStr():
             for block in subregs:
                 bed_dict.append(
@@ -101,12 +102,13 @@ def main():
     # Iterate through the input file
     logging.info("Processing input file...")
     for lIn in f_in:
-        line = Depth_Line(f_in.strip().split())
-        # Iterate through the regions and blocks
-        for regIter in bed_dict:
-            # Count the line in any region that contains it
-            if regIter["region"].contains(line.Chrom, int(line.Pos) - 1):
-                regIter["depths"].append(int(line.DP))
+        if lIn[0] != "#":
+            line = Depth_Line(*lIn.strip().split())
+            # Iterate through the regions and blocks
+            for regIter in bed_dict:
+                # Count the line in any region that contains it
+                if regIter["region"].contains(line.Chrom, int(line.Pos) - 1):
+                    regIter["depths"].append(int(line.DP))
 
     # Close input file
     if o.in_file is not None:
@@ -140,8 +142,8 @@ def main():
                 len(regIter["region"])-len(regIter["depths"]))])
             regIter["min"] = min(regIter["depths"])
             regIter["max"] = max(regIter["depths"])
-            regIter["median"] = median(regIter["depths"])
-            regIter["mean"] = mean(regIter["depths"])
+            regIter["median"] = statistics.median(regIter["depths"])
+            regIter["mean"] = statistics.mean(regIter["depths"])
 
         # Write line to output file
         f_out.write(
