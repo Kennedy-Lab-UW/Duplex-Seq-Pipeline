@@ -53,7 +53,7 @@ class Bed_Line:
         else:
             self.thickEnd = int(thickEnd)
         if itemRGB == "":
-            self.itemRBG = None
+            self.itemRGB = None
         else:
             self.itemRGB = itemRGB
         if blockCount == "":
@@ -103,3 +103,20 @@ class Bed_Line:
             return(True)
         else:
             return(False)
+    
+    def __len__(self):
+        return self.endPos - self.startPos - 1
+
+    def __repr__(self):
+        return f"Bed_Line:{str(self)}"
+
+    def __str__(self):
+        bSizes = ",".join(self.blockSizes)
+        bStarts = ",".join(self.bStarts)
+        if self.strand == '-':
+        outString = (
+            f"{self.chrom}\t{self.startPos}\t{self.endPos}\t"
+            f"{self.name}\t{self.score}\t{self.strans}\t{self.thickStart}\t"
+            f"{self.thickEnd}\t{self.itemRGB}\t{self.blockCount}\t{bSizes}\t"
+            f"{bStarts}\n")
+        return outString
