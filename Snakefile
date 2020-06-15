@@ -1191,7 +1191,7 @@ rule PlotCoverage:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt",
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
-        temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff")
+        temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.png")
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -1250,21 +1250,21 @@ rule MutsPerCycle:
 # R, and a desire to embed the resulting figures in the report html file.
 # This issue may be revisited in the future, if we come accross a better 
 # PNG device for R.  
-rule tiff2png:
-    params:
-        basePath = sys.path[0],
-    input:
-        "{prefix}.tiff"
-    output:
-        "{prefix}.png"
-    conda:
-        "envs/DS_env_full.yaml"
-    shell:
-        """
-        python {params.basePath}/scripts/tiff2png.py \
-        {wildcards.prefix}.tiff \
-        {wildcards.prefix}.png
-        """
+# rule tiff2png:
+#     params:
+#         basePath = sys.path[0],
+#     input:
+#         "{prefix}.tiff"
+#     output:
+#         "{prefix}.png"
+#     conda:
+#         "envs/DS_env_full.yaml"
+#     shell:
+#         """
+#         python {params.basePath}/scripts/tiff2png.py \
+#         {wildcards.prefix}.tiff \
+#         {wildcards.prefix}.png
+#         """
 
 # make summary files
 rule makeSummaryCSV:
