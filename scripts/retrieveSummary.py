@@ -163,7 +163,7 @@ def main():
         "% mapped SSCS,% mapped DCS,"
         "Raw/SSCS,SSCS/DCS,"
         "Peak Family Size,Max Family Size,Mean Insert Size,"
-        "SSCS On Target,DCS On Target,"
+        "RawOnTarget,SSCS On Target,DCS On Target,"
         "DCS Mean Depth,DCS Max Depth,"
         "DCS Uncovered Target,"
         "Nucleotides Sequenced,"
@@ -216,6 +216,13 @@ def main():
             maxSize = line.split()[0]
         tagstatsFile.close()
         sscsOnTarget = "NA"
+
+        # read raw on target file
+        rawTarget = open(f"{baseDir}/Stats/data/{runID}_onTargetCount.txt", 'r').readlines()
+        if int(rawTarget[1].split()[0]) == 0:
+            rawOnTarget=0
+        else:
+            rawOnTarget=f"{round(int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0]),4)}%"
 
         # read depth file:
         print("Processing Depth")
@@ -341,13 +348,16 @@ def main():
         else:
             mutFreq = 0
         outFile.write(
-            f"{runID},"
-            f"{baseDir},{rawReads},{sscsReads},{mappedSscs},{dcsReads},{mappedDcs},"
+            f"{runID},{baseDir},"
+            f"{rawReads},{sscsReads},{mappedSscs},{dcsReads},{mappedDcs},"
             f"{percentMappedSSCS},{percentMappedDCS},{rawPerSSCS},{sscsPerDCS},"
-            f"{peakSize},{maxSize},{meanInsertSize},{sscsOnTarget},{dcsOnTarget},{dcsMeanDepth},"
-            f"{dcsMaxDepth},{dcsUncovered},{totalNt},{AsSeq},{TsSeq},{CsSeq},{GsSeq},{totalMuts},{mutFreq},"
-            f"{AtoT},{AtoC},{AtoG},{TtoA},{TtoC},{TtoG},{CtoA},{CtoT},{CtoG},{GtoA},"
-            f"{GtoT},{GtoC},{ins},{dels}\n"
+            f"{peakSize},{maxSize},{meanInsertSize},"
+            f"{rawOnTarget},{sscsOnTarget},{dcsOnTarget},"
+            f"{dcsMeanDepth},{dcsMaxDepth},{dcsUncovered},"
+            f"{totalNt},{AsSeq},{TsSeq},{CsSeq},{GsSeq},{totalMuts},{mutFreq},"
+            f"{AtoT},{AtoC},{AtoG},{TtoA},{TtoC},{TtoG},"
+            f"{CtoA},{CtoT},{CtoG},{GtoA},{GtoT},{GtoC},"
+            f"{ins},{dels}\n"
         )
 
     outFile.close()
