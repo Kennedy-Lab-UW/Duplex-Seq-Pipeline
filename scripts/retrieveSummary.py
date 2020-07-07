@@ -12,142 +12,107 @@ o = parser.parse_args()
 samples = pd.read_csv(o.config).set_index("sample", drop=False)
 validate(samples, f"{sys.path[0]}/../DS_baseSchema.yaml")
 
-
 def get_sample(sample):
     return samples.loc[sample, "sample"]
-
 
 def get_rglb(sample):
     return samples.loc[sample, "rglb"]
 
-
 def get_rgpl(sample):
     return samples.loc[sample, "rgpl"]
-
 
 def get_rgpu(sample):
     return samples.loc[sample, "rgpu"]
 
-
 def get_rgsm(sample):
     return samples.loc[sample, "rgsm"]
-
 
 def get_reference(sample):
     return samples.loc[sample, "reference"]
 
-
 def get_target_bed(sample):
     return samples.loc[sample, "target_bed"]
-
 
 def get_blast_db(sample):
     return samples.loc[sample, "blast_db"]
 
-
 def get_blast_db_path(sample):
     return f'{samples.loc[sample, "blast_db"]}.nal'
-
 
 def get_target_taxon(sample):
     return samples.loc[sample, "targetTaxonId"]
 
-
 def get_baseDir(sample):
     return samples.loc[sample, "baseDir"]
-
 
 def get_in1(sample):
     return f'{samples.loc[sample, "baseDir"]}/{samples.loc[sample, "in1"]}'
 
-
 def get_in2(sample):
     return f'{samples.loc[sample, "baseDir"]}/{samples.loc[sample, "in2"]}'
-
 
 def get_mqFilt(sample):
     return samples.loc[sample, "mqFilt"]
 
-
 def get_minMem(sample):
     return samples.loc[sample, "minMem"]
-
 
 def get_maxMem(sample):
     return samples.loc[sample, "maxMem"]
 
-
 def get_cutOff(sample):
     return samples.loc[sample, "cutOff"]
-
 
 def get_nCutOff(sample):
     return samples.loc[sample, "nCutOff"]
 
-
 def get_umiLen(sample):
     return samples.loc[sample, "umiLen"]
-
 
 def get_spacerLen(sample):
     return samples.loc[sample, "spacerLen"]
 
-
 def get_locLen(sample):
     return samples.loc[sample, "locLen"]
-
 
 def get_readLen(sample):
     return samples.loc[sample, "readLen"]
 
-
 def get_clipBegin(sample):
     return samples.loc[sample, "clipBegin"]
-
 
 def get_clipEnd(sample):
     return samples.loc[sample, "clipEnd"]
 
-
 def get_runSSCS(sample):
     return samples.loc[sample, "runSSCS"]
-
 
 def get_runDCS(sample):
     return samples.loc[sample, "runDCS"]
 
-
 def get_makeDCS(sample):
     return samples.loc[sample, "makeDCS"]
-
 
 def get_cm_outputs(sample):
     return samples.loc[sample, "cm_outputs"]
 
-
 def get_cm_sumTypes(sample):
     return samples.loc[sample, "cm_sumTypes"]
-
 
 def get_minClonal(sample):
     return samples.loc[sample, "minClonal"]
 
-
 def get_maxClonal(sample):
     return samples.loc[sample, "maxClonal"]
-
 
 def get_minDepth(sample):
     return samples.loc[sample, "minDepth"]
 
-
 def get_maxNs(sample):
     return samples.loc[sample, "maxNs"]
 
-
 def get_cleanup(sample):
     return samples.loc[sample, "cleanup"]
-
 
 def get_recovery(sample):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[sample, "recovery"]}'
@@ -163,7 +128,7 @@ def main():
         "% mapped SSCS,% mapped DCS,"
         "Raw/SSCS,SSCS/DCS,"
         "Peak Family Size,Max Family Size,Mean Insert Size,"
-        "SSCS On Target,DCS On Target,"
+        "Raw On Target,SSCS On Target,DCS On Target,"
         "DCS Mean Depth,DCS Max Depth,"
         "DCS Uncovered Target,"
         "Nucleotides Sequenced,"
@@ -198,6 +163,12 @@ def main():
         # ~ dcsFlagstat=pysam.flagstat(f"{index}/{runID}_mem.dcs.sort.bam").split('\n')
         dcsReads = float(dcsFlagstats[0].split()[0])
         mappedDcs = float(dcsFlagstats[4].split()[0])
+
+        rawTarget = open(f"{baseDir}/Stats/data/{runID}_onTargetCount.txt", 'r').readlines()
+        if int(rawTarget[1].split()[0]) == 0:
+            rawOnTarget=0
+        else:
+            rawOnTarget=int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0])
 
         print("Processing Tagstats")
         # get tagstats numbers
@@ -341,13 +312,21 @@ def main():
         else:
             mutFreq = 0
         outFile.write(
-            f"{runID},"
-            f"{baseDir},{rawReads},{sscsReads},{mappedSscs},{dcsReads},{mappedDcs},"
-            f"{percentMappedSSCS},{percentMappedDCS},{rawPerSSCS},{sscsPerDCS},"
-            f"{peakSize},{maxSize},{meanInsertSize},{sscsOnTarget},{dcsOnTarget},{dcsMeanDepth},"
-            f"{dcsMaxDepth},{dcsUncovered},{totalNt},{AsSeq},{TsSeq},{CsSeq},{GsSeq},{totalMuts},{mutFreq},"
-            f"{AtoT},{AtoC},{AtoG},{TtoA},{TtoC},{TtoG},{CtoA},{CtoT},{CtoG},{GtoA},"
-            f"{GtoT},{GtoC},{ins},{dels}\n"
+            f"{runID},{baseDir},{rawReads},"
+            f"{sscsReads},{mappedSscs},"
+            f"{dcsReads},{mappedDcs},"
+            f"{percentMappedSSCS},{percentMappedDCS},"
+            f"{rawPerSSCS},{sscsPerDCS},"
+            f"{peakSize},{maxSize},{meanInsertSize},"
+            f"{rawOnTarget},{sscsOnTarget},{dcsOnTarget},"
+            f"{dcsMeanDepth},{dcsMaxDepth},"
+            f"{dcsUncovered},"
+            f"{totalNt},"
+            f"{AsSeq},{TsSeq},{CsSeq},{GsSeq},"
+            f"{totalMuts},{mutFreq},"
+            f"{AtoT},{AtoC},{AtoG},{TtoA},{TtoC},{TtoG},"
+            f"{CtoA},{CtoT},{CtoG},{GtoA},{GtoT},{GtoC},"
+            f"{ins},{dels}\n"
         )
 
     outFile.close()
