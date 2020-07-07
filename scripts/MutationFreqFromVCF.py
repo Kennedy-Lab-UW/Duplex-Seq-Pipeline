@@ -30,6 +30,9 @@ def Wilson(positive,  total) :
 
     return  (phat, positiveCI , negativeCI )
 
+def filter_list(inStr):
+    return inStr.split(':')
+
 def getParams():
     parser = ArgumentParser(
         description=(
@@ -175,7 +178,26 @@ def getParams():
             f"Valid options are %(choices)s [default = %(default)s].  "
             )
         )
+    parser.add_argument(
+        "--apply_filters",
+        action="store",
+        dest="filters",
+        default=["near_indel","clustered"],
+        type=filter_list,
+        help=(
+            f"A colon-seperated list of filters to apply while counting, "
+            f"such as 'low_depth:near_indel:clustered'.  "
+            f"[default = 'near_indel:clustered']")
+        )
     return(parser.parse_args())
+
+def check_filters(vcf_filters,bad_filters):
+    good_var = True
+    for vcf_filt in vcf_filters:
+        if vcf_filt in bad_filters:
+            good_var = False
+    return good_var
+
 
 class countMutsEngine:
     def __init__(self, 
@@ -188,7 +210,8 @@ class countMutsEngine:
                  minDepth=1, 
                  minC=0, 
                  maxC=1, 
-                 sampName=None
+                 sampName=None,
+                 bad_filters=["near_indel", "clustered"]
                  ):
         self.params = {
            "inBam":inBam, 
@@ -211,6 +234,7 @@ class countMutsEngine:
             self.sample = sampName
         self.minC = minC
         self.maxC = maxC
+        self.bad_filters = bad_filters
         self.inFasta = pysam.FastaFile(inFasta)
         self.rmNumTable = {ord(c): None for c in '1234567890'}
         if inBed is None:
@@ -250,7 +274,7 @@ class countMutsEngine:
             clonality = int(varIter.samples[self.inVCF.samps[0]]['AD'].split(',')[1])/int(varIter.samples[self.inVCF.samps[0]]['DP'])
             if (
                     nProp <= self.params['Nprop'] 
-                    and varIter.filter in ([],["PASS"])
+                    and check_filters(varIter.filter, self.bad_filters)
                     and clonality >= self.params["minC"] 
                     and clonality <= self.params["maxC"]
                     and int(varIter.samples[self.inVCF.samps[0]]['DP']) >= self.params['minDepth']
@@ -914,7 +938,8 @@ def main():
         o.mindepth, 
         o.min_clonality, 
         o.max_clonality, 
-        o.sampName
+        o.sampName, 
+        o.filters
         )
     logging.info("Processing Lines")
     myEngine.processLines(

@@ -77,6 +77,8 @@ def get_cm_outputs(wildcards):
     return samples.loc[wildcards.sample, "cm_outputs"]
 def get_cm_sumTypes(wildcards):
     return samples.loc[wildcards.sample, "cm_sumTypes"]
+def get_cm_filters(wildcards):
+    return samples.loc[wildcards.sample, "cm_filters"]
 def get_minClonal(wildcards):
     return samples.loc[wildcards.sample, "minClonal"]
 def get_maxClonal(wildcards):
@@ -1089,7 +1091,8 @@ rule makeCountMuts:
         maxNs = get_maxNs,
         sampName = get_rgsm,
         cm_outputs = get_cm_outputs,
-        cm_sums = get_cm_sumTypes
+        cm_sums = get_cm_sumTypes, 
+        cm_filters = get_cm_filters
     input:
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
@@ -1117,7 +1120,8 @@ rule makeCountMuts:
         -C {params.maxClonal} \
         -n {params.maxNs} \
         -u \
-        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.countmuts.csv
+        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.countmuts.csv \
+        --apply_filters {params.cm_filters}
         cd ..
         """
 
