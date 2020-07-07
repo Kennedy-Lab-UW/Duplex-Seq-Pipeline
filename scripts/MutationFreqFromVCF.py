@@ -221,7 +221,8 @@ class countMutsEngine:
            "Nprop": Nprop, 
            "minDepth": minDepth, 
            "minC": minC, 
-           "maxC": maxC
+           "maxC": maxC,
+           "bad_filters": bad_filters
            }
         if inBam is None:
             self.inBam = pysam.AlignmentFile("-", 'rb')
@@ -234,7 +235,6 @@ class countMutsEngine:
             self.sample = sampName
         self.minC = minC
         self.maxC = maxC
-        self.bad_filters = bad_filters
         self.inFasta = pysam.FastaFile(inFasta)
         self.rmNumTable = {ord(c): None for c in '1234567890'}
         if inBed is None:
@@ -274,7 +274,7 @@ class countMutsEngine:
             clonality = int(varIter.samples[self.inVCF.samps[0]]['AD'].split(',')[1])/int(varIter.samples[self.inVCF.samps[0]]['DP'])
             if (
                     nProp <= self.params['Nprop'] 
-                    and check_filters(varIter.filter, self.bad_filters)
+                    and check_filters(varIter.filter, self.params["bad_filters"])
                     and clonality >= self.params["minC"] 
                     and clonality <= self.params["maxC"]
                     and int(varIter.samples[self.inVCF.samps[0]]['DP']) >= self.params['minDepth']
@@ -601,7 +601,9 @@ class countMutsEngine:
                         }
         return(mutsDict)
     
-    def genSummary(self, Fout, overall_mode="GENES", gene_mode="FULL", outputs="GB"):
+    def genSummary(self, Fout, 
+                   overall_mode="GENES", gene_mode="FULL", 
+                   outputs="GB", fliters=["near_indel","clustered"]):
         logging.debug("Generating summary")
         logging.debug(self.mutsCounts)
         logging.debug(self.geneCounts)
@@ -618,6 +620,7 @@ class countMutsEngine:
             f"##Input bed:\t{self.params['inBed']}\n"
             f"##Minimum Depth: \t{self.params['minDepth']}\n"
             f"##Clonality: \t{self.params['minC']}-{self.params['maxC']}\n"
+            f"##Filters: \t{', '.join(self.params['bad_filters'])}\n"
             )
         if overall_mode == "GENES":
             outFile.write(

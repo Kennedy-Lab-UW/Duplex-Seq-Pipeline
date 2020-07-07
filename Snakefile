@@ -1642,6 +1642,10 @@ import numpy as np
                     cmTable1.append(
                         f"| Clonality | {linebins[1]} |  \n"
                         )
+                elif "Filters" in line:
+                    cmTable1.append(
+                        f"| Filters | {linebins[1]} |  \n"
+                        )
                 elif "Unique" in line:
                     cmTable1.append(
                         f"| Unique | True |  \n"
