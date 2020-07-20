@@ -105,7 +105,7 @@ if (length(row.names(depth)) > 0) {
   for (dataIter in seq(1,length(row.names(depth)))) {
     myName = "Off_Target"
     for (bedIter in seq(1, length(row.names(myBed)))) {
-      if ( depth$`#Chrom`[dataIter] == myBed$Chrom[bedIter] && 
+      if ( depth$Chrom[dataIter] == myBed$Chrom[bedIter] && 
            depth$Pos[dataIter] >= myBed$Start[bedIter] && 
            depth$Pos[dataIter] < myBed$End[bedIter]) {
         myName = myBed$Name[bedIter]
@@ -181,5 +181,4 @@ ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.png", sep="
        width = 200, 
        height=50*ceiling(length(levels(depth$Target)) / 4), 
        units="mm", 
-       device = "png", 
-       compression="lzw")
+       device = "png")

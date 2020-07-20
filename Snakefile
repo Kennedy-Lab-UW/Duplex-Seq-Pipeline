@@ -1073,7 +1073,7 @@ rule summaizeDepth:
     shell:
         """
         cd {wildcards.runPath}
-        python {params.basePath}/DepthSummaryCsv.py \
+        python {params.basePath}/scripts/DepthSummaryCsv.py \
         -i Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.txt \
         -o Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.summary.csv \
         -b {input.inBed}
@@ -1175,7 +1175,7 @@ rule PlotInsertSize:
     input:
         "{runPath}/Stats/data/{sample}.{sampType}.iSize_Metrics.txt",
     output:
-        temp("{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.tiff")
+        "{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.png"
     conda:
         "envs/DS_env_full.yaml"
     shell:
@@ -1195,7 +1195,7 @@ rule PlotCoverage:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt",
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
-        temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.png")
+        "{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.png"
     conda:
         "envs/DS_env_full.yaml"
     log:
