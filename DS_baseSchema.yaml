@@ -9,7 +9,7 @@ properties:
     type: string
     pattern: ^[^\s]*$
     description: 
-  rbpl:
+  rgpl:
     type: string
     pattern: ^[^\s]*$
     description: 
