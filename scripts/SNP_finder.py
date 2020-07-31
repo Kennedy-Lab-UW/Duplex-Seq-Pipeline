@@ -48,6 +48,15 @@ def main():
         default = 0.05, 
         type=float
         )
+    parser.add_argument(
+        '-t', '--snp_threshold',
+        action='store',
+        dest='snp_threshold',
+        help=(f'The threshold for a variant to be marked as a SNP.  '
+              f'Any mutation with a MAF >= this will be marked as a SNP.  '),
+        default=0.4,
+        type=float
+    )
     # logLevel (hidden argument)
     parser.add_argument(
         '--logLevel', 
@@ -88,7 +97,7 @@ def main():
     inVCF.header.addLine(
         lineType="FILTER", 
         label="SNP", 
-        description=f"This variant is probably a SNP, and not a somatic variant."
+        description=f"This variant is probably a SNP (MAF >= {o.snp_threshold}), and not a somatic variant."
         )
     
     # Open SNP VCF
@@ -103,7 +112,7 @@ def main():
         if int(varLine.samples[sampName]["DP"]) < o.min_depth: 
             ###   Add low_depth filter
             varLine.add_filter("low_depth")
-        if float(varLine.samples[sampName]["AF"].split(',')[1]) >= 0.4:
+        if float(varLine.samples[sampName]["AF"].split(',')[1]) >= o.snp_threshold:
             ### Mark as SNP
             varLine.add_filter("SNP")
             ### Write to SNP file

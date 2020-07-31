@@ -85,6 +85,16 @@ def get_cleanup(wildcards):
     return(samples.loc[(wildcards.sample),"cleanup"])
 def get_recovery(wildcards):
     return(f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[(wildcards.sample),"recovery"]}')
+def get_final_length(wildcards):
+    myLen = int(samples.loc[wildcards.sample, "readLen"])
+    myLen -= int(samples.loc[wildcards.sample, "umiLen"])
+    myLen -= int(samples.loc[wildcards.sample, "spacerLen"])
+    return myLen
+def get_snps_threshold(wildcards):
+    snpsLevel = min([
+        float(samples.loc[wildcards.sample, "maxClonal"]),
+        0.4])
+    return snpsLevel
 
 def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
     outList = []
@@ -968,8 +978,8 @@ rule endClipSscs:
         -m ../{output.clippingMetrics}
         cd ../
         else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
+        cp {input.inBam} {output.outBam}
+        cp {input.inBai} {output.outBai}
         fi
         """
 
@@ -1012,8 +1022,8 @@ rule endClipDcs:
         -m ../{output.clippingMetrics}
         cd ../
         else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
+        cp {input.inBam} {output.outBam}
+        cp {input.inBai} {output.outBai}
         fi
         """
 
@@ -1055,8 +1065,8 @@ rule endClipDcs_noBlast:
         -m ../{output.clippingMetrics}
         cd ../
         else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
+        cp {input.inBam} {output.outBam}
+        cp {input.inBai} {output.outBai}
         fi
         """
 
@@ -1193,6 +1203,7 @@ rule getSnps:
         basePath = sys.path[0],
         runPath = get_baseDir,
         minDepth = get_minDepth,
+        snpLevel = get_snps_threshold
     input:
         inVCF = "{runPath}/{sample}.{sampType}.region.mutpos.vcf"
     output:
@@ -1393,7 +1404,7 @@ rule MutsPerCycle:
         sample = get_sample,
         basePath = sys.path[0],
         runPath = get_baseDir,
-        readLength = get_readLen
+        readLength = get_final_length,
     input:
         inRef = get_reference,
         inFinal = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
