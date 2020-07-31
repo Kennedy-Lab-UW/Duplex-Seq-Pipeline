@@ -51,7 +51,7 @@ class MismatchCounter:
                         refBase = compBase[refBase]
                         readBase = compBase[readBase]
                     snpTest = f"{refChrom}:{refPos}:{refBase}>{readBase}"
-                    if snpTest not in self.snps:
+                    if snpTest not in self.snps and refBase in ("C","T"):
                         if readDir == -1:
                             self.mismatch_counts[rLen - x[0]-hardclipping-1][f"{refBase}>{readBase}"] += 1
                         elif readDir == 1:
