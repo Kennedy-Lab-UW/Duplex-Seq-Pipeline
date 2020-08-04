@@ -80,11 +80,11 @@ class Bed_Line:
         if blockSizes == "":
             self.blockSizes = [abs(self.endPos - self.startPos)]
         else:
-            self.blockSizes = list(filter(None,[int(x) for x in blockSizes.split(',')]))
+            self.blockSizes = [int(x) for x in blockSizes.split(',') if x != ""]
         if blockStarts == "":
             self.blockStarts = [0]
         else:
-            self.blockStarts = list(filter([int(x) for x in blockStarts.split(',')]))
+            self.blockStarts = [int(x) for x in blockStarts.split(',') if x != ""]
         assert self.blockCount == len(self.blockSizes)
         assert self.blockCount == len(self.blockStarts)
 
@@ -128,11 +128,11 @@ class Bed_Line:
         return f"Bed_Line:{str(self)}"
 
     def __str__(self):
-        bSizes = ",".join(self.blockSizes)
-        bStarts = ",".join(self.bStarts)
+        bSizes = ",".join([str(x) for x in self.blockSizes])
+        bStarts = ",".join([str(x) for x in self.blockStarts])
         outString = (
             f"{self.chrom}\t{self.startPos}\t{self.endPos}\t"
-            f"{self.name}\t{self.score}\t{self.strans}\t{self.thickStart}\t"
+            f"{self.name}\t{self.score}\t{self.strand}\t{self.thickStart}\t"
             f"{self.thickEnd}\t{self.itemRGB}\t{self.blockCount}\t{bSizes}\t"
             f"{bStarts}\n")
         return outString
