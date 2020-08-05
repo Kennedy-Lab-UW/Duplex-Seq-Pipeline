@@ -1420,7 +1420,7 @@ import numpy as np
 11. [Depth per Target](#Depth-per-Target:)
 12. [Muts per Cycle](#Muts-per-Cycle:)
 13. [Countmuts output](#Countmuts-output:)
-14. [Depth Summary] (#Depth-Summary)
+14. [Depth Summary](#Depth-Summary:)
 """
             ))
         # Glossary
@@ -1660,10 +1660,10 @@ import numpy as np
         myCells.append(nbf.v4.new_markdown_cell(
             f"##Countmuts output:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"###Parameters:  \n"
+            f"###Parameters:  \n  \n"
             f"{''.join(cmTable1)}"
             f"  \n"
-            f"###Overall Mutation Counts:  \n"
+            f"###Overall Mutation Counts:  \n  \n"
             f"{''.join(cmTable2)}"
             ))
         depthFile = open(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs.depth.summary.csv','r')
@@ -1671,13 +1671,13 @@ import numpy as np
                       "| ---- | ----- | --------- | ------- | ---- | --- | ---- | ------ | --- |  \n"]
         for line in depthFile:
             if "#" not in line:
-                cmTable2.append(
+                depthTable.append(
                     f"| {' | '.join([x for x in line.strip().split(',')])} |  \n"
                     )
         depthFile.close()
         myCells.append(nbf.v4.new_markdown_cell(
             f"##Depth Summary:  \n"
-            f"[Top](#Duplex-Sequencing-Summary)  \n"
+            f"[Top](#Duplex-Sequencing-Summary)  \n  \n"
             f"{''.join(depthTable)}"))
         nb['cells'] = myCells
         nbf.write(nb, f"{wildcards.runPath}/Stats/{wildcards.sample}.report.ipynb")

@@ -89,14 +89,18 @@ def main():
                 bed_dict.append(
                     {"region": block,
                      "depths": [], 
-                     "class": "Bed_Block"})
+                     "class": "Bed_Block",
+                     "min": 0,
+                     "mean": 0,
+                     "median": 0,
+                     "max": 0})
 
     # Open input file
     if o.in_file is None:
         logging.info("Using input from StdIn")
         f_in = sys.stdin
     else:
-        logging.info("Using input from o.in_file")
+        logging.info(f"Using input from {o.in_file}")
         f_in = open(o.in_file,'r')
 
     # Iterate through the input file
@@ -137,9 +141,9 @@ def main():
 
     # Calculate average depths and write output
     for regIter in bed_dict:
-        if len(regIter["region"]) > 0:
-            regIter["depths"].extend([0 for x in range(
-                len(regIter["region"])-len(regIter["depths"]))])
+        if len(regIter["region"]) > 0 and len(regIter["depths"]) > 0:
+            #regIter["depths"].extend([0 for x in range(
+            #    len(regIter["region"])-len(regIter["depths"]))])
             regIter["min"] = min(regIter["depths"])
             regIter["max"] = max(regIter["depths"])
             regIter["median"] = statistics.median(regIter["depths"])
