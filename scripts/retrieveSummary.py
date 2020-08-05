@@ -188,6 +188,13 @@ def main():
         tagstatsFile.close()
         sscsOnTarget = "NA"
 
+        # read raw on target file
+        rawTarget = open(f"{baseDir}/Stats/data/{runID}_onTargetCount.txt", 'r').readlines()
+        if int(rawTarget[1].split()[0]) == 0:
+            rawOnTarget=0
+        else:
+            rawOnTarget=f"{round(int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0]),4)}%"
+
         # read depth file:
         print("Processing Depth")
         depthFile = open(f"{baseDir}/Stats/data/{runID}.dcs.depth.txt", 'r')
