@@ -97,9 +97,10 @@ def get_final_length(wildcards):
     myLen -= int(samples.loc[wildcards.sample, "spacerLen"])
     return myLen
 def get_snps_threshold(wildcards):
-    snpsLevel = min([
-        float(samples.loc[wildcards.sample, "maxClonal"]),
-        0.4])
+    snpsLevel = 0.4
+    # snpsLevel = min([
+    #     float(samples.loc[wildcards.sample, "maxClonal"]),
+    #     0.4])
     return snpsLevel
 
 def getVarDictBam(wildcards):
