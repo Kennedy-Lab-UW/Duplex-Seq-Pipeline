@@ -6,6 +6,7 @@ import pysam
 from math import sqrt
 import sys
 from VCF_Parser import *
+from BedParser import *
 
 def Wilson(positive,  total) :
     """Get Wilson confidence intervals for a position"""
@@ -29,107 +30,9 @@ def Wilson(positive,  total) :
 
     return  (phat, positiveCI , negativeCI )
 
-class Bed_File:
-    def __init__(self, inFile):
-        self.file = open(inFile, 'r')
-        
-    def __iter__(self):
-        return(self)
-    
-    def __next__(self):
-        myLine = self.file.readline()
-        if myLine != "":
-            return(Bed_Line(*myLine.strip().split()))
-        else:
-            raise StopIteration
-            
-class Bed_Line:
-    def __init__(self, 
-                 chrom, 
-                 startPos, 
-                 endPos, 
-                 name="",
-                 score="", 
-                 strand="+",
-                 thickStart="", 
-                 thickEnd="",
-                 itemRGB="", 
-                 blockCount="",
-                 blockSizes="", 
-                 blockStarts=""):
-        self.chrom = chrom
-        self.startPos = int(startPos)
-        self.endPos = int(endPos)
-        if name == "":
-            self.name = f"{self.chrom}:{self.startPos}-{self.endPos}"
-        else:
-            self.name = name
-        if score == '':
-            self.score = 0
-        else:
-            self.score = int(score)
-        if strand in (".","+","-"):
-            self.strand = strand
-        else:
-            self.strand = "."
-        if thickStart == "":
-            self.thickStart = self.startPos
-        else:
-            self.thickStart = int(thickStart)
-        if thickEnd == "":
-            self.thickEnd = self.endPos
-        else:
-            self.thickEnd = int(thickEnd)
-        if itemRGB == "":
-            self.itemRBG = None
-        else:
-            self.itemRGB = itemRGB
-        if blockCount == "":
-            self.blockCount = 1
-        else:
-            self.blockCount = int(blockCount)
-        if blockSizes == "":
-            self.blockSizes = [abs(self.endPos - self.startPos)]
-        else:
-            self.blockSizes = [int(x) for x in blockSizes.split(',')]
-        if blockStarts == "":
-            self.blockStarts = [0]
-        else:
-            self.blockStarts = [int(x) for x in blockStarts.split(',')]
-    
-    def samtoolsStr(self):
-        return(f"{self.chrom}:{self.startPos}:{self.endPos}")
-    
-    def get_subregions(self):
-        if self.strand == '+':
-            return([Bed_Line(
-                self.chrom, 
-                self.startPos + self.blockStarts[x], 
-                self.startPos + self.blockStarts[x] + self.blockSizes[x], 
-                f"{self.name}_block{x + 1}", 
-                self.score, 
-                self.strand
-                ) for x in range(len(self.blockStarts))])
-        elif self.strand == '-':
-            return([Bed_Line(
-                self.chrom, 
-                self.startPos + self.blockStarts[-x - 1], 
-                self.startPos + self.blockStarts[-x - 1] + self.blockSizes[-x - 1], 
-                f"{self.name}_block{x + 1}", 
-                self.score, 
-                self.strand
-                ) for x in range(len(self.blockStarts))])
-        
-    def contains(self, inChr, inPos):
-        if (
-                inChr == self.chrom
-                and inPos >= self.startPos
-                and inPos < self.endPos
-                ):
-            return(True)
-        else:
-            return(False)
-    
+def filter_list(inStr):
+    return inStr.split(':')
+
 def getParams():
     parser = ArgumentParser(
         description=(
@@ -275,7 +178,26 @@ def getParams():
             f"Valid options are %(choices)s [default = %(default)s].  "
             )
         )
+    parser.add_argument(
+        "--apply_filters",
+        action="store",
+        dest="filters",
+        default=["near_indel","clustered"],
+        type=filter_list,
+        help=(
+            f"A colon-seperated list of filters to apply while counting, "
+            f"such as 'low_depth:near_indel:clustered'.  "
+            f"[default = 'near_indel:clustered']")
+        )
     return(parser.parse_args())
+
+def check_filters(vcf_filters,bad_filters):
+    good_var = True
+    for vcf_filt in vcf_filters:
+        if vcf_filt in bad_filters:
+            good_var = False
+    return good_var
+
 
 class countMutsEngine:
     def __init__(self, 
@@ -288,7 +210,8 @@ class countMutsEngine:
                  minDepth=1, 
                  minC=0, 
                  maxC=1, 
-                 sampName=None
+                 sampName=None,
+                 bad_filters=["near_indel", "clustered"]
                  ):
         self.params = {
            "inBam":inBam, 
@@ -298,7 +221,8 @@ class countMutsEngine:
            "Nprop": Nprop, 
            "minDepth": minDepth, 
            "minC": minC, 
-           "maxC": maxC
+           "maxC": maxC,
+           "bad_filters": bad_filters
            }
         if inBam is None:
             self.inBam = pysam.AlignmentFile("-", 'rb')
@@ -350,7 +274,7 @@ class countMutsEngine:
             clonality = int(varIter.samples[self.inVCF.samps[0]]['AD'].split(',')[1])/int(varIter.samples[self.inVCF.samps[0]]['DP'])
             if (
                     nProp <= self.params['Nprop'] 
-                    and varIter.filter in ([],["PASS"])
+                    and check_filters(varIter.filter, self.params["bad_filters"])
                     and clonality >= self.params["minC"] 
                     and clonality <= self.params["maxC"]
                     and int(varIter.samples[self.inVCF.samps[0]]['DP']) >= self.params['minDepth']
@@ -677,7 +601,9 @@ class countMutsEngine:
                         }
         return(mutsDict)
     
-    def genSummary(self, Fout, overall_mode="GENES", gene_mode="FULL", outputs="GB"):
+    def genSummary(self, Fout, 
+                   overall_mode="GENES", gene_mode="FULL", 
+                   outputs="GB", fliters=["near_indel","clustered"]):
         logging.debug("Generating summary")
         logging.debug(self.mutsCounts)
         logging.debug(self.geneCounts)
@@ -694,6 +620,7 @@ class countMutsEngine:
             f"##Input bed:\t{self.params['inBed']}\n"
             f"##Minimum Depth: \t{self.params['minDepth']}\n"
             f"##Clonality: \t{self.params['minC']}-{self.params['maxC']}\n"
+            f"##Filters: \t{', '.join(self.params['bad_filters'])}\n"
             )
         if overall_mode == "GENES":
             outFile.write(
@@ -1014,7 +941,8 @@ def main():
         o.mindepth, 
         o.min_clonality, 
         o.max_clonality, 
-        o.sampName
+        o.sampName, 
+        o.filters
         )
     logging.info("Processing Lines")
     myEngine.processLines(

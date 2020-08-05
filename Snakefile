@@ -77,6 +77,8 @@ def get_cm_outputs(wildcards):
     return samples.loc[wildcards.sample, "cm_outputs"]
 def get_cm_sumTypes(wildcards):
     return samples.loc[wildcards.sample, "cm_sumTypes"]
+def get_cm_filters(wildcards):
+    return samples.loc[wildcards.sample, "cm_filters"]
 def get_minClonal(wildcards):
     return samples.loc[wildcards.sample, "minClonal"]
 def get_maxClonal(wildcards):
@@ -95,9 +97,10 @@ def get_final_length(wildcards):
     myLen -= int(samples.loc[wildcards.sample, "spacerLen"])
     return myLen
 def get_snps_threshold(wildcards):
-    snpsLevel = min([
-        float(samples.loc[wildcards.sample, "maxClonal"]),
-        0.4])
+    snpsLevel = 0.4
+    # snpsLevel = min([
+    #     float(samples.loc[wildcards.sample, "maxClonal"]),
+    #     0.4])
     return snpsLevel
 
 def getVarDictBam(wildcards):
@@ -289,6 +292,8 @@ def getReportInput(wildcards):
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.final.bam.bai')
     #'Mutations Stats Files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.countmuts.csv')
+    # Depth stats file
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs.depth.summary.csv')
     # SSCS-only files
     if get_runSSCS(wildcards):
         outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.countmuts.csv')
@@ -296,6 +301,7 @@ def getReportInput(wildcards):
         outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.mutated.bam.bai')
         outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.snps.vcf')
         outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/sscs/{wildcards.sample}.sscs.vcf')
+        outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.sscs.depth.summary.csv')
     #'Final stats files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/plots/{wildcards.sample}.dcs.iSize_Histogram.png')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Final/dcs/{wildcards.sample}.dcs.mutated.bam')
@@ -1015,7 +1021,7 @@ rule varDict2VCF:
     shell:
         """
         cd {wildcards.runPath}
-        python {params.basePath}/scripts/varDictToVCF.py \
+        python {params.basePath}/scripts/VarDictToVCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.varDict.txt \
         -n {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt \
         -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
@@ -1055,6 +1061,26 @@ rule makeDepth:
         cd ..
         """
 
+rule summaizeDepth:
+    params:
+        basePath = sys.path[0],
+    input:
+        inDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt",
+        inBed = get_target_bed
+    output:
+        outDepthSummary = "{runPath}/Stats/data/{sample}.{sampType}.depth.summary.csv"
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        cd {wildcards.runPath}
+        python {params.basePath}/scripts/DepthSummaryCsv.py \
+        -i Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.txt \
+        -o Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.summary.csv \
+        -b {input.inBed}
+        cd ../
+        """
+
 # Make countMuts file from VCF file
 rule makeCountMuts:
     params:
@@ -1066,7 +1092,8 @@ rule makeCountMuts:
         maxNs = get_maxNs,
         sampName = get_rgsm,
         cm_outputs = get_cm_outputs,
-        cm_sums = get_cm_sumTypes
+        cm_sums = get_cm_sumTypes, 
+        cm_filters = get_cm_filters
     input:
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
@@ -1081,7 +1108,7 @@ rule makeCountMuts:
         """
         cd {params.runPath}
         # BamToCountMuts:
-        python {params.basePath}/scripts/bamToCountMuts.py \
+        python {params.basePath}/scripts/MutationFreqFromVCF.py \
         --samp_name {params.sampName} \
         -i ../{input.inBam} \
         -f {input.inRef} \
@@ -1094,7 +1121,8 @@ rule makeCountMuts:
         -C {params.maxClonal} \
         -n {params.maxNs} \
         -u \
-        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.countmuts.csv
+        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.countmuts.csv \
+        --apply_filters {params.cm_filters}
         cd ..
         """
 
@@ -1148,7 +1176,7 @@ rule PlotInsertSize:
     input:
         "{runPath}/Stats/data/{sample}.{sampType}.iSize_Metrics.txt",
     output:
-        temp("{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.tiff")
+        "{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.png"
     conda:
         "envs/DS_env_full.yaml"
     shell:
@@ -1168,7 +1196,7 @@ rule PlotCoverage:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt",
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
-        temp("{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.tiff")
+        "{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.png"
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -1227,21 +1255,21 @@ rule MutsPerCycle:
 # R, and a desire to embed the resulting figures in the report html file.
 # This issue may be revisited in the future, if we come accross a better 
 # PNG device for R.  
-rule tiff2png:
-    params:
-        basePath = sys.path[0],
-    input:
-        "{prefix}.tiff"
-    output:
-        "{prefix}.png"
-    conda:
-        "envs/DS_env_full.yaml"
-    shell:
-        """
-        python {params.basePath}/scripts/tiff2png.py \
-        {wildcards.prefix}.tiff \
-        {wildcards.prefix}.png
-        """
+# rule tiff2png:
+#     params:
+#         basePath = sys.path[0],
+#     input:
+#         "{prefix}.tiff"
+#     output:
+#         "{prefix}.png"
+#     conda:
+#         "envs/DS_env_full.yaml"
+#     shell:
+#         """
+#         python {params.basePath}/scripts/tiff2png.py \
+#         {wildcards.prefix}.tiff \
+#         {wildcards.prefix}.png
+#         """
 
 # make summary files
 rule makeSummaryCSV:
@@ -1393,6 +1421,7 @@ import numpy as np
 11. [Depth per Target](#Depth-per-Target:)
 12. [Muts per Cycle](#Muts-per-Cycle:)
 13. [Countmuts output](#Countmuts-output:)
+14. [Depth Summary](#Depth-Summary:)
 """
             ))
         # Glossary
@@ -1614,6 +1643,10 @@ import numpy as np
                     cmTable1.append(
                         f"| Clonality | {linebins[1]} |  \n"
                         )
+                elif "Filters" in line:
+                    cmTable1.append(
+                        f"| Filters | {linebins[1]} |  \n"
+                        )
                 elif "Unique" in line:
                     cmTable1.append(
                         f"| Unique | True |  \n"
@@ -1628,13 +1661,25 @@ import numpy as np
         myCells.append(nbf.v4.new_markdown_cell(
             f"##Countmuts output:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
-            f"###Parameters:  \n"
+            f"###Parameters:  \n  \n"
             f"{''.join(cmTable1)}"
             f"  \n"
-            f"###Overall Mutation Counts:  \n"
+            f"###Overall Mutation Counts:  \n  \n"
             f"{''.join(cmTable2)}"
             ))
-
+        depthFile = open(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs.depth.summary.csv','r')
+        depthTable = ["| NAME | CHROM | START_POS | END_POS | TYPE | MIN | MEAN | MEDIAN | MAX |  \n",
+                      "| ---- | ----- | --------- | ------- | ---- | --- | ---- | ------ | --- |  \n"]
+        for line in depthFile:
+            if "#" not in line:
+                depthTable.append(
+                    f"| {' | '.join([x for x in line.strip().split(',')])} |  \n"
+                    )
+        depthFile.close()
+        myCells.append(nbf.v4.new_markdown_cell(
+            f"##Depth Summary:  \n"
+            f"[Top](#Duplex-Sequencing-Summary)  \n  \n"
+            f"{''.join(depthTable)}"))
         nb['cells'] = myCells
         nbf.write(nb, f"{wildcards.runPath}/Stats/{wildcards.sample}.report.ipynb")
 

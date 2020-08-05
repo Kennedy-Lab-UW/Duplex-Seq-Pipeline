@@ -7,6 +7,7 @@ from collections import namedtuple
 from VCF_Parser import *
 import pandas as pd
 import pysam
+import regex
 
 
 def varDictLine2vcfLine(inVarDictLine, inSampName):
@@ -291,10 +292,12 @@ def main():
     # create array of VCF lines for vardict lines
     myVariants = []
     for index, rowIter in vardict_vars.iterrows():
-        if (rowIter["AltDepth"] > 0
-                and 'N' not in rowIter['Ref']
-                and 'N' not in rowIter['Alt']):
-            myVariants.append(varDictLine2vcfLine(rowIter, o.sampName))
+        if (len(regex.findall(r'^[ACGTN]+$',str(rowIter['Ref']))) == 1 
+                and len(regex.findall(r'^[ACGTN]+$',str(rowIter['Alt']))) == 1):
+            if (rowIter["AltDepth"] > 0
+                    and 'N' not in rowIter['Ref']
+                    and 'N' not in rowIter['Alt']):
+                myVariants.append(varDictLine2vcfLine(rowIter, o.sampName))
     mySnps = []
     indels = {}
     # add SNP filter to header

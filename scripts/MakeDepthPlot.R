@@ -6,6 +6,79 @@ inSampType = args[3]
 
 library(ggplot2)
 library(readr)
+
+addZeros <- function(inData) {
+  #column labels: #Chrom  Pos Ref DP  Ns
+  outChroms = c()
+  outPos = c()
+  outRef = c()
+  outDp = c()
+  outNs = c()
+  contiguousStart = 1
+  contiguousEnd = 1
+  for (datIter in seq(1,length(row.names(inData)))) {
+    if ( inData$`#Chrom`[datIter] == inData$`#Chrom`[contiguousStart] &&
+         inData$`Pos`[datIter] == inData$`Pos`[contiguousStart] + datIter - contiguousStart
+    ) {
+      contiguousEnd = datIter
+    } else {
+      outChroms = c(outChroms, 
+                    inData$`#Chrom`[contiguousStart], 
+                    inData$`#Chrom`[contiguousStart:contiguousEnd], 
+                    inData$`#Chrom`[datIter-1]
+      )
+      outPos = c(outPos, 
+                 inData$Pos[contiguousStart] - 1, 
+                 inData$Pos[contiguousStart:contiguousEnd], 
+                 inData$Pos[contiguousEnd] + 1
+      )
+      outRef = c(outRef, 
+                 '.', 
+                 inData$Ref[contiguousStart:contiguousEnd], 
+                 '.'
+      )
+      outDp = c(outDp, 
+                0, 
+                inData$DP[contiguousStart:contiguousEnd], 
+                0
+      )
+      outNs = c(outNs, 
+                0, 
+                inData$Ns[contiguousStart:contiguousEnd], 
+                0
+      )
+      contiguousStart = datIter
+      contiguousEnd = datIter
+    }
+  }
+  outChroms = c(outChroms, 
+                inData$`#Chrom`[contiguousStart], 
+                inData$`#Chrom`[contiguousStart:contiguousEnd], 
+                inData$`#Chrom`[datIter-1]
+                )
+  outPos = c(outPos, 
+             inData$Pos[contiguousStart] - 1, 
+             inData$Pos[contiguousStart:contiguousEnd], 
+             inData$Pos[contiguousEnd] + 1
+             )
+  outRef = c(outRef, 
+             '.', 
+             inData$Ref[contiguousStart:contiguousEnd], 
+             '.'
+             )
+  outDp = c(outDp, 
+            0, 
+            inData$DP[contiguousStart:contiguousEnd], 
+            0
+            )
+  outNs = c(outNs, 
+            0, 
+            inData$Ns[contiguousStart:contiguousEnd], 
+            0
+            )
+  outData = data.frame(`Chrom` = outChroms, Pos = outPos, Ref = outRef, DP = outDp, Ns = outNs)
+  return(outData)
+}
 # read in bed file
 # input:
 #        inBed = get_target_bed,
@@ -16,9 +89,9 @@ library(readr)
 
 myBed <- read_table2(inBed, col_names = FALSE)
 myFName = paste("Stats/data/",inSampName, ".depth.txt", sep="")
-depth <- read_delim(myFName,
+depth <- addZeros(read_delim(myFName,
                     "\t", escape_double = FALSE, trim_ws = TRUE, 
-                    col_types="cicii") 
+                    col_types="cicii")) 
 # Set column names
 bedColNames = c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd","itemRgb","blockCounts","blockSizes","blockStarts")
 numCols = length(colnames(myBed))
@@ -32,7 +105,7 @@ if (length(row.names(depth)) > 0) {
   for (dataIter in seq(1,length(row.names(depth)))) {
     myName = "Off_Target"
     for (bedIter in seq(1, length(row.names(myBed)))) {
-      if ( depth$`#Chrom`[dataIter] == myBed$Chrom[bedIter] && 
+      if ( depth$Chrom[dataIter] == myBed$Chrom[bedIter] && 
            depth$Pos[dataIter] >= myBed$Start[bedIter] && 
            depth$Pos[dataIter] < myBed$End[bedIter]) {
         myName = myBed$Name[bedIter]
@@ -85,8 +158,8 @@ if (length(row.names(myVCF)) > 0) {
   myVCF$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
 } else {myVCF$Target = factor()}
 myPlot=ggplot(data = depth[depth$Target != "Off_Target",]) + 
-  geom_bar(mapping = aes(x = Pos, y = DP), stat="identity", width=1) + 
-  geom_bar(mapping=aes(x=Pos, y=Ns * multiplier), color='red', alpha=0.7, stat="identity", width=1) + 
+  geom_area(mapping = aes(x = Pos, y = DP), stat="identity") + 
+  geom_area(mapping=aes(x=Pos, y=Ns * multiplier), color='red', alpha=0.7, stat="identity") + 
   geom_segment(data = myBed, mapping = aes(x=Start,xend=End, y=0, yend=0))
 if (length(row.names(myVCF)) > 0) {
   myPlot = myPlot + 
@@ -103,10 +176,9 @@ myPlot = myPlot +
     axis.text.x = element_text(angle=90)
   ) + 
   facet_wrap(. ~ Target, scales = "free_x", ncol = min(length(myBed$Name), 4))
-ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.tiff", sep=""), 
+ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.png", sep=""), 
        plot=myPlot, 
        width = 200, 
        height=50*ceiling(length(levels(depth$Target)) / 4), 
        units="mm", 
-       device = "tiff", 
-       compression="lzw")
+       device = "png")

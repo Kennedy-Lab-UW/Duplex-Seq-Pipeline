@@ -107,13 +107,13 @@ properties:
     default: 0
     minimum: 0
     description: 
-  minClone:
+  minClonal:
     type: number
     default: 0
     minimum: 0
     maximum: 1
     description: 
-  maxClone:
+  maxClonal:
     type: number
     default: 0.1
     minimum: 0
@@ -144,6 +144,11 @@ properties:
     type: string
     pattern: ^[GB][TB]$
     default: "GT"
+  cm_filters:
+    type: string
+    pattern: ^(.+)?(:.+)+$
+    default: "near_indel:clustered"
+    description: Select which filters to apply durring frequency calculation.  
   runSSCS:
     type: boolean
     default: false
