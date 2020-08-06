@@ -102,6 +102,12 @@ def get_snps_threshold(wildcards):
     #     float(samples.loc[wildcards.sample, "maxClonal"]),
     #     0.4])
     return snpsLevel
+def get_mask_bed(wildcards):
+    testBed = samples.loc[wildcards.sample, "maskBed"]
+    if testBed.upper() == "NONE":
+        return "NONE"
+    else:
+        return testBed
 
 def getVarDictBam(wildcards):
     if wildcards.sampType == 'dcs':
@@ -123,6 +129,18 @@ def getVarDictBam(wildcards):
     else:
         raise Exception("Wrong sampType")
     return output
+
+def get_final_vcf(wildcards):
+    out_vcf = ""
+    if get_mask_bed(wildcards) == NONE:
+        # if mask bed is NONE
+        out_vcf = (f"{wildcards.runPath}/{wildcards.sample}."
+                   f"{wildcards.sampType}.raw.vcf")
+    else:
+        # if mask bed is not NONE
+        out_vcf = (f"{wildcards.runPath}/{wildcards.sample}."
+                   f"{wildcards.sampType}.masked.vcf")
+    return out_vcf
 
 def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
     outList = []
@@ -1014,23 +1032,53 @@ rule varDict2VCF:
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
     output:
-        outVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
+        outVCF = temp("{runPath}/{sample}.{sampType}.raw.vcf"),
         outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
     conda:
         "envs/DS_env_full.yaml"
     shell:
         """
         cd {wildcards.runPath}
-        python {params.basePath}/scripts/VarDictToVCF.py \
+        python {params.basePath}/scripts/varDictToVCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.varDict.txt \
         -n {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt \
         -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
+        -o {wildcards.sample}.{wildcards.sampType}.raw.vcf \
         -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         --samp_name {params.sampName} \
         --snp_threshold {params.snpLevel} \
         -d {params.minDepth}
         cd ..
+        """
+
+rule maskVariants:
+    params:
+        basePath = sys.path[0],
+    input:
+        inVCF = "{runPath}/{sample}.{sampType}.raw.vcf",
+        inMask = get_mask_bed
+    output:
+        outVCF = temp("{runPath}/{sample}.{sampType}.masked.vcf")
+    conda:
+        "envs/DS_env_full.yaml"
+    shell:
+        """
+        cd {wildcards.runPath)
+        python Mask_VCF.py \
+        -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
+        -o {wildcards.sample}.{wildcards.sampType}.masked.vcf \
+        -b {input.inMask}
+        cd ..
+        """
+
+rule make_final_VCF:
+    input:
+        in_VCF = get_cm_vcf
+    output:
+        out_VCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
+    shell:
+        """
+            cp {input.in_VCF} {output.out_VCF}
         """
 
 rule makeDepth:
