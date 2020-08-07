@@ -74,11 +74,15 @@ be able to use. After this, with the exception of setting up the Genomes
 Section 5), you should be able to run the Duplex-Seq pipeline using 
 
 ```bash
-DS CONFIG_CSV.csv
+bash /path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv
 ```
 
 where CONFIG_CSV.csv is a configuration CSV file generated as described 
 below.  
+
+If you want, you can also add the DS and DS-clean scripts to your path; 
+this will simplify invocation if you only have a single release version 
+on your system. 
 
 ## 4: Genome setup
 
@@ -308,7 +312,7 @@ provided with the pipeline will produce accurate data.
 The pipeline can be run using the DS command created by the setup script:
 
 ```bash
-DS CONFIG_CSV.csv
+/path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv
 ```
 
 ## 10: Output file descriptions:
@@ -514,8 +518,8 @@ in those cases.
 To finish preparing for and executing a rerun, run:
 
 ```bash
-DS-clean CONFIG_CSV.csv
-DS CONFIG_CSV.csv
+/path/to/Duplex-Seq-Pipeline/DS-clean CONFIG_CSV.csv
+/path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv
 ```
 
 ## 13: Unlocking following a power failure
@@ -524,5 +528,5 @@ the directory can be unlocked in order to restart using the provided
 DS-unlock script:
 
 ```bash 
-DS-unlock CONFIG_CSV.csv
+/path/to/Duplex-Seq-Pipeline/DS-unlock CONFIG_CSV.csv
 ```
