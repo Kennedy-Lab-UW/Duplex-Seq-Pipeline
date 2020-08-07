@@ -60,14 +60,15 @@ indelRegion = namedtuple(
 
 
 def main():
-    parser = ArgumentParser()
+    parser = ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     #  Input VarDict file
     parser.add_argument(
         '-i', '--in_file',
         action='store',
         dest='Fin',
         help=(f"An input single-sample VarDict output file without Ns "
-              f"included in the depth to process"),
+              f"included in the depth to process."),
         required=True
     )
     parser.add_argument(
@@ -75,14 +76,14 @@ def main():
         action='store',
         dest='Nin',
         help=(f"An input single-sample VarDict output file with Ns "
-              f"included in the depth to process"),
+              f"included in the depth to process."),
         required=True
     )
     parser.add_argument(
         '-b', '--in_bam_file',
         action='store',
         dest='Bin',
-        help=f"An input bam file used to generate both VarDict inputs",
+        help=f"An input bam file used to generate both VarDict inputs.",
         required=True
     )
     #  Output VCF file
@@ -90,7 +91,7 @@ def main():
         '-o', '--out_file',
         action='store',
         dest='Fout',
-        help='An name for the output VCF file including depth and SNP filtering',
+        help='An name for the output VCF file including depth and SNP filtering.',
         required=True
     )
     #  Output SNP file
@@ -98,7 +99,7 @@ def main():
         '-s', '--snp_file',
         action='store',
         dest='Fsnp',
-        help='An name for the output VCF file including only SNPs',
+        help='An name for the output VCF file including only SNPs.',
         required=True
     )
     #  minimum depth for good variant detection
@@ -106,7 +107,7 @@ def main():
         '-d', '--min_depth',
         action='store',
         dest='min_depth',
-        help='The minimum depth required to avoid being filtered',
+        help='The minimum depth required to avoid being filtered.',
         default=100,
         type=int
     )
@@ -114,7 +115,7 @@ def main():
         '--samp_name',
         action='store',
         dest='sampName',
-        help='A name for this sample.  ',
+        help='A name for this sample.',
         default="SAMPLE"
     )
     parser.add_argument(
@@ -122,10 +123,18 @@ def main():
         action='store',
         dest='snp_threshold',
         help=(f'The threshold for a variant to be marked as a SNP.  '
-              f'Any mutation with a MAF >= this will be marked as a SNP.  '),
+              f'Any mutation with a MAF >= this will be marked as a SNP.'),
         default=0.4,
         type=float
     )
+    parser.add_argument(
+        '--cluster_dist', 
+        action='store', 
+        dest='cluster_dist',
+        type=int,
+        default=10,
+        help='How far from a variant to check for clustering.'
+        )
     # logLevel (hidden argument)
     parser.add_argument(
         '--logLevel',
@@ -137,6 +146,7 @@ def main():
     )
     # parse arguments
     o = parser.parse_args()
+    o.cluster_dist = 10
 
     # Setup logging
     numeric_level = getattr(logging, o.logLvl.upper(), None)
@@ -319,7 +329,7 @@ def main():
     myHeader.addLine(
         lineType="FILTER",
         label="clustered",
-        description=f"This variant is part of a cluster of variants (nearest variant is within 10 bp).")
+        description=f"This variant is part of a cluster of variants (nearest variant is within {o.cluster_dist} bp).")
     # Get set of SNP loci and indel loci, and add low_depth and SNP filters
     for varLine in myVariants:
         if int(varLine.samples[o.sampName]["DP"]) < o.min_depth:
@@ -346,27 +356,29 @@ def main():
                 nearIndel = True
             if nearIndel:
                 vcfLine.add_filter("near_indel")
+        
     # add clustered variant filter
     for vcfIter in range(len(myVariants)):
-        clusteredVariant = False
-        if vcfIter == 0 and len(myVariants) > 1:
+        if "SNP" in myVariants[vcfIter].filter:
+            # Skip calculations for SNPs
+            continue
+        nearby_variants = []
+        for vcfIter2 in range(len(myVariants)):
+            # Find variants within 10 bp
+            # chech for self identity
+            if vcfIter == vcfIter2:
+                continue
             if (
-                    myVariants[vcfIter].chrom == myVariants[vcfIter + 1].chrom
-                    and myVariants[vcfIter].pos + 10 >= myVariants[vcfIter + 1].pos):
-                clusteredVariant = True
-        elif vcfIter == len(myVariants) - 1 and len(myVariants) > 1:
-            if (
-                    myVariants[vcfIter].chrom == myVariants[vcfIter - 1].chrom
-                    and myVariants[vcfIter].pos - 10 <= myVariants[vcfIter - 1].pos):
-                clusteredVariant = True
-        else:
-            if ((
-                    myVariants[vcfIter].chrom == myVariants[vcfIter - 1].chrom
-                    and myVariants[vcfIter].pos - 10 <= myVariants[vcfIter - 1].pos) or (
-                    myVariants[vcfIter].chrom == myVariants[vcfIter + 1].chrom
-                    and myVariants[vcfIter].pos + 10 >= myVariants[vcfIter + 1].pos)):
-                clusteredVariant = True
-        if clusteredVariant:
+                    myVariants[vcfIter].chrom == myVariants[vcfIter2].chrom
+                    and myVariants[vcfIter].pos + o.cluster_dist >= myVariants[vcfIter2].pos
+                    and "SNP" not in myVariants[vcfIter2]):
+                nearby_variants.append(vcfIter2)
+            elif (
+                    myVariants[vcfIter].chrom == myVariants[vcfIter2].chrom
+                    and myVariants[vcfIter].pos - o.cluster_dist <= myVariants[vcfIter2].pos
+                    and "SNP" not in myVariants[vcfIter2]):
+                nearby_variants.append(vcfIter2)
+        if len(nearby_variants) > 0:
             myVariants[vcfIter].add_filter("clustered")
     # Create output file
     outVCF = VariantFile(o.Fout, 'w', myHeader)
