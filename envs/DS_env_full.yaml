@@ -10,8 +10,7 @@ dependencies:
   - pysam=0.15.3
   - snakemake=5.*
   - bcftools=1.9*
-  - r>=3.6*
-  - ensembl-vep
+  - r=3.6.3
   - pandas
   - numpy
   - matplotlib
@@ -21,9 +20,10 @@ dependencies:
   - jupyterlab
   - nbconvert
   - pandoc
-  - r-tidyverse 
+  - r-tidyverse
   - r-gridextra
   - r-gridbase
   - icu=64.*
   - pillow
-  - vardict-java=1.7.0
+  - vardict-java=1.8.0
+  - fgbio=1.3.0
