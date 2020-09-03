@@ -122,7 +122,7 @@ class Bed_Line:
             return False
     
     def __len__(self):
-        return self.endPos - self.startPos - 1
+        return self.endPos - self.startPos
 
     def __repr__(self):
         return f"Bed_Line:{str(self)}"
