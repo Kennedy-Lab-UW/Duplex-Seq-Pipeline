@@ -971,8 +971,8 @@ rule overlapClip:
         inBai = "{runPath}/{sample}.{sampType}.clipped.bai",
         inRef = get_reference
     output:
-        outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
-        outBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bai",
+        outBam = temp("{runPath}/{sample}.{sampType}.overlapClip.temp.bam"),
+        outBai = temp("{runPath}/{sample}.{sampType}.overlapClip.temp.bai"),
         clippingMetrics = "{runPath}/Stats/data/{sample}.{sampType}.overlapClip.metrics.txt"
     conda:
        "envs/DS_env_full.yaml"
@@ -988,6 +988,30 @@ rule overlapClip:
         -c Hard \
         --clip-overlapping-reads true \
         -m ../{output.clippingMetrics}
+        cd ../
+        """
+
+rule FinalFilter:
+    params:
+        runPath = get_baseDir,
+        inBed = get_target_bed
+    input:
+        inBam = "{runPath}/{sample}.{sampType}.overlapClip.temp.bam",
+        inBai = "{runPath}/{sample}.{sampType}.overlapClip.temp.bai"
+    output:
+        outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
+    conda:
+         "envs/DS_env_full.yaml"
+    log:
+         "{runPath}/logs/{sample}_finalFilter_{sampType}.log"
+    shell:
+        """
+        set -x
+
+        cd {params.runPath}
+        samtools view -b -L {params.inBed} \
+        {wildcards.sample}.{wildcards.sampType}.overlapClip.temp.bam \
+        > Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam
         cd ../
         """
 
