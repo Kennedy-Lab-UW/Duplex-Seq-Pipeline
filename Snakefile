@@ -910,7 +910,7 @@ rule makePreEndClip:
     input:
         inBam = getEndClipBam,
     output:
-        outBam = "{runPath}/{sample}.{sampType}.prevar.bam"
+        outBam = temp("{runPath}/{sample}.{sampType}.prevar.temp.bam")
     conda:
         "envs/DS_env_full.yaml"
     shell:
@@ -927,8 +927,8 @@ rule endClip:
         runPath = get_baseDir
     input:
         # inBam, inBai will be set by getEndClipBam (renamed) and getVarDictBai
-        inBam = "{runPath}/{sample}.{sampType}.prevar.bam",
-        inBai = "{runPath}/{sample}.{sampType}.prevar.bam.bai",
+        inBam = "{runPath}/{sample}.{sampType}.prevar.temp.bam",
+        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai",
         inRef = get_reference
     output:
         outBam = temp("{runPath}/{sample}.{sampType}.clipped.bam"),
