@@ -132,7 +132,7 @@ def getVarDictBam(wildcards):
 
 def get_final_vcf(wildcards):
     out_vcf = ""
-    if get_mask_bed(wildcards) == NONE:
+    if get_mask_bed(wildcards) == "NONE":
         # if mask bed is NONE
         out_vcf = (f"{wildcards.runPath}/{wildcards.sample}."
                    f"{wildcards.sampType}.raw.vcf")

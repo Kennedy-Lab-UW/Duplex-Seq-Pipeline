@@ -161,7 +161,7 @@ properties:
     description: What type of rerun you want to do.  0 -> no rerun;  1 -> rerun variant caller;  2 -> rerun postBlastRecovery; 3 -> rerun BLAST and alignment;  4 -> rerun consensus maker.  
   maskBed:
     type: string
-    pattern: ^[^\s]*\.bed$
+    pattern: NONE|^[^\s]*\.bed$
     default: NONE
     description: A bed file to use for masking variants.  
 
