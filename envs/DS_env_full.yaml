@@ -10,7 +10,7 @@ dependencies:
   - pysam=0.15.3
   - snakemake=5.*
   - bcftools=1.9*
-  - r=3.6.3
+  - r>=3.6
   - pandas
   - numpy
   - matplotlib
