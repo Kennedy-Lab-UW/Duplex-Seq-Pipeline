@@ -1073,7 +1073,7 @@ rule maskVariants:
 
 rule make_final_VCF:
     input:
-        in_VCF = get_cm_vcf
+        in_VCF = get_final_vcf
     output:
         out_VCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     shell:
