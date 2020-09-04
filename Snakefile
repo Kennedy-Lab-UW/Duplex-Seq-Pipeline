@@ -103,7 +103,7 @@ def get_snps_threshold(wildcards):
     #     0.4])
     return snpsLevel
 
-def getVarDictBam(wildcards):
+def getEndClipBam(wildcards):
     if wildcards.sampType == 'dcs':
         if get_blast_db_path(wildcards) == "NONE.nal":
             output=(f"{wildcards.runPath}/"
@@ -905,17 +905,114 @@ rule CountAmbig:
         cd ../
         """
 
-rule makePreVariantCallCp:
+rule makePreEndClip:
     params:
     input:
-        inBam = getVarDictBam,
+        inBam = getEndClipBam,
     output:
-        outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam"
+        outBam = temp("{runPath}/{sample}.{sampType}.prevar.temp.bam")
     conda:
         "envs/DS_env_full.yaml"
     shell:
         """
         cp {input.inBam} {output.outBam}
+        """
+
+rule endClip:
+    params:
+        sample = get_sample,
+        clip5 = get_clipBegin,
+        clip3 = get_clipEnd,
+        basePath = sys.path[0],
+        runPath = get_baseDir
+    input:
+        # inBam, inBai will be set by getEndClipBam (renamed) and getVarDictBai
+        inBam = "{runPath}/{sample}.{sampType}.prevar.temp.bam",
+        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai",
+        inRef = get_reference
+    output:
+        outBam = temp("{runPath}/{sample}.{sampType}.clipped.bam"),
+        outBai = temp("{runPath}/{sample}.{sampType}.clipped.bai"),
+        clippingMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.endClip.metrics.txt")
+    conda:
+       "envs/DS_env_full.yaml"
+    log:
+         "{runPath}/logs/{sample}_endClip_{sampType}.log"
+
+    shell:
+        """
+        if [ "$(( {params.clip5}+{params.clip3} ))" -gt "0" ]
+        then
+        cd {params.runPath}
+        fgbio ClipBam \
+        -i ../{input.inBam} \
+        -o ../{output.outBam} \
+        -r {input.inRef} \
+        -c Hard \
+        --read-one-five-prime {params.clip5} \
+        --read-one-three-prime {params.clip3} \
+        --read-two-five-prime {params.clip5} \
+        --read-two-three-prime {params.clip3} \
+        -m ../{output.clippingMetrics}
+        cd ../
+        else
+        ln -s {input.inBam} {output.outBam}
+        ln -s {input.inBai} {output.outBai}
+        fi
+        """
+
+rule overlapClip:
+    params:
+        sample = get_sample,
+        basePath = sys.path[0],
+        runPath = get_baseDir
+    input:
+        inBam = "{runPath}/{sample}.{sampType}.clipped.bam",
+        inBai = "{runPath}/{sample}.{sampType}.clipped.bai",
+        inRef = get_reference
+    output:
+        outBam = temp("{runPath}/{sample}.{sampType}.overlapClip.temp.bam"),
+        outBai = temp("{runPath}/{sample}.{sampType}.overlapClip.temp.bai"),
+        clippingMetrics = "{runPath}/Stats/data/{sample}.{sampType}.overlapClip.metrics.txt"
+    conda:
+       "envs/DS_env_full.yaml"
+    log:
+         "{runPath}/logs/{sample}_overlapClip_{sampType}.log"
+    shell:
+        """
+        cd {params.runPath}
+        fgbio ClipBam \
+        -i ../{input.inBam} \
+        -o ../{output.outBam} \
+        -r {input.inRef} \
+        -c Hard \
+        --clip-overlapping-reads true \
+        -m ../{output.clippingMetrics}
+        cd ../
+        """
+
+rule FinalFilter:
+    params:
+        runPath = get_baseDir,
+        inBed = get_target_bed
+    input:
+        inBam = "{runPath}/{sample}.{sampType}.overlapClip.temp.bam",
+        inBai = "{runPath}/{sample}.{sampType}.overlapClip.temp.bai"
+    output:
+        outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
+    conda:
+         "envs/DS_env_full.yaml"
+    log:
+         "{runPath}/logs/{sample}_finalFilter_{sampType}.log"
+    shell:
+        """
+        set -x
+
+        cd {params.runPath}
+        samtools view -b -L {params.inBed} \
+        {wildcards.sample}.{wildcards.sampType}.overlapClip.temp.bam \
+        > Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam
+        cd ../
         """
 
 rule varDict:
@@ -945,8 +1042,7 @@ rule varDict:
         """
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        -UN -P {params.clip5} \
-        -T $(( {params.readLength}-{params.umiLen}-{params.spacerLen}-{params.clip3} )) \
+        -UN \
         -f {params.vardict_f} -p \
         -G {input.inRef} \
         -nmfreq {params.vardict_nmfreq} \
