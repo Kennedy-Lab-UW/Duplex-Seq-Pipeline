@@ -17,6 +17,7 @@ dependencies:
   - regex
   - biopython
   - blast
+  - bedtools
   - jupyterlab
   - nbconvert
   - pandoc
