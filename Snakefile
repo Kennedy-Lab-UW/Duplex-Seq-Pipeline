@@ -1039,6 +1039,24 @@ rule FinalFilter:
         cd ../
         """
 
+rule makeBufferedBed:
+    params:
+        readLength = get_readLen,
+    input:
+        inBed = get_target_bed,
+        inRef = get_reference, 
+    output:
+        outBed = temp("{runPath}/{sample}.vardictBed.bed"),
+        temp_sizes = temp("{runPath}/{sample}.ref.genome"),
+    shell:
+        """
+        cd {wildcards.runPath}
+        cut -f 1,2 {input.inRef}.fai > {wildcards.sample}.ref.genome
+        bedtools slop -i {input.inBed} -g {wildcards.sample}.ref.genome \
+        -b {params.readLength} > {wildcards.sample}.vardictBed.bed
+        cd ../
+        """
+
 rule varDict:
     params:
         clip5 = get_clipBegin,
@@ -1056,7 +1074,7 @@ rule varDict:
     input:
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inBed = get_target_bed,
+        inBed = "{runPath}/{sample}.vardictBed.bed",
         inRef = get_reference
     output:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.txt"), 
@@ -1073,7 +1091,7 @@ rule varDict:
         -N {params.sampName} \
         -r {params.vardict_r} \
         -v -c 1 -S 2 -E 3 -U -g 4 \
-        {input.inBed} \
+        {wildcards.sample}.vardictBed.bed \
         -h -V {params.vardict_V} \
         --adaptor {params.vardict_adaptor} \
         > {wildcards.sample}.{wildcards.sampType}.varDict.txt
@@ -1097,7 +1115,7 @@ rule varDict_Ns:
     input:
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inBed = get_target_bed,
+        inBed = "{runPath}/{sample}.vardictBed.bed",
         inRef = get_reference
     output:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.Ns.txt"), 
@@ -1115,7 +1133,7 @@ rule varDict_Ns:
         -N {params.sampName} \
         -r {params.vardict_r} \
         -v -c 1 -S 2 -E 3 -U -g 4 \
-        {input.inBed} \
+        {wildcards.sample}.vardictBed.bed \
         -h -V {params.vardict_V} \
         --adaptor {params.vardict_adaptor} \
         > {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt
