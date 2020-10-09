@@ -1223,13 +1223,13 @@ rule MutsPerCycle:
         sample = get_sample,
         basePath = sys.path[0],
         runPath = get_baseDir,
-        readLength = get_final_length
+        readLength = get_final_length,
         filter_string = get_mpc_filters
     input:
         inRef = get_reference,
         inFinal = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
         inFinalBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
+        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
         outBam2 = "{runPath}/Final/{sampType}/{sample}.{sampType}.mutated.bam",
         outErrPerCyc2_WN = "{runPath}/Stats/plots/{sample}.{sampType}_BasePerPosInclNs.png",
@@ -1246,7 +1246,7 @@ rule MutsPerCycle:
         cd {params.runPath}
         python3 {params.basePath}/scripts/countMutsPerCycle.py  \
         --inFile Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        --inSnps Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
+        --inVCF Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
         -o {wildcards.sample}.{wildcards.sampType} \
         -l {params.readLength} -b -t 0 -c --text_file \
         --filter SNP --filter INDEL {params.filter_string}

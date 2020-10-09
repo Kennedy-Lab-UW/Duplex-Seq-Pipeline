@@ -15,7 +15,6 @@ compBase = {"C": "G", "G": "C", "T": "A", "A": "T", "N": "N"}
 
 class MismatchCounter:
     def __init__(self, max_read_length, filters, filterSet, indelsSet, varsSet):
-        o.rlen, o.filters, snps, indels, variants
         self.mismatch_counts = [
             {"C>T": 0, "C>A": 0, "C>G": 0, "T>A": 0, "T>C": 0, "T>G": 0, "C>N": 0, "T>N": 0, "Count": 0}
             for i in range(max_read_length)
@@ -25,6 +24,7 @@ class MismatchCounter:
         self.snps = filterSet
         self.indels = indelsSet
         self.vars = varsSet
+        self.debug_file = open("MPC_debug.txt",'w')
 
     def countRead(self, read):
         numMuts = 0
@@ -71,6 +71,7 @@ class MismatchCounter:
                         # remove non-included variants, if requested
                         use_variant = False
                     if use_variant:
+                        self.debug_file.write(f"{snpTest}\n")
                         if readDir == -1:
                             self.mismatch_counts[rLen - x[0] - hardclipping - 1][f"{refBase}>{readBase}"] += 1
                         elif readDir == 1:
@@ -159,7 +160,7 @@ def near_indel(inVar, inIndel):
     indelbins = inIndel.split(':')[:2]
     indel_start = int(indelbins[1]) - indel_length
     indel_stop = int(indelbins[1]) + indel_length
-    varbins = in_var.split(':')[:2]
+    varbins = inVar.split(':')[:2]
     if (
             varbins[0] == indelbins[0]
             and indel_start <= int(varbins[1]) <= indel_stop):
@@ -268,7 +269,7 @@ def main():
     o = parser.parse_args()
     # Get list of SNPs from snp file
     inVCF = VariantFile(o.inVCF, 'r')
-    filtOut = set()
+    filt_out = set()
     indels = set()
     variants = set()
     for line in inVCF:
