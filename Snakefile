@@ -91,6 +91,12 @@ def get_cleanup(wildcards):
     return samples.loc[wildcards.sample, "cleanup"]
 def get_recovery(wildcards):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
+
+def get_mpc_filters(wildcards):
+    out_str = " ".join([
+        f"--filter {x}" for x in samples.loc[wildcards.sample, "cm_filters"].split(':')])
+    return out_str
+
 def get_final_length(wildcards):
     myLen = int(samples.loc[wildcards.sample, "readLen"])
     myLen -= int(samples.loc[wildcards.sample, "umiLen"])
@@ -1218,6 +1224,7 @@ rule MutsPerCycle:
         basePath = sys.path[0],
         runPath = get_baseDir,
         readLength = get_final_length
+        filter_string = get_mpc_filters
     input:
         inRef = get_reference,
         inFinal = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
@@ -1241,7 +1248,8 @@ rule MutsPerCycle:
         --inFile Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
         --inSnps Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         -o {wildcards.sample}.{wildcards.sampType} \
-        -l {params.readLength} -b -t 0 -c --text_file
+        -l {params.readLength} -b -t 0 -c --text_file \
+        --filter SNP --filter INDEL {params.filter_string}
         
         mv {wildcards.sample}.{wildcards.sampType}*.png Stats/plots/
         mv {wildcards.sample}.{wildcards.sampType}_MutsPerCycle.dat.csv Stats/data/

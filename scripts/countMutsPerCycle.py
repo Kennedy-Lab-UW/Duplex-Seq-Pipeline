@@ -1,4 +1,5 @@
 import sys
+import math
 from argparse import ArgumentParser
 from collections import defaultdict
 
@@ -13,13 +14,17 @@ compBase = {"C": "G", "G": "C", "T": "A", "A": "T", "N": "N"}
 
 
 class MismatchCounter:
-    def __init__(self, max_read_length, snpsSet):
+    def __init__(self, max_read_length, filters, filterSet, indelsSet, varsSet):
+        o.rlen, o.filters, snps, indels, variants
         self.mismatch_counts = [
             {"C>T": 0, "C>A": 0, "C>G": 0, "T>A": 0, "T>C": 0, "T>G": 0, "C>N": 0, "T>N": 0, "Count": 0}
             for i in range(max_read_length)
         ]
         self.indelCounts = 0
-        self.snps = snpsSet
+        self.filters = filters
+        self.snps = filterSet
+        self.indels = indelsSet
+        self.vars = varsSet
 
     def countRead(self, read):
         numMuts = 0
@@ -52,7 +57,20 @@ class MismatchCounter:
                         refBase = compBase[refBase]
                         readBase = compBase[readBase]
                     snpTest = f"{refChrom}:{refPos}:{refBase}>{readBase}"
-                    if snpTest not in self.snps:
+                    use_variant = True
+                    
+                    if snpTest in self.snps:
+                        # check for and remove SNPs if requested
+                        use_variant = False
+                    if (
+                            any([near_indel(snpTest, x) for x in self.indels])
+                            and "INDEL" in self.filters):
+                        # check for and remove variants near indels, if requested
+                        use_variant = False
+                    if snpTest not in self.vars and "INCLUDE" in self.filters:
+                        # remove non-included variants, if requested
+                        use_variant = False
+                    if use_variant:
                         if readDir == -1:
                             self.mismatch_counts[rLen - x[0] - hardclipping - 1][f"{refBase}>{readBase}"] += 1
                         elif readDir == 1:
@@ -135,6 +153,26 @@ def getIndels(read):
                     contLoop = False
     return (indelDict)
 
+def near_indel(inVar, inIndel):
+    indelbins = inIndel.split(':')[2].split('>')
+    indel_length = math.ceil(1.1 * max([len(indelbins[0]), len(indelbins[1])]))
+    indelbins = inIndel.split(':')[:2]
+    indel_start = int(indelbins[1]) - indel_length
+    indel_stop = int(indelbins[1]) + indel_length
+    varbins = in_var.split(':')[:2]
+    if (
+            varbins[0] == indelbins[0]
+            and indel_start <= int(varbins[1]) <= indel_stop):
+        return True
+    else:
+        return False
+
+def is_indel(inVariant):
+    varbins = inVariant.split(':')[2].split('>')
+    if len(varbins[0]) != len(varbins[1]):
+        return True
+    else:
+        return False
 
 def extractVariant(inVarLine):
     if len(inVarLine.ref) == 1 and len(inVarLine.alts[0]) == 1:
@@ -161,10 +199,10 @@ def main():
         help='Input bam file.'
     )
     parser.add_argument(
-        '-s', '--inSnps',
+        '-v', '--inVCF',
         action='store',
-        dest='inSnps',
-        help='Input SNP VCF file.'
+        dest='inVCF',
+        help='Input VCF file for filtering.'
     )
     parser.add_argument(
         '-o', '--outPrefix',
@@ -179,6 +217,22 @@ def main():
         dest='rlen',
         help='The length of an individual read'
     )
+    parser.add_argument(
+        '--filter',
+        action="append",
+        dest="filters",
+        help=(
+            "Sets filtering behavior.  Can be provided multiple times to "
+            "impose multiple filters.  'SNP' will filter out any "
+            "variants marked as SNPs in the provided VCF file.  "
+            "'INDEL' will filter out any variant located within indel_length "
+            "bp of any indel in the provided VCF file.  'INCLUDE' "
+            "will count only variants provided in the VCF file (with the "
+            "exception of SNPs, if both 'INCLUDE' and 'SNP' are active).  "
+            "All other arguments will be assumed to be filters in the 'FILTER'"
+            " column of the VCF file, and will filter out variants matching "
+            "that filter.  "
+            ))
     parser.add_argument(
         '-g',
         action="store_true",
@@ -213,12 +267,25 @@ def main():
     )
     o = parser.parse_args()
     # Get list of SNPs from snp file
-    inSnps = VariantFile(o.inSnps, 'r')
-    snps = set()
-    for line in inSnps:
-        if "SNP" in line.filter:
-            snps.add(extractVariant(line))
-    myCounter = MismatchCounter(o.rlen, snps)
+    inVCF = VariantFile(o.inVCF, 'r')
+    filtOut = set()
+    indels = set()
+    variants = set()
+    for line in inVCF:
+        variant = extractVariant(line)
+        if is_indel(variant) and "INDEL" in o.filters:
+            indels.add(variant)
+        else:
+            filterVar = False
+            for filt_iter in o.filters:
+                if filt_iter not in ("INDEL", "INCLUDE"):
+                    if filt_iter in line.filter:
+                        filt_out.add(variant)
+                        filterVar = True
+            if "INCLUDE" in o.filters and not filterVar:
+                variants.add(variant)
+
+    myCounter = MismatchCounter(o.rlen, o.filters, filt_out, indels, variants)
     inBam = pysam.AlignmentFile(o.inFile, 'rb')
 
     # open output bam files
