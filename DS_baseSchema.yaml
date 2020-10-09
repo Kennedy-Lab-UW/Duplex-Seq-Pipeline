@@ -159,6 +159,12 @@ properties:
     minimum: 0
     maximum: 4
     description: What type of rerun you want to do.  0 -> no rerun;  1 -> rerun variant caller;  2 -> rerun postBlastRecovery; 3 -> rerun BLAST and alignment;  4 -> rerun consensus maker.  
+  maskBed:
+    type: string
+    pattern: NONE|^[^\s]*\.bed$
+    default: NONE
+    description: A bed file to use for masking variants.  
+
 required:
   - sample
   - rglb
