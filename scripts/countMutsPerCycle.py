@@ -24,7 +24,7 @@ class MismatchCounter:
         self.snps = filterSet
         self.indels = indelsSet
         self.vars = varsSet
-        self.debug_file = open("MPC_debug.txt",'w')
+        #self.debug_file = open("MPC_debug.txt",'w')
 
     def countRead(self, read):
         numMuts = 0
@@ -71,7 +71,7 @@ class MismatchCounter:
                         # remove non-included variants, if requested
                         use_variant = False
                     if use_variant:
-                        self.debug_file.write(f"{snpTest}\n")
+                        #self.debug_file.write(f"{snpTest}\n")
                         if readDir == -1:
                             self.mismatch_counts[rLen - x[0] - hardclipping - 1][f"{refBase}>{readBase}"] += 1
                         elif readDir == 1:
