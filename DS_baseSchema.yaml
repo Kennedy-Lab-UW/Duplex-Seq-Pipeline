@@ -97,6 +97,11 @@ properties:
     default: 101
     minimum: 1
     description: 
+  adapterSeq:
+    type: string
+    default: "ANNNNNNNNAGATCGGAAGAG"
+    pattern: ^[ACTGRYSWKMBDHVN]*$
+    description: The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included
   clipBegin:
     type: integer
     default: 7

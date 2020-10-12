@@ -89,6 +89,8 @@ def get_maxNs(wildcards):
     return samples.loc[wildcards.sample, "maxNs"]
 def get_cleanup(wildcards):
     return samples.loc[wildcards.sample, "cleanup"]
+def get_adapter_seq(wildcards):
+    return samples.loc[wildcards.sample, "adapterSeq"]
 def get_recovery(wildcards):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
 def get_final_length(wildcards):
@@ -506,6 +508,29 @@ rule makeConsensus:
         cd ../
         """
 
+# Need to add adapter seq to DS_baseSchema.yaml, config file.
+rule clipAdapters:
+    params:
+        adapterSeq = get_adapter_seq,
+    input:
+        in1 = "{runPath}/Intermediate/ConsensusMakerOutputs/{sample}_read1_{sampType}.fq.gz",
+        in2 = "{runPath}/Intermediate/ConsensusMakerOutputs/{sample}_read2_{sampType}.fq.gz",
+    output:
+        out1 = temp("{runPath}/{sample}_read1_{sampType}.adaptClip.fq.gz"),
+        out2 = temp("{runPath}/{sample}_read2_{sampType}.adaptClip.fq.gz"),
+    shell:
+        """
+        cd {wildcards.runPath}
+        cutadapt \
+        -a {params.adapterSeq} -A {params.adapterSeq} \
+        -o {wildcards.sample}_read1_{wildcards.sampType}.adaptClip.fq.gz \
+        -p {wildcards.sample}_read2_{wildcards.sampType}.adaptClip.fq.gz \
+        Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read1_{wildcards.sampType}.fq.gz \
+        Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read2_{wildcards.sampType}.fq.gz
+        cd ..
+        """
+
+
 # Calculate # on target raw reads based on outAln1 and outAln2 from makeConsensus
 rule getOnTarget:
     params:
@@ -558,8 +583,8 @@ rule alignReads:
         runPath = get_baseDir
     priority: 45
     input:
-        in1 = "{runPath}/Intermediate/ConsensusMakerOutputs/{sample}_read1_{sampType}.fq.gz",
-        in2 = "{runPath}/Intermediate/ConsensusMakerOutputs/{sample}_read2_{sampType}.fq.gz",
+        in1 = "{runPath}/{sample}_read1_{sampType}.adaptClip.fq.gz",
+        in2 = "{runPath}/{sample}_read2_{sampType}.adaptClip.fq.gz",
         inRef = get_reference
     output:
         outBam = temp("{runPath}/{sample}_mem.{sampType}.sort.bam"),
