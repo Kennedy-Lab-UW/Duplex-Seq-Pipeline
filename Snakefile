@@ -524,6 +524,8 @@ rule clipAdapters:
     output:
         out1 = temp("{runPath}/{sample}_read1_{sampType}.adaptClip.fq.gz"),
         out2 = temp("{runPath}/{sample}_read2_{sampType}.adaptClip.fq.gz"),
+    conda:
+       "envs/DS_env_full.yaml"
     shell:
         """
         cd {wildcards.runPath}
@@ -535,7 +537,6 @@ rule clipAdapters:
         Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read2_{wildcards.sampType}.fq.gz
         cd ..
         """
-
 
 # Calculate # on target raw reads based on outAln1 and outAln2 from makeConsensus
 rule getOnTarget:
@@ -770,7 +771,8 @@ rule PreBlastProcessing3:
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/countMutsPerCycle.py  \
         --inFile {wildcards.sample}_mem.dcs.nonSecSup.bam \
-        --inSnps {wildcards.sample}_dcs.snps.vcf \
+        --inVCF {wildcards.sample}_dcs.snps.vcf \
+        --filter SNP \
         -o Intermediate/postBlast/{wildcards.sample}_dcs.snpFiltered \
         -l {params.readLength} -g -b -t 0
         mv Intermediate/postBlast/{wildcards.sample}_dcs.snpFiltered.badReads.t0.bam \

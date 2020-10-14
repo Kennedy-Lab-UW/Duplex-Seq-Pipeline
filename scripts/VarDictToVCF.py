@@ -371,12 +371,12 @@ def main():
             if (
                     myVariants[vcfIter].chrom == myVariants[vcfIter2].chrom
                     and myVariants[vcfIter].pos + o.cluster_dist >= myVariants[vcfIter2].pos
-                    and "SNP" not in myVariants[vcfIter2]):
+                    and "SNP" not in myVariants[vcfIter2].filter):
                 nearby_variants.append(vcfIter2)
             elif (
                     myVariants[vcfIter].chrom == myVariants[vcfIter2].chrom
                     and myVariants[vcfIter].pos - o.cluster_dist <= myVariants[vcfIter2].pos
-                    and "SNP" not in myVariants[vcfIter2]):
+                    and "SNP" not in myVariants[vcfIter2].filter):
                 nearby_variants.append(vcfIter2)
         if len(nearby_variants) > 0:
             myVariants[vcfIter].add_filter("clustered")

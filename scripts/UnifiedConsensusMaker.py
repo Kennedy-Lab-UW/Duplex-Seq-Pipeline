@@ -505,7 +505,7 @@ def main():
                     )
                     read1_sscs_fq_file.write(f"@{tag}#ab/1 XF:Z:{seq_dict['ab:1'][1]}\n"
                                              f"{seq_dict['ab:1'][0]}\n"
-                                             f"+{seq_dict['ab:1'][1]}\n"
+                                             f"+\n"
                                              f"{corrQualStr}\n"
                                              )
 
@@ -517,7 +517,7 @@ def main():
                     )
                     read2_sscs_fq_file.write(f"@{tag}#ab/2 XF:Z:{seq_dict['ab:2'][1]}\n"
                                              f"{seq_dict['ab:2'][0]}\n"
-                                             f"+{seq_dict['ab:2'][1]}\n"
+                                             f"+\n"
                                              f"{corrQualStr}\n"
                                              )
 
@@ -530,7 +530,7 @@ def main():
                     )
                     read1_sscs_fq_file.write(f"@{tag}#ba/1 XF:Z:{seq_dict['ba:1'][1]}\n"
                                              f"{seq_dict['ba:1'][0]}\n"
-                                             f"+{seq_dict['ba:1'][1]}\n"
+                                             f"+\n"
                                              f"{corrQualStr}\n"
                                              )
 
@@ -542,7 +542,7 @@ def main():
                     )
                     read2_sscs_fq_file.write(f"@{tag}#ba/2 XF:Z:{seq_dict['ba:2'][1]}\n"
                                              f"{seq_dict['ba:2'][0]}\n"
-                                             f"+{seq_dict['ba:2'][1]}\n"
+                                             f"+\n"
                                              f"{corrQualStr}\n"
                                              )
 
@@ -608,13 +608,13 @@ def main():
                     read1_dcs_fq_file.write(
                         f"@{tag}/1 XF:Z:{dcs_read_1[1]}:{dcs_read_1[2]}\n"
                         f"{dcs_read_1[0]}\n"
-                        f"+{dcs_read_1[1]}:{dcs_read_1[2]}\n"
+                        f"+\n"
                         f"{r1QualStr}\n"
                     )
                     read2_dcs_fq_file.write(
                         f"@{tag}/2 XF:Z:{dcs_read_2[1]}:{dcs_read_2[2]}\n"
                         f"{dcs_read_2[0]}\n"
-                        f"+{dcs_read_2[1]}:{dcs_read_2[2]}\n"
+                        f"+\n"
                         f"{r2QualStr}\n"
                     )
                 elif (tag.count('N') != 0
