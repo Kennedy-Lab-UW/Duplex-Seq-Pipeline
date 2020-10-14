@@ -93,6 +93,12 @@ def get_adapter_seq(wildcards):
     return samples.loc[wildcards.sample, "adapterSeq"]
 def get_recovery(wildcards):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
+
+def get_mpc_filters(wildcards):
+    out_str = " ".join([
+        f"--filter {x}" for x in samples.loc[wildcards.sample, "cm_filters"].split(':')])
+    return out_str
+
 def get_final_length(wildcards):
     myLen = int(samples.loc[wildcards.sample, "readLen"])
     myLen -= int(samples.loc[wildcards.sample, "umiLen"])
@@ -1058,6 +1064,24 @@ rule FinalFilter:
         cd ../
         """
 
+rule makeBufferedBed:
+    params:
+        readLength = get_readLen,
+    input:
+        inBed = get_target_bed,
+        inRef = get_reference, 
+    output:
+        outBed = temp("{runPath}/{sample}.vardictBed.bed"),
+        temp_sizes = temp("{runPath}/{sample}.ref.genome"),
+    shell:
+        """
+        cd {wildcards.runPath}
+        cut -f 1,2 {input.inRef}.fai > {wildcards.sample}.ref.genome
+        bedtools slop -i {input.inBed} -g {wildcards.sample}.ref.genome \
+        -b {params.readLength} > {wildcards.sample}.vardictBed.bed
+        cd ../
+        """
+
 rule varDict:
     params:
         clip5 = get_clipBegin,
@@ -1075,7 +1099,7 @@ rule varDict:
     input:
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inBed = get_target_bed,
+        inBed = "{runPath}/{sample}.vardictBed.bed",
         inRef = get_reference
     output:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.txt"), 
@@ -1092,7 +1116,7 @@ rule varDict:
         -N {params.sampName} \
         -r {params.vardict_r} \
         -v -c 1 -S 2 -E 3 -U -g 4 \
-        {input.inBed} \
+        {wildcards.sample}.vardictBed.bed \
         -h -V {params.vardict_V} \
         --adaptor {params.vardict_adaptor} \
         > {wildcards.sample}.{wildcards.sampType}.varDict.txt
@@ -1116,7 +1140,7 @@ rule varDict_Ns:
     input:
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam", 
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inBed = get_target_bed,
+        inBed = "{runPath}/{sample}.vardictBed.bed",
         inRef = get_reference
     output:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.Ns.txt"), 
@@ -1134,7 +1158,7 @@ rule varDict_Ns:
         -N {params.sampName} \
         -r {params.vardict_r} \
         -v -c 1 -S 2 -E 3 -U -g 4 \
-        {input.inBed} \
+        {wildcards.sample}.vardictBed.bed \
         -h -V {params.vardict_V} \
         --adaptor {params.vardict_adaptor} \
         > {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt
@@ -1386,12 +1410,13 @@ rule MutsPerCycle:
         sample = get_sample,
         basePath = sys.path[0],
         runPath = get_baseDir,
-        readLength = get_final_length
+        readLength = get_final_length,
+        filter_string = get_mpc_filters
     input:
         inRef = get_reference,
         inFinal = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
         inFinalBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
+        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
     output:
         outBam2 = "{runPath}/Final/{sampType}/{sample}.{sampType}.mutated.bam",
         outErrPerCyc2_WN = "{runPath}/Stats/plots/{sample}.{sampType}_BasePerPosInclNs.png",
@@ -1408,9 +1433,10 @@ rule MutsPerCycle:
         cd {params.runPath}
         python3 {params.basePath}/scripts/countMutsPerCycle.py  \
         --inFile Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        --inSnps Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
+        --inVCF Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
         -o {wildcards.sample}.{wildcards.sampType} \
-        -l {params.readLength} -b -t 0 -c --text_file
+        -l {params.readLength} -b -t 0 -c --text_file \
+        --filter SNP --filter INDEL {params.filter_string}
         
         mv {wildcards.sample}.{wildcards.sampType}*.png Stats/plots/
         mv {wildcards.sample}.{wildcards.sampType}_MutsPerCycle.dat.csv Stats/data/
