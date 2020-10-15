@@ -125,8 +125,9 @@ def consensus_caller(input_reads, cutoff, tag, length_check):
     return consensus_seq
 
 
-def qual_calc(qual_list):
-    return [sum(qual_score) for qual_score in zip(*qual_list)]
+def qual_calc(qual_list, read):
+    qual = [sum(qual_score) for qual_score in zip(*qual_list)]
+    return [qual[x]  if read[x] != 'N' else 0 for x in range(len(qual))]
 
 
 def main():
@@ -481,7 +482,7 @@ def main():
                                          ),
                         str(famSizes[tag_subtype])
                     ]
-                    qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype])
+                    qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype], seq_dict[tag_subtype][0])
                     numSSCS += 1
                 elif famSizes[tag_subtype] > o.maxmem:
                     seq_dict[tag_subtype] = [
@@ -492,7 +493,7 @@ def main():
                                          ),
                         str(famSizes[tag_subtype])
                     ]
-                    qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype])
+                    qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype], seq_dict[tag_subtype][0])
                     numSSCS += 1
             if o.write_sscs is True:
 
@@ -560,7 +561,7 @@ def main():
                     ]
                     dcs_read_1_qual = map(
                         lambda x: x if x < 41 else 41,
-                        qual_calc([qual_dict['ab:1'], qual_dict['ba:2']])
+                        qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], dcs_read_1[0])
                     )
                     read1_dcs_len = len(dcs_read_1[0])
                     fam_size_x_axis.append(int(seq_dict['ab:1'][1]))
@@ -585,7 +586,7 @@ def main():
                     ]
                     dcs_read_2_qual = map(
                         lambda x: x if x < 41 else 41,
-                        qual_calc([qual_dict['ba:1'], qual_dict['ab:2']])
+                        qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], dcs_read_2[0])
                     )
                     read2_dcs_len = len(dcs_read_2[0])
 
