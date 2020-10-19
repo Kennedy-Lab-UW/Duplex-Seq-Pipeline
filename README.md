@@ -40,11 +40,12 @@ This pipeline is known to work with the following minimum versions of
 the follow required programs:
 
 * Python3.6+
-* Snakemake=5.5.\*
+* Snakemake>=5.25.0
 * Pandas
 * Miniconda/Anaconda=4.7.\*
 * bwa=0.7.17.* (for genome setup)
 * ncbi-blast=>2.6.0 (installed separately, for contaminant database setup)
+* mamba>=0.5.1 (needed for environment setup; install through conda)
 * wget (on macOS, install using homebrew; present by default on linux)
 
 Once Python3.6 is installed, snakemake and pandas can be installed using 
@@ -69,7 +70,11 @@ bash setupDS.sh MAX_CORES
 ```
 
 where MAX_CORES is the maximum number of cores you want the pipeline to 
-be able to use. After this, with the exception of setting up the Genomes 
+be able to use. This will create a test configuration file in the test 
+directory (test/testConfig.csv), a basic configuration file (DS_progConfig.yaml), 
+a run script (DS), a DAG-creation script (DS-dag), a reset script (DS-clean), 
+and an unlock script (DS-unlock). 
+After this, with the exception of setting up the Genomes 
 (See Section 4) and the (optional) blast contamination database (See 
 Section 5), you should be able to run the Duplex-Seq pipeline using 
 
@@ -87,7 +92,7 @@ on your system.
 ## 4: Genome setup
 
 Put genomes in an easily findable location, such as our references 
-directory (i.e. ~/bioinformatics/reference). 
+directory (i.e. \~/bioinformatics/reference). 
 
 Many genomes can be downloaded from UCSC 
 (http://hgdownload.soe.ucsc.edu/downloads.html).  In order to download 
@@ -141,10 +146,10 @@ At the moment, this pipeline does not support compressed genomes.
 ## 5: Contaminant Database Setup:
 The Duplex-Seq pipeline is designed to use a local NCBI Blast instance 
 to detect and remove potential contamination from non-target species and 
-identify issues arising from pseudogenes.
-*This step is optional, but requires a non valid NCBI Blast database file 
+identify issues arising from pseudogenes. 
+*This step is optional, but requires a valid NCBI Blast database file 
 name. To run without BLAST, enter "NONE" (with any capitalization) 
-in the blast_db field in the config.csv file. *
+in the blast_db field in the config.csv file.*
  
 To construct your contaminant database, if desired, first decide on a 
 list of species you want to monitor for contaminants.  A suggested 
@@ -223,18 +228,24 @@ If, at a later time, you need to change your contaminant database, you
 then only need to rebuild the modified portion, and then update this 
 file to reflect that.  
 
-## 6: Bed  file preparation
+## 6: Bed file preparation
 
 A bed file is a file which details regions of the genome in which you 
 are interested.  The syntax for bed files is described at 
 https://genome.ucsc.edu/FAQ/FAQformat.html#format1.  
 
 If you know which genes you are targeting and are using a common 
-published genome, the bed file can be downloaded from the UCSC Table 
+published genome, the target bed file can be downloaded from the UCSC Table 
 Browser (https://genome.ucsc.edu/cgi-bin/hgTables).  Otherwise, it can 
 be created using results from a BLAST search or any other method you 
-like.  **This pipeline does not currently support overlapping intervals, 
+like.  **This pipeline does not currently support overlapping intervals, but
 does support blocks as described in the bed spec.**  
+
+This pipeline can also optionally use a masking bed file, for if there are 
+genomic regions where you know there will be a high number of artifactual 
+variants, or which you would like to ignore for other reasons. The masking bed 
+file only needs to contain the first three bed columns (chrom, start, and stop), 
+and will ignore any other columns provided.  
 
 ## 7: Configuration file creation:
 
@@ -250,6 +261,7 @@ For each row, fill in the information about a particular sample:
 | rgsm             | Required               | Read Group Sample |
 | reference        | Required               | The path to the prepared reference genome to use with this sample.  |
 | target_bed       | Required               | A bed file showing where the targets are for this particular sample |  
+| maskBed | NONE | A bed file to use for masking variants. |  
 | blast_db         | Required               | The blast database to use for contaminant filtering; must include your target genome.  |
 | targetTaxonId    | Required               | The taxon ID of the species you are expecting to be present in the sample.  |
 | baseDir          | Required               | The directory the input files are in, and where the output files will be created. |
@@ -263,17 +275,19 @@ For each row, fill in the information about a particular sample:
 | umiLen           | 8                      | The length of the UMI in this sample |
 | spacerLen        | 1                      | The length of the spacer sequence in this sample |
 | locLen           | 10                     | The localization length to use for this sample |
-| readLen          | 101                    | The length of a read for this sample |
+| readLen          | 101                    | The length of a read for this sample |  
+| adapterSeq       | "ANNNNNNNNAGATCGGAAGAG" | The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Used by cutadapt for adapter clipping |  
 | clipBegin        | 7                      | How many bases to clip off the 5' end of the read |
 | clipEnd          | 0                      | How many bases to clip off the 3' end of the read |
 | minClonal        | 0                      | The minimum clonality to use for count_muts generation |
 | maxClonal        | 0.1                    | The maximum clonality to use for count_muts generation |
 | minDepth         | 100                    | The minimum depth to use for count_muts generation |
 | maxNs            | 1                      | The maximum proportion of N bases to use for count_muts generation |
+| recovery         | "noRecovery.sh"        | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
 | cm_outputs       | "GB"                   | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
 | cm_sumTypes      | "GT"                   | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
-| runSSCS          | false                  | true or false; whether to do full analysis for SSCS data.  | 
-| recovery         | "noRecovery.sh"        | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
+| cm_filters | "near_indel:clustered" | Select which filters to apply durring frequency calculation. These filters will also be applied durring muts_per_cycle calculation. |  
+| runSSCS          | false                  | true or false; whether to do full analysis for SSCS data.  |  
 | rerun_type       | 0 (Required for rerun) | What type of rerun you want to do.  0 -> no rerun;  1 -> rerun variant caller;  2 -> rerun postBlastRecovery; 3 -> rerun BLAST and alignment;  4 -> rerun consensus maker.  |  
 
 Save the file as a .csv file with unix line endings (LF).
@@ -300,6 +314,17 @@ The script must create the following output files:
  * ${4}.wrongSpecies.bam
 
 All script files must be stored in scripts/RecoveryScripts.  
+
+Any packages required by your recovery script can be added to the envs/DS_env_recovery.yaml file.  By default, this contains the conda packages (from bioconda or conda-forge):  
+
+ * Python 3.6
+ * samtools
+ * pysam
+ * snakemake
+ * pandas
+ * regex
+ * biopython
+ * pandoc
 
 Note that if you decide to write your own recovery scripts, you are 
 responsible for ensuring that your recovery scripts actually work as 
@@ -510,9 +535,9 @@ in those cases.
 
 | Issue | Amount to rerun | rerun_type |  
 | ----- | --------------- | ----------------- |  
-| <ul><li>Wrong bed file used</li><li>Wrong clipping parameters used</li></ul> | From pre-variant calling | 1 |  
+| <ul><li>Wrong target bed file used</li><li>Wrong clipping parameters used</li></ul> | From pre-variant calling | 1 |  
 | Wrong target taxon ID used | From post-blast | 2 |  
-| <ul><li>Wrong contaminant db used</li><li>Wrong reference genome used</li></ul> | From post-Consensus Maker | 3 |  
+| <ul><li>Wrong contaminant db used</li><li>Wrong reference genome used</li><li>Wrong adapter sequence used</li></ul> | From post-Consensus Maker | 3 |  
 | Wrong consensus making parameters used | From beginning | 4 |  
 
 To finish preparing for and executing a rerun, run:
