@@ -114,11 +114,12 @@ simple majority.</p>
 the follow required programs:</p>
 <ul>
 <li>Python3.6+</li>
-<li>Snakemake=5.5.*</li>
+<li>Snakemake&gt;=5.25.0</li>
 <li>Pandas</li>
 <li>Miniconda/Anaconda=4.7.*</li>
 <li>bwa=0.7.17.* (for genome setup)</li>
 <li>ncbi-blast=&gt;2.6.0 (installed separately, for contaminant database setup)</li>
+<li>mamba&gt;=0.5.1 (needed for environment setup; install through conda)</li>
 <li>wget (on macOS, install using homebrew; present by default on linux)</li>
 </ul>
 <p>Once Python3.6 is installed, snakemake and pandas can be installed using
@@ -134,12 +135,19 @@ pipeline using git:</p>
 <p>change into the directory, and run:</p>
 <div class="highlight highlight-source-shell"><pre>bash setupDS.sh MAX_CORES</pre></div>
 <p>where MAX_CORES is the maximum number of cores you want the pipeline to
-be able to use. After this, with the exception of setting up the Genomes
+be able to use. This will create a test configuration file in the test
+directory (test/testConfig.csv), a basic configuration file (DS_progConfig.yaml),
+a run script (DS), a DAG-creation script (DS-dag), a reset script (DS-clean),
+and an unlock script (DS-unlock).
+After this, with the exception of setting up the Genomes
 (See Section 4) and the (optional) blast contamination database (See
 Section 5), you should be able to run the Duplex-Seq pipeline using</p>
-<div class="highlight highlight-source-shell"><pre>DS CONFIG_CSV.csv</pre></div>
+<div class="highlight highlight-source-shell"><pre>bash /path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv</pre></div>
 <p>where CONFIG_CSV.csv is a configuration CSV file generated as described
 below.</p>
+<p>If you want, you can also add the DS and DS-clean scripts to your path;
+this will simplify invocation if you only have a single release version
+on your system.</p>
 <h2>
 <a id="user-content-4-genome-setup" class="anchor" href="#4-genome-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>4: Genome setup</h2>
 <p>Put genomes in an easily findable location, such as our references
@@ -191,9 +199,9 @@ reference genome</p>
 <p>The Duplex-Seq pipeline is designed to use a local NCBI Blast instance
 to detect and remove potential contamination from non-target species and
 identify issues arising from pseudogenes.
-*This step is optional, but requires a non valid NCBI Blast database file
+<em>This step is optional, but requires a valid NCBI Blast database file
 name. To run without BLAST, enter "NONE" (with any capitalization)
-in the blast_db field in the config.csv file. *</p>
+in the blast_db field in the config.csv file.</em></p>
 <p>To construct your contaminant database, if desired, first decide on a
 list of species you want to monitor for contaminants.  A suggested
 starting list is:</p>
@@ -256,16 +264,21 @@ DBLIST GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db
 then only need to rebuild the modified portion, and then update this
 file to reflect that.</p>
 <h2>
-<a id="user-content-6-bed--file-preparation" class="anchor" href="#6-bed--file-preparation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>6: Bed  file preparation</h2>
+<a id="user-content-6-bed-file-preparation" class="anchor" href="#6-bed-file-preparation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>6: Bed file preparation</h2>
 <p>A bed file is a file which details regions of the genome in which you
 are interested.  The syntax for bed files is described at
 <a href="https://genome.ucsc.edu/FAQ/FAQformat.html#format1" rel="nofollow">https://genome.ucsc.edu/FAQ/FAQformat.html#format1</a>.</p>
 <p>If you know which genes you are targeting and are using a common
-published genome, the bed file can be downloaded from the UCSC Table
+published genome, the target bed file can be downloaded from the UCSC Table
 Browser (<a href="https://genome.ucsc.edu/cgi-bin/hgTables" rel="nofollow">https://genome.ucsc.edu/cgi-bin/hgTables</a>).  Otherwise, it can
 be created using results from a BLAST search or any other method you
-like.  <strong>This pipeline does not currently support overlapping intervals,
+like.  <strong>This pipeline does not currently support overlapping intervals, but
 does support blocks as described in the bed spec.</strong></p>
+<p>This pipeline can also optionally use a masking bed file, for if there are
+genomic regions where you know there will be a high number of artifactual
+variants, or which you would like to ignore for other reasons. The masking bed
+file only needs to contain the first three bed columns (chrom, start, and stop),
+and will ignore any other columns provided.</p>
 <h2>
 <a id="user-content-7-configuration-file-creation" class="anchor" href="#7-configuration-file-creation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>7: Configuration file creation:</h2>
 <p>Use the ConfigTemplate to create a new file with the appropriate headers.
@@ -313,6 +326,11 @@ For each row, fill in the information about a particular sample:</p>
 <td>target_bed</td>
 <td>Required</td>
 <td>A bed file showing where the targets are for this particular sample</td>
+</tr>
+<tr>
+<td>maskBed</td>
+<td>NONE</td>
+<td>A bed file to use for masking variants.</td>
 </tr>
 <tr>
 <td>blast_db</td>
@@ -385,6 +403,11 @@ For each row, fill in the information about a particular sample:</p>
 <td>The length of a read for this sample</td>
 </tr>
 <tr>
+<td>adapterSeq</td>
+<td>"ANNNNNNNNAGATCGGAAGAG"</td>
+<td>The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Used by cutadapt for adapter clipping</td>
+</tr>
+<tr>
 <td>clipBegin</td>
 <td>7</td>
 <td>How many bases to clip off the 5' end of the read</td>
@@ -415,6 +438,11 @@ For each row, fill in the information about a particular sample:</p>
 <td>The maximum proportion of N bases to use for count_muts generation</td>
 </tr>
 <tr>
+<td>recovery</td>
+<td>"noRecovery.sh"</td>
+<td>The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.</td>
+</tr>
+<tr>
 <td>cm_outputs</td>
 <td>"GB"</td>
 <td>Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -&gt; output GENE sections for each bed line; B -&gt; output 'BLOCK' sections for each block in the bed line (if present); 'N' -&gt; Only output overall frequencies.  Overrides all other options.</td>
@@ -425,14 +453,14 @@ For each row, fill in the information about a particular sample:</p>
 <td>How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -&gt; OVERALL = sum(GENEs); B -&gt; OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -&gt; GENE = Whole gene, ignoring BLOCKs; B -&gt; GENE = sum(BLOCKs).</td>
 </tr>
 <tr>
+<td>cm_filters</td>
+<td>"near_indel:clustered"</td>
+<td>Select which filters to apply durring frequency calculation. These filters will also be applied durring muts_per_cycle calculation.</td>
+</tr>
+<tr>
 <td>runSSCS</td>
 <td>false</td>
 <td>true or false; whether to do full analysis for SSCS data.</td>
-</tr>
-<tr>
-<td>recovery</td>
-<td>"noRecovery.sh"</td>
-<td>The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.</td>
 </tr>
 <tr>
 <td>rerun_type</td>
@@ -465,6 +493,17 @@ functionality may be changed in the future.  In general, these scripts must:</p>
 <li>${4}.wrongSpecies.bam</li>
 </ul>
 <p>All script files must be stored in scripts/RecoveryScripts.</p>
+<p>Any packages required by your recovery script can be added to the envs/DS_env_recovery.yaml file.  By default, this contains the conda packages (from bioconda or conda-forge):</p>
+<ul>
+<li>Python 3.6</li>
+<li>samtools</li>
+<li>pysam</li>
+<li>snakemake</li>
+<li>pandas</li>
+<li>regex</li>
+<li>biopython</li>
+<li>pandoc</li>
+</ul>
 <p>Note that if you decide to write your own recovery scripts, you are
 responsible for ensuring that your recovery scripts actually work as
 intended, and do not break your computer.  We are unable to guarantee
@@ -473,7 +512,7 @@ provided with the pipeline will produce accurate data.</p>
 <h2>
 <a id="user-content-9-running-pipelines" class="anchor" href="#9-running-pipelines" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>9: Running pipelines:</h2>
 <p>The pipeline can be run using the DS command created by the setup script:</p>
-<div class="highlight highlight-source-shell"><pre>DS CONFIG_CSV.csv</pre></div>
+<div class="highlight highlight-source-shell"><pre>/path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv</pre></div>
 <h2>
 <a id="user-content-10-output-file-descriptions" class="anchor" href="#10-output-file-descriptions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>10: Output file descriptions:</h2>
 <p>The pipeline will create a set of summary files covering all samples, as
@@ -1051,7 +1090,7 @@ in those cases.</p>
 <tbody>
 <tr>
 <td><ul>
-<li>Wrong bed file used</li>
+<li>Wrong target bed file used</li>
 <li>Wrong clipping parameters used</li>
 </ul></td>
 <td>From pre-variant calling</td>
@@ -1066,6 +1105,7 @@ in those cases.</p>
 <td><ul>
 <li>Wrong contaminant db used</li>
 <li>Wrong reference genome used</li>
+<li>Wrong adapter sequence used</li>
 </ul></td>
 <td>From post-Consensus Maker</td>
 <td>3</td>
@@ -1078,14 +1118,14 @@ in those cases.</p>
 </tbody>
 </table>
 <p>To finish preparing for and executing a rerun, run:</p>
-<div class="highlight highlight-source-shell"><pre>DS-clean CONFIG_CSV.csv
-DS CONFIG_CSV.csv</pre></div>
+<div class="highlight highlight-source-shell"><pre>/path/to/Duplex-Seq-Pipeline/DS-clean CONFIG_CSV.csv
+/path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv</pre></div>
 <h2>
 <a id="user-content-13-unlocking-following-a-power-failure" class="anchor" href="#13-unlocking-following-a-power-failure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>13: Unlocking following a power failure</h2>
 <p>In the event that pipeline execution is interrupted by a power failure,
 the directory can be unlocked in order to restart using the provided
 DS-unlock script:</p>
-<div class="highlight highlight-source-shell"><pre>DS-unlock CONFIG_CSV.csv</pre></div>
+<div class="highlight highlight-source-shell"><pre>/path/to/Duplex-Seq-Pipeline/DS-unlock CONFIG_CSV.csv</pre></div>
 
               </article>
             </div>
