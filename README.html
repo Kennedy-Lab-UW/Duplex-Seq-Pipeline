@@ -455,7 +455,7 @@ For each row, fill in the information about a particular sample:</p>
 <tr>
 <td>cm_filters</td>
 <td>"near_indel:clustered"</td>
-<td>Select which filters to apply durring frequency calculation. These filters will also be applied durring muts_per_cycle calculation.</td>
+<td>Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation.</td>
 </tr>
 <tr>
 <td>runSSCS</td>
@@ -549,79 +549,91 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </table>
 <p>This directory structure looks like this:</p>
 <div class="highlight highlight-source-shell"><pre><span class="pl-c1">.</span>
-└── SAMP_DIR
-   ├── Final
-   │   ├── dcs
-   │   │   ├── FilteredReads
-   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
-   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
-   │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
-   │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
-   │   │   ├── SAMPLE.dcs.countmuts.csv
-   │   │   ├── SAMPLE.dcs.final.bam
-   │   │   ├── SAMPLE.dcs.final.bam.bai
-   │   │   ├── SAMPLE.dcs.mutated.bam
-   │   │   ├── SAMPLE.dcs.mutated.bam.bai
-   │   │   ├── SAMPLE.dcs.snps.vcf
-   │   │   └── SAMPLE.dcs.vcf
-   │   ├── SAMPLE.report.html
-   │   └── sscs
-   │       ├── SAMPLE.sscs.countmuts.csv
-   │       ├── SAMPLE.sscs.final.bam
-   │       ├── SAMPLE.sscs.final.bam.bai
-   │       ├── SAMPLE.sscs.mutated.bam
-   │       ├── SAMPLE.sscs.mutated.bam.bai
-   │       ├── SAMPLE.sscs.snps.vcf
-   │       └── SAMPLE.sscs.vcf
-   ├── Intermediate
-   │   ├── ConsensusMakerOutputs
-   │   │   ├── SAMPLE_aln_seq1.fq.gz
-   │   │   ├── SAMPLE_aln_seq2.fq.gz
-   │   │   ├── SAMPLE_read1_dcs.fq.gz
-   │   │   ├── SAMPLE_read1_sscs.fq.gz
-   │   │   ├── SAMPLE_read2_dcs.fq.gz
-   │   │   └── SAMPLE_read2_sscs.fq.gz
-   │   └── postBlast
-   │       ├── FilteredReads
-   │       │   ├── SAMPLE_dcs.ambig.sort.bam
-   │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
-   │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
-   │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
-   │       ├── SAMPLE_dcs.blast.xml
-   │       ├── SAMPLE_dcs.preBlast.mutated.bam
-   │       └── SAMPLE_dcs.preBlast.unmutated.bam
-   ├── logs
-   │   └── Log Files
-   ├── SAMPLE_seq1.fastq.gz
-   ├── SAMPLE_seq2.fastq.gz
-   └── Stats
-       ├── data
-       │   ├── SAMPLE_cmStats.txt
-       │   ├── SAMPLE.dcs_ambiguity_counts.txt
-       │   ├── SAMPLE.dcs.iSize_Metrics.txt
-       │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
-       │   ├── SAMPLE.dcs.mutsPerRead.txt
-       │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
-       │   ├── SAMPLE.sscs.mutsPerRead.txt
-       │   ├── SAMPLE.dcs.depth.txt
-       │   ├── SAMPLE_dcs.speciesComp.txt
-       │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
-       │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
-       │   ├── SAMPLE_onTargetCount.txt
-       │   ├── SAMPLE.tagstats.txt
-       │   └── SAMPLE.temp.sort.flagstats.txt
-       ├── SAMPLE.report.ipynb
-       └── plots
-           ├── SAMPLE.dcs_BasePerPosInclNs.png
-           ├── SAMPLE.dcs_BasePerPosWithoutNs.png
-           ├── SAMPLE.dcs.iSize_Histogram.png
-           ├── SAMPLE.dcs.mutsPerRead.png
-           ├── SAMPLE.dcs.targetCoverage.png
-           ├── SAMPLE.sscs_BasePerPosInclNs.png
-           ├── SAMPLE.sscs_BasePerPosWithoutNs.png
-           ├── SAMPLE.sscs.mutsPerRead.png
-           ├── SAMPLE_family_size.png
-           └── SAMPLE_fam_size_relation.png</pre></div>
+├── CONFIG_FILE.summary.csv
+├── CONFIG_FILE.summaryDepth.pdf
+├── CONFIG_FILE.summaryFamilySize.pdf
+├── CONFIG_FILE.summaryInsertSize.pdf
+├── CONFIG_FILE.summaryMutsByCycle.pdf
+└──SAMP_DIR
+    ├── Final
+    │   ├── dcs
+    │   │   ├── FilteredReads
+    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
+    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
+    │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
+    │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
+    │   │   ├── SAMPLE.dcs.countmuts.csv
+    │   │   ├── SAMPLE.dcs.final.bam
+    │   │   ├── SAMPLE.dcs.final.bam.bai
+    │   │   ├── SAMPLE.dcs.mutated.bam
+    │   │   ├── SAMPLE.dcs.mutated.bam.bai
+    │   │   ├── SAMPLE.dcs.snps.vcf
+    │   │   └── SAMPLE.dcs.vcf
+    │   ├── SAMPLE.report.html
+    │   └── sscs
+    │       ├── SAMPLE.sscs.countmuts.csv
+    │       ├── SAMPLE.sscs.final.bam
+    │       ├── SAMPLE.sscs.final.bam.bai
+    │       ├── SAMPLE.sscs.mutated.bam
+    │       ├── SAMPLE.sscs.mutated.bam.bai
+    │       ├── SAMPLE.sscs.snps.vcf
+    │       └── SAMPLE.sscs.vcf
+    ├── Intermediate
+    │   ├── ConsensusMakerOutputs
+    │   │   ├── SAMPLE_aln_seq1.fq.gz
+    │   │   ├── SAMPLE_aln_seq2.fq.gz
+    │   │   ├── SAMPLE_read1_dcs.fq.gz
+    │   │   ├── SAMPLE_read1_sscs.fq.gz
+    │   │   ├── SAMPLE_read2_dcs.fq.gz
+    │   │   └── SAMPLE_read2_sscs.fq.gz
+    │   └── postBlast
+    │       ├── FilteredReads
+    │       │   ├── SAMPLE_dcs.ambig.sort.bam
+    │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
+    │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
+    │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
+    │       ├── SAMPLE_dcs.blast.xml
+    │       ├── SAMPLE_dcs.preBlast.mutated.bam
+    │       └── SAMPLE_dcs.preBlast.unmutated.bam
+    ├── logs
+    │   └── Log files
+    ├── testSeq1.fastq.gz
+    ├── testSeq2.fastq.gz
+    └── Stats
+        ├── data
+        │   ├── SAMPLE_cmStats.txt
+        │   ├── SAMPLE.dcs_ambiguity_counts.txt
+        │   ├── SAMPLE.dcs.iSize_Metrics.txt
+        │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
+        │   ├── SAMPLE.dcs.mutsPerRead.txt
+        │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
+        │   ├── SAMPLE.sscs.mutsPerRead.txt
+        │   ├── SAMPLE.dcs.depth.txt
+        │   ├── SAMPLE.dcs.depth.summary.csv
+        │   ├── SAMPLE.sscs.depth.txt
+        │   ├── SAMPLE.sscs.depth.summary.csv
+        │   ├── SAMPLE_dcs.speciesComp.txt
+        │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
+        │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
+        │   ├── SAMPLE.dcs.endClip.metrics.txt
+        │   ├── SAMPLE.dcs.overlapClip.metrics.txt
+        │   ├── SAMPLE.sscs.endClip.metrics.txt
+        │   ├── SAMPLE.sscs.overlapClip.metrics.txt
+        │   ├── SAMPLE_onTargetCount.txt
+        │   ├── SAMPLE.tagstats.txt
+        │   └── SAMPLE.temp.sort.flagstats.txt
+        ├── SAMPLE.report.ipynb
+        └── plots
+            ├── SAMPLE.dcs.iSize_Histogram.png
+            ├── SAMPLE.dcs.mutsPerRead.png
+            ├── SAMPLE.dcs.targetCoverage.png
+            ├── SAMPLE.dcs_BasePerPosInclNs.png
+            ├── SAMPLE.dcs_BasePerPosWithoutNs.png
+            ├── SAMPLE.sscs.mutsPerRead.png
+            ├── SAMPLE.sscs_BasePerPosInclNs.png
+            ├── SAMPLE.sscs_BasePerPosWithoutNs.png
+            ├── SAMPLE_fam_size_relation.png
+            └── SAMPLE_family_size.png</pre></div>
 <p>File descriptions are as follows:</p>
 <table>
 <thead>
@@ -635,429 +647,501 @@ well as a file directory structure for each sample.  The summary files are:</p>
 <tbody>
 <tr>
 <td>.</td>
+<td>CONFIG_FILE.summary.csv</td>
+<td>Summary CSV file with basic statistics for all samples processed with this CONFIG_FILE.</td>
+<td></td>
+</tr>
+<tr>
+<td>.</td>
+<td>CONFIG_FILE.summaryDepth.pdf</td>
+<td>Summary PDF file with depth plots for all samples processed with this CONFIG_FILE.</td>
+<td></td>
+</tr>
+<tr>
+<td>.</td>
+<td>CONFIG_FILE.summaryFamilySize.pdf</td>
+<td>Summary PDF file with family size for all samples processed with this CONFIG_FILE.</td>
+<td></td>
+</tr>
+<tr>
+<td>.</td>
+<td>CONFIG_FILE.summaryInsertSize.pdf</td>
+<td>Summary PDF file with insert size for all samples processed with this CONFIG_FILE.</td>
+<td></td>
+</tr>
+<tr>
+<td>.</td>
+<td>CONFIG_FILE.summaryMutsByCycle.pdf</td>
+<td>Summary PDF file with muts per cycle plots for all samples processed with this CONFIG_FILE.</td>
+<td></td>
+</tr>
+<tr>
+<td>SAMP_DIR</td>
 <td>SAMPLE_seq1.fastq.gz</td>
 <td>Input read 1 file</td>
 <td>Input</td>
 </tr>
 <tr>
-<td>.</td>
+<td>SAMP_DIR</td>
 <td>SAMPLE_seq2.fastq.gz</td>
 <td>Input read 2 file</td>
 <td>Input</td>
 </tr>
 <tr>
-<td>.</td>
+<td>SAMP_DIR</td>
 <td>Final</td>
 <td>Directory containing final bam and vcf files</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final</td>
+<td>SAMP_DIR/Final</td>
 <td>dcs</td>
 <td>Directory containing final dcs files</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>FilteredReads</td>
 <td>Directory containing reads still filtered after postBlastRecovery</td>
 <td>blast_db!=NONE</td>
 </tr>
 <tr>
-<td>Final/dcs/FilteredReads</td>
+<td>SAMP_DIR/Final/dcs/FilteredReads</td>
 <td>SAMPLE.dcs.postRecovery.ambig.bam</td>
 <td>File containing reads still considered ambiguous after postBlastRecovery.  May be empty.</td>
 <td>blast_db!=NONE</td>
 </tr>
 <tr>
-<td>Final/dcs/FilteredReads</td>
+<td>SAMP_DIR/Final/dcs/FilteredReads</td>
 <td>SAMPLE.dcs.postRecovery.ambig.bam.bai</td>
 <td>Index for SAMPLE.dcs.postRecovery.ambig.bam</td>
 <td>blast_db!=NONE</td>
 </tr>
 <tr>
-<td>Final/dcs/FilteredReads</td>
+<td>SAMP_DIR/Final/dcs/FilteredReads</td>
 <td>SAMPLE.dcs.postRecovery.wrongSpecies.bam</td>
 <td>File containing reads still considered ambiguous after postBlastRecovery. May be empty.</td>
 <td>blast_db!=NONE</td>
 </tr>
 <tr>
-<td>Final/dcs/FilteredReads</td>
+<td>SAMP_DIR/Final/dcs/FilteredReads</td>
 <td>SAMPLE.dcs.postRecovery.wrongSpecies.bam.bai</td>
 <td>Index for SAMPLE.dcs.postRecovery.wrongSpecies.bam</td>
 <td>blast_db!=NONE</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>SAMPLE.dcs.countmuts.csv</td>
 <td>Countmuts file, showing a summary of mutation data for DCS reads.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>SAMPLE.dcs.final.bam</td>
 <td>Final file for DCS reads, including all reads that overlap the bed file.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>SAMPLE.dcs.final.bam.bai</td>
 <td>Index for final DCS reads.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>SAMPLE.dcs.mutated.bam</td>
 <td>File containing DCS reads with non-SNP mutations</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>SAMPLE.dcs.mutated.bam.bai</td>
 <td>Index for DCS mutated reads file.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>SAMPLE.dcs.snps.vcf</td>
 <td>VCF file containing SNPs overlapping bed file in DCS.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/dcs</td>
+<td>SAMP_DIR/Final/dcs</td>
 <td>SAMPLE.dcs.vcf</td>
 <td>VCF file containing all variants overlapping bed file in DCS.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final</td>
+<td>SAMP_DIR/Final</td>
 <td>SAMPLE.report.html</td>
 <td>Summary report for this sample</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final</td>
+<td>SAMP_DIR/Final</td>
 <td>sscs</td>
 <td>Directory containing final SSCS files</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/sscs</td>
+<td>SAMP_DIR/Final/sscs</td>
 <td>SAMPLE.sscs.countmuts.csv</td>
 <td>Countmuts file, showing a summary of mutation data for SSCS reads.</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Final/sscs</td>
+<td>SAMP_DIR/Final/sscs</td>
 <td>SAMPLE.sscs.final.bam</td>
 <td>Final file for SSCS reads, including all reads that overlap the bed file.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/sscs</td>
+<td>SAMP_DIR/Final/sscs</td>
 <td>SAMPLE.sscs.final.bam.bai</td>
 <td>Index for final SSCS reads.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Final/sscs</td>
+<td>SAMP_DIR/Final/sscs</td>
 <td>SAMPLE.sscs.mutated.bam</td>
 <td>File containing SSCS reads with non-SNP mutations</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Final/sscs</td>
+<td>SAMP_DIR/Final/sscs</td>
 <td>SAMPLE.sscs.mutated.bam.bai</td>
 <td>Index for SSCS mutated reads file.</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Final/sscs</td>
+<td>SAMP_DIR/Final/sscs</td>
 <td>SAMPLE.sscs.snps.vcf</td>
 <td>VCF file containing SNPs overlapping bed file in SSCS.</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Final/sscs</td>
+<td>SAMP_DIR/Final/sscs</td>
 <td>SAMPLE.sscs.vcf</td>
 <td>VCF file containing all variants overlapping bed file in SSCS.</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>.</td>
+<td>SAMP_DIR</td>
 <td>Intermediate</td>
 <td>Directory containing intermediate checkpointing files</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate</td>
+<td>SAMP_DIR/Intermediate</td>
 <td>ConsensusMakerOutputs</td>
 <td>Directory for post-consensus maker checkpoint files</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/ConsensusMakerOutputs</td>
+<td>SAMP_DIR/Intermediate/ConsensusMakerOutputs</td>
 <td>SAMPLE_aln_seq1.fq.gz</td>
 <td>Read 1 file for raw on-target determination</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/ConsensusMakerOutputs</td>
+<td>SAMP_DIR/Intermediate/ConsensusMakerOutputs</td>
 <td>SAMPLE_aln_seq2.fq.gz</td>
 <td>Read 2 file for raw on-target determination</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/ConsensusMakerOutputs</td>
+<td>SAMP_DIR/Intermediate/ConsensusMakerOutputs</td>
 <td>SAMPLE_read1_dcs.fq.gz</td>
 <td>DCS Read 1 File</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/ConsensusMakerOutputs</td>
+<td>SAMP_DIR/Intermediate/ConsensusMakerOutputs</td>
 <td>SAMPLE_read1_sscs.fq.gz</td>
 <td>SSCS Read 1 file</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/ConsensusMakerOutputs</td>
+<td>SAMP_DIR/Intermediate/ConsensusMakerOutputs</td>
 <td>SAMPLE_read2_dcs.fq.gz</td>
 <td>DCS Read 2 File</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/ConsensusMakerOutputs</td>
+<td>SAMP_DIR/Intermediate/ConsensusMakerOutputs</td>
 <td>SAMPLE_read2_sscs.fq.gz</td>
 <td>SSCS Read 2 file</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate</td>
+<td>SAMP_DIR/Intermediate</td>
 <td>postBlast</td>
 <td>Directory for post-BLAST checkpoint files.  Only affects DCS.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast</td>
+<td>SAMP_DIR/Intermediate/postBlast</td>
 <td>FilteredReads</td>
 <td>Directory for reads that got filtered out of DCS processing due to BLAST analysis indicating that they were either the wrong species or ambiguously mapped.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast/FilteredReads</td>
+<td>SAMP_DIR/Intermediate/postBlast/FilteredReads</td>
 <td>SAMPLE_dcs.ambig.sort.bam</td>
 <td>Reads that were filtered out due to ambiguous mapping according to BLAST alignment.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast/FilteredReads</td>
+<td>SAMP_DIR/Intermediate/postBlast/FilteredReads</td>
 <td>SAMPLE_dcs.ambig.sort.bam.bai</td>
 <td>Index for ambiguous reads file</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast/FilteredReads</td>
+<td>SAMP_DIR/Intermediate/postBlast/FilteredReads</td>
 <td>SAMPLE_dcs.wrongSpecies.sort.bam</td>
 <td>Reads that were filtered out due to BLAST alignment indicating that they were from the wrong species, or where species of origin could not be determined.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast/FilteredReads</td>
+<td>SAMP_DIR/Intermediate/postBlast/FilteredReads</td>
 <td>SAMPLE_dcs.wrongSpecies.sort.bam.bai</td>
 <td>Index for wrong-species file</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast</td>
+<td>SAMP_DIR/Intermediate/postBlast</td>
 <td>SAMPLE_dcs.blast.xml</td>
 <td>BLAST xml output</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast</td>
+<td>SAMP_DIR/Intermediate/postBlast</td>
 <td>SAMPLE_dcs.preBlast.mutated.bam</td>
 <td>DCS with potential non-SNP variants that were submitted to BLAST.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Intermediate/postBlast</td>
+<td>SAMP_DIR/Intermediate/postBlast</td>
 <td>SAMPLE_dcs.preBlast.unmutated.bam</td>
 <td>DCS reads without non-SNP variants.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>.</td>
+<td>SAMP_DIR</td>
 <td>logs</td>
 <td>Directory containing log files for this sample.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>.</td>
+<td>SAMP_DIR</td>
 <td>Stats</td>
 <td>Directory containing statistics files</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats</td>
+<td>SAMP_DIR/Stats</td>
 <td>data</td>
 <td>Directory containing statistics data files.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE_cmStats.txt</td>
 <td>Statistics from the Consensus Maker</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.dcs_ambiguity_counts.txt</td>
 <td>Statistics on ambiguity counts</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.dcs.iSize_Metrics.txt</td>
 <td>Statistics on insert size in DCS</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.dcs_MutsPerCycle.dat.csv</td>
 <td>Statistics file for non-SNP mutations per cycle in DCS reads</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.dcs.mutsPerRead.txt</td>
 <td>Statistics file for non-SNP mutations per read in DCS reads</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/data</td>
-<td>SAMPLE.dcs.depth.txt</td>
-<td>Per-base coverage and N counts for final DCS</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
-<td>SAMPLE_dcs.speciesComp.txt</td>
-<td>File containing species assignment data for DCS reads</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
-<td>SAMPLE_mem.dcs.sort.flagstats.txt</td>
-<td>Initial alignment statistics for DCS reads</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
-<td>SAMPLE_mem.sscs.sort.flagstats.txt</td>
-<td>Initial alignment statistics for SSCS reads</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
-<td>SAMPLE_onTargetCount.txt</td>
-<td>Raw on target statistics</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.sscs_MutsPerCycle.dat.csv</td>
 <td>Text data of error rate per cycle in unclipped SSCS</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.sscs.mutsPerRead.txt</td>
 <td>Statistics file for non-SNP mutations per read in SSCS reads</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.dcs.depth.txt</td>
+<td>Per-base coverage and N counts for final DCS</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.dcs.depth.summary.csv</td>
+<td>Per-bed region min, mean, median, and max non-zero depth for final DCS.</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.sscs.depth.txt</td>
+<td>Per-base coverage and N counts for final SSCS</td>
+<td>runSscs=True</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.sscs.depth.summary.csv</td>
+<td>Per-bed region min, mean, median, and max non-zero depth for final SSCS.</td>
+<td>runSscs=True</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE_dcs.speciesComp.txt</td>
+<td>File containing species assignment data for DCS reads</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE_mem.dcs.sort.flagstats.txt</td>
+<td>Initial alignment statistics for DCS reads</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE_mem.sscs.sort.flagstats.txt</td>
+<td>Initial alignment statistics for SSCS reads</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.dcs.endClip.metrics.txt</td>
+<td>Statistics on fixed end clipping in DCS</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.dcs.overlapClip.metrics.txt</td>
+<td>Statistics on overlap clipping in DCS</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.sscs.endClip.metrics.txt</td>
+<td>Statistics on fixed end clipping in SSCS</td>
+<td>runSscs=True</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.sscs.overlapClip.metrics.txt</td>
+<td>Statistics on overlap clipping in SSCS</td>
+<td>runSscs=True</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE_onTargetCount.txt</td>
+<td>Raw on target statistics</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.tagstats.txt</td>
 <td>Family size data (in text form)</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/data</td>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.temp.sort.flagstats.txt</td>
 <td>Statistics on initial read counts</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats</td>
+<td>SAMP_DIR/Stats</td>
 <td>SAMPLE.report.ipynb</td>
 <td>iPython notebook for the HTML report</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats</td>
+<td>SAMP_DIR/Stats</td>
 <td>plots</td>
 <td>Directory containing statistics plots.</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
-<td>SAMPLE.dcs_BasePerPosInclNs.png</td>
-<td>Plot of error rate per cycle for DCS, including Ns</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/plots</td>
-<td>SAMPLE.dcs_BasePerPosWithoutNs.png</td>
-<td>Plot of error rate per cycle for DCS</td>
-<td>Always</td>
-</tr>
-<tr>
-<td>Stats/plots</td>
+<td>SAMP_DIR/Stats/plots</td>
 <td>SAMPLE.dcs.iSize_Histogram.png</td>
 <td>Histogram of insert size metrics for un-clipped DCS</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
+<td>SAMP_DIR/Stats/plots</td>
 <td>SAMPLE.dcs.mutsPerRead.png</td>
 <td>Plot of mutations per read in DCS</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
+<td>SAMP_DIR/Stats/plots</td>
 <td>SAMPLE.dcs.targetCoverage.png</td>
 <td>Plot of per-target coverage in DCS</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
-<td>SAMPLE_family_size.png</td>
-<td>Plot of family size distribution</td>
+<td>SAMP_DIR/Stats/plots</td>
+<td>SAMPLE.dcs_BasePerPosInclNs.png</td>
+<td>Plot of error rate per cycle for DCS, including Ns</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
-<td>SAMPLE_fam_size_relation.png</td>
-<td>Plot of relationship between a:b and b:a families</td>
+<td>SAMP_DIR/Stats/plots</td>
+<td>SAMPLE.dcs_BasePerPosWithoutNs.png</td>
+<td>Plot of error rate per cycle for DCS</td>
 <td>Always</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
+<td>SAMP_DIR/Stats/plots</td>
+<td>SAMPLE.sscs.mutsPerRead.png</td>
+<td>Plot of mutations per read in SSCS</td>
+<td>runSscs=True</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/plots</td>
 <td>SAMPLE.sscs_BasePerPosInclNs.png</td>
 <td>Plot of error rate per cycle SSCS, including Ns</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
+<td>SAMP_DIR/Stats/plots</td>
 <td>SAMPLE.sscs_BasePerPosWithoutNs.png</td>
 <td>Plot of error rate per cycle for SSCS</td>
 <td>runSscs=True</td>
 </tr>
 <tr>
-<td>Stats/plots</td>
-<td>SAMPLE.sscs.mutsPerRead.png</td>
-<td>Plot of mutations per read in SSCS</td>
-<td>runSscs=True</td>
+<td>SAMP_DIR/Stats/plots</td>
+<td>SAMPLE_fam_size_relation.png</td>
+<td>Plot of relationship between a:b and b:a families</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/plots</td>
+<td>SAMPLE_family_size.png</td>
+<td>Plot of family size distribution</td>
+<td>Always</td>
 </tr>
 </tbody>
 </table>
@@ -1067,7 +1151,7 @@ well as a file directory structure for each sample.  The summary files are:</p>
 located in the 'test' directory. To test the pipeline, change into the
 'test' directory and invoking at the command prompt:</p>
 <div class="highlight highlight-source-shell"><pre>DS testConfig.csv</pre></div>
-<p>A final output report can be found in the testData/Final directory and
+<p>A final set of output reports can be found in the testData/Final directory and
 be compared to the reports in the ExpectedReports directory located in
 the parent test directory.</p>
 <h2>
@@ -1122,7 +1206,7 @@ in those cases.</p>
 /path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv</pre></div>
 <h2>
 <a id="user-content-13-unlocking-following-a-power-failure" class="anchor" href="#13-unlocking-following-a-power-failure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>13: Unlocking following a power failure</h2>
-<p>In the event that pipeline execution is interrupted by a power failure,
+<p>In the event that pipeline execution is interrupted (such as by a power failure),
 the directory can be unlocked in order to restart using the provided
 DS-unlock script:</p>
 <div class="highlight highlight-source-shell"><pre>/path/to/Duplex-Seq-Pipeline/DS-unlock CONFIG_CSV.csv</pre></div>

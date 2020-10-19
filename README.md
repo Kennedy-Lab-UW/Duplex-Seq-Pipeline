@@ -286,7 +286,7 @@ For each row, fill in the information about a particular sample:
 | recovery         | "noRecovery.sh"        | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
 | cm_outputs       | "GB"                   | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
 | cm_sumTypes      | "GT"                   | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
-| cm_filters | "near_indel:clustered" | Select which filters to apply durring frequency calculation. These filters will also be applied durring muts_per_cycle calculation. |  
+| cm_filters | "near_indel:clustered" | Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation. |  
 | runSSCS          | false                  | true or false; whether to do full analysis for SSCS data.  |  
 | rerun_type       | 0 (Required for rerun) | What type of rerun you want to do.  0 -> no rerun;  1 -> rerun variant caller;  2 -> rerun postBlastRecovery; 3 -> rerun BLAST and alignment;  4 -> rerun consensus maker.  |  
 
@@ -358,156 +358,180 @@ This directory structure looks like this:
 
 ```bash
 .
-└── SAMP_DIR
-   ├── Final
-   │   ├── dcs
-   │   │   ├── FilteredReads
-   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
-   │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
-   │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
-   │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
-   │   │   ├── SAMPLE.dcs.countmuts.csv
-   │   │   ├── SAMPLE.dcs.final.bam
-   │   │   ├── SAMPLE.dcs.final.bam.bai
-   │   │   ├── SAMPLE.dcs.mutated.bam
-   │   │   ├── SAMPLE.dcs.mutated.bam.bai
-   │   │   ├── SAMPLE.dcs.snps.vcf
-   │   │   └── SAMPLE.dcs.vcf
-   │   ├── SAMPLE.report.html
-   │   └── sscs
-   │       ├── SAMPLE.sscs.countmuts.csv
-   │       ├── SAMPLE.sscs.final.bam
-   │       ├── SAMPLE.sscs.final.bam.bai
-   │       ├── SAMPLE.sscs.mutated.bam
-   │       ├── SAMPLE.sscs.mutated.bam.bai
-   │       ├── SAMPLE.sscs.snps.vcf
-   │       └── SAMPLE.sscs.vcf
-   ├── Intermediate
-   │   ├── ConsensusMakerOutputs
-   │   │   ├── SAMPLE_aln_seq1.fq.gz
-   │   │   ├── SAMPLE_aln_seq2.fq.gz
-   │   │   ├── SAMPLE_read1_dcs.fq.gz
-   │   │   ├── SAMPLE_read1_sscs.fq.gz
-   │   │   ├── SAMPLE_read2_dcs.fq.gz
-   │   │   └── SAMPLE_read2_sscs.fq.gz
-   │   └── postBlast
-   │       ├── FilteredReads
-   │       │   ├── SAMPLE_dcs.ambig.sort.bam
-   │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
-   │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
-   │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
-   │       ├── SAMPLE_dcs.blast.xml
-   │       ├── SAMPLE_dcs.preBlast.mutated.bam
-   │       └── SAMPLE_dcs.preBlast.unmutated.bam
-   ├── logs
-   │   └── Log Files
-   ├── SAMPLE_seq1.fastq.gz
-   ├── SAMPLE_seq2.fastq.gz
-   └── Stats
-       ├── data
-       │   ├── SAMPLE_cmStats.txt
-       │   ├── SAMPLE.dcs_ambiguity_counts.txt
-       │   ├── SAMPLE.dcs.iSize_Metrics.txt
-       │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
-       │   ├── SAMPLE.dcs.mutsPerRead.txt
-       │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
-       │   ├── SAMPLE.sscs.mutsPerRead.txt
-       │   ├── SAMPLE.dcs.depth.txt
-       │   ├── SAMPLE_dcs.speciesComp.txt
-       │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
-       │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
-       │   ├── SAMPLE_onTargetCount.txt
-       │   ├── SAMPLE.tagstats.txt
-       │   └── SAMPLE.temp.sort.flagstats.txt
-       ├── SAMPLE.report.ipynb
-       └── plots
-           ├── SAMPLE.dcs_BasePerPosInclNs.png
-           ├── SAMPLE.dcs_BasePerPosWithoutNs.png
-           ├── SAMPLE.dcs.iSize_Histogram.png
-           ├── SAMPLE.dcs.mutsPerRead.png
-           ├── SAMPLE.dcs.targetCoverage.png
-           ├── SAMPLE.sscs_BasePerPosInclNs.png
-           ├── SAMPLE.sscs_BasePerPosWithoutNs.png
-           ├── SAMPLE.sscs.mutsPerRead.png
-           ├── SAMPLE_family_size.png
-           └── SAMPLE_fam_size_relation.png
+├── CONFIG_FILE.summary.csv
+├── CONFIG_FILE.summaryDepth.pdf
+├── CONFIG_FILE.summaryFamilySize.pdf
+├── CONFIG_FILE.summaryInsertSize.pdf
+├── CONFIG_FILE.summaryMutsByCycle.pdf
+└──SAMP_DIR
+    ├── Final
+    │   ├── dcs
+    │   │   ├── FilteredReads
+    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
+    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
+    │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
+    │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
+    │   │   ├── SAMPLE.dcs.countmuts.csv
+    │   │   ├── SAMPLE.dcs.final.bam
+    │   │   ├── SAMPLE.dcs.final.bam.bai
+    │   │   ├── SAMPLE.dcs.mutated.bam
+    │   │   ├── SAMPLE.dcs.mutated.bam.bai
+    │   │   ├── SAMPLE.dcs.snps.vcf
+    │   │   └── SAMPLE.dcs.vcf
+    │   ├── SAMPLE.report.html
+    │   └── sscs
+    │       ├── SAMPLE.sscs.countmuts.csv
+    │       ├── SAMPLE.sscs.final.bam
+    │       ├── SAMPLE.sscs.final.bam.bai
+    │       ├── SAMPLE.sscs.mutated.bam
+    │       ├── SAMPLE.sscs.mutated.bam.bai
+    │       ├── SAMPLE.sscs.snps.vcf
+    │       └── SAMPLE.sscs.vcf
+    ├── Intermediate
+    │   ├── ConsensusMakerOutputs
+    │   │   ├── SAMPLE_aln_seq1.fq.gz
+    │   │   ├── SAMPLE_aln_seq2.fq.gz
+    │   │   ├── SAMPLE_read1_dcs.fq.gz
+    │   │   ├── SAMPLE_read1_sscs.fq.gz
+    │   │   ├── SAMPLE_read2_dcs.fq.gz
+    │   │   └── SAMPLE_read2_sscs.fq.gz
+    │   └── postBlast
+    │       ├── FilteredReads
+    │       │   ├── SAMPLE_dcs.ambig.sort.bam
+    │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
+    │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
+    │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
+    │       ├── SAMPLE_dcs.blast.xml
+    │       ├── SAMPLE_dcs.preBlast.mutated.bam
+    │       └── SAMPLE_dcs.preBlast.unmutated.bam
+    ├── logs
+    │   └── Log files
+    ├── testSeq1.fastq.gz
+    ├── testSeq2.fastq.gz
+    └── Stats
+        ├── data
+        │   ├── SAMPLE_cmStats.txt
+        │   ├── SAMPLE.dcs_ambiguity_counts.txt
+        │   ├── SAMPLE.dcs.iSize_Metrics.txt
+        │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
+        │   ├── SAMPLE.dcs.mutsPerRead.txt
+        │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
+        │   ├── SAMPLE.sscs.mutsPerRead.txt
+        │   ├── SAMPLE.dcs.depth.txt
+        │   ├── SAMPLE.dcs.depth.summary.csv
+        │   ├── SAMPLE.sscs.depth.txt
+        │   ├── SAMPLE.sscs.depth.summary.csv
+        │   ├── SAMPLE_dcs.speciesComp.txt
+        │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
+        │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
+        │   ├── SAMPLE.dcs.endClip.metrics.txt
+        │   ├── SAMPLE.dcs.overlapClip.metrics.txt
+        │   ├── SAMPLE.sscs.endClip.metrics.txt
+        │   ├── SAMPLE.sscs.overlapClip.metrics.txt
+        │   ├── SAMPLE_onTargetCount.txt
+        │   ├── SAMPLE.tagstats.txt
+        │   └── SAMPLE.temp.sort.flagstats.txt
+        ├── SAMPLE.report.ipynb
+        └── plots
+            ├── SAMPLE.dcs.iSize_Histogram.png
+            ├── SAMPLE.dcs.mutsPerRead.png
+            ├── SAMPLE.dcs.targetCoverage.png
+            ├── SAMPLE.dcs_BasePerPosInclNs.png
+            ├── SAMPLE.dcs_BasePerPosWithoutNs.png
+            ├── SAMPLE.sscs.mutsPerRead.png
+            ├── SAMPLE.sscs_BasePerPosInclNs.png
+            ├── SAMPLE.sscs_BasePerPosWithoutNs.png
+            ├── SAMPLE_fam_size_relation.png
+            └── SAMPLE_family_size.png
 ```
 
 File descriptions are as follows:  
 
 | Directory | File name | Description | When Generated |  
 | --------- | ------------ | -------------- | -------- |  
-| . | SAMPLE_seq1.fastq.gz | Input read 1 file | Input |  
-| . | SAMPLE_seq2.fastq.gz | Input read 2 file | Input |  
-| . | Final | Directory containing final bam and vcf files | Always |  
-| Final | dcs | Directory containing final dcs files | Always |  
-| Final/dcs | FilteredReads | Directory containing reads still filtered after postBlastRecovery | blast_db!=NONE |  
-| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.ambig.bam | File containing reads still considered ambiguous after postBlastRecovery.  May be empty.  | blast_db!=NONE |  
-| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.ambig.bam.bai | Index for SAMPLE.dcs.postRecovery.ambig.bam | blast_db!=NONE |  
-| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.wrongSpecies.bam | File containing reads still considered ambiguous after postBlastRecovery. May be empty. | blast_db!=NONE |  
-| Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.wrongSpecies.bam.bai | Index for SAMPLE.dcs.postRecovery.wrongSpecies.bam | blast_db!=NONE |  
-| Final/dcs | SAMPLE.dcs.countmuts.csv |  Countmuts file, showing a summary of mutation data for DCS reads.   | Always |  
-| Final/dcs | SAMPLE.dcs.final.bam | Final file for DCS reads, including all reads that overlap the bed file.   | Always |  
-| Final/dcs | SAMPLE.dcs.final.bam.bai | Index for final DCS reads.   | Always |  
-| Final/dcs | SAMPLE.dcs.mutated.bam | File containing DCS reads with non-SNP mutations | Always |  
-| Final/dcs | SAMPLE.dcs.mutated.bam.bai | Index for DCS mutated reads file.   | Always |  
-| Final/dcs | SAMPLE.dcs.snps.vcf | VCF file containing SNPs overlapping bed file in DCS. | Always |  
-| Final/dcs | SAMPLE.dcs.vcf | VCF file containing all variants overlapping bed file in DCS. | Always |  
-| Final | SAMPLE.report.html | Summary report for this sample | Always |  
-| Final | sscs | Directory containing final SSCS files | Always |  
-| Final/sscs | SAMPLE.sscs.countmuts.csv |  Countmuts file, showing a summary of mutation data for SSCS reads.   | runSscs=True |  
-| Final/sscs | SAMPLE.sscs.final.bam | Final file for SSCS reads, including all reads that overlap the bed file.   | Always |  
-| Final/sscs | SAMPLE.sscs.final.bam.bai | Index for final SSCS reads.   | Always |  
-| Final/sscs | SAMPLE.sscs.mutated.bam | File containing SSCS reads with non-SNP mutations | runSscs=True |  
-| Final/sscs | SAMPLE.sscs.mutated.bam.bai | Index for SSCS mutated reads file.   | runSscs=True |  
-| Final/sscs | SAMPLE.sscs.snps.vcf | VCF file containing SNPs overlapping bed file in SSCS. | runSscs=True |  
-| Final/sscs | SAMPLE.sscs.vcf | VCF file containing all variants overlapping bed file in SSCS. | runSscs=True |  
-| . | Intermediate | Directory containing intermediate checkpointing files | Always |  
-| Intermediate | ConsensusMakerOutputs | Directory for post-consensus maker checkpoint files | Always |  
-| Intermediate/ConsensusMakerOutputs | SAMPLE_aln_seq1.fq.gz | Read 1 file for raw on-target determination | Always |  
-| Intermediate/ConsensusMakerOutputs | SAMPLE_aln_seq2.fq.gz | Read 2 file for raw on-target determination | Always |  
-| Intermediate/ConsensusMakerOutputs | SAMPLE_read1_dcs.fq.gz |  DCS Read 1 File  | Always |  
-| Intermediate/ConsensusMakerOutputs | SAMPLE_read1_sscs.fq.gz |  SSCS Read 1 file  | Always |  
-| Intermediate/ConsensusMakerOutputs | SAMPLE_read2_dcs.fq.gz |  DCS Read 2 File  | Always |  
-| Intermediate/ConsensusMakerOutputs | SAMPLE_read2_sscs.fq.gz |  SSCS Read 2 file  | Always |  
-| Intermediate | postBlast | Directory for post-BLAST checkpoint files.  Only affects DCS.   | Always |  
-| Intermediate/postBlast | FilteredReads | Directory for reads that got filtered out of DCS processing due to BLAST analysis indicating that they were either the wrong species or ambiguously mapped.   | Always |  
-| Intermediate/postBlast/FilteredReads | SAMPLE_dcs.ambig.sort.bam | Reads that were filtered out due to ambiguous mapping according to BLAST alignment.   | Always |  
-| Intermediate/postBlast/FilteredReads | SAMPLE_dcs.ambig.sort.bam.bai | Index for ambiguous reads file | Always |  
-| Intermediate/postBlast/FilteredReads | SAMPLE_dcs.wrongSpecies.sort.bam | Reads that were filtered out due to BLAST alignment indicating that they were from the wrong species, or where species of origin could not be determined.   | Always |  
-| Intermediate/postBlast/FilteredReads | SAMPLE_dcs.wrongSpecies.sort.bam.bai | Index for wrong-species file | Always |  
-| Intermediate/postBlast | SAMPLE_dcs.blast.xml | BLAST xml output | Always |  
-| Intermediate/postBlast | SAMPLE_dcs.preBlast.mutated.bam | DCS with potential non-SNP variants that were submitted to BLAST. | Always |  
-| Intermediate/postBlast | SAMPLE_dcs.preBlast.unmutated.bam | DCS reads without non-SNP variants.   | Always |  
-| . | logs | Directory containing log files for this sample.   | Always |  
-| . | Stats | Directory containing statistics files | Always |  
-| Stats | data | Directory containing statistics data files.   | Always |  
-| Stats/data | SAMPLE_cmStats.txt | Statistics from the Consensus Maker | Always |  
-| Stats/data | SAMPLE.dcs_ambiguity_counts.txt | Statistics on ambiguity counts | Always |  
-| Stats/data | SAMPLE.dcs.iSize_Metrics.txt | Statistics on insert size in DCS | Always |  
-| Stats/data | SAMPLE.dcs_MutsPerCycle.dat.csv | Statistics file for non-SNP mutations per cycle in DCS reads | Always |  
-| Stats/data | SAMPLE.dcs.mutsPerRead.txt | Statistics file for non-SNP mutations per read in DCS reads | Always |  
-| Stats/data | SAMPLE.dcs.depth.txt | Per-base coverage and N counts for final DCS  | Always |  
-| Stats/data | SAMPLE_dcs.speciesComp.txt | File containing species assignment data for DCS reads | Always |  
-| Stats/data | SAMPLE_mem.dcs.sort.flagstats.txt | Initial alignment statistics for DCS reads | Always |  
-| Stats/data | SAMPLE_mem.sscs.sort.flagstats.txt | Initial alignment statistics for SSCS reads | Always |  
-| Stats/data | SAMPLE_onTargetCount.txt | Raw on target statistics | Always |  
-| Stats/data | SAMPLE.sscs_MutsPerCycle.dat.csv |  Text data of error rate per cycle in unclipped SSCS  | runSscs=True |  
-| Stats/data | SAMPLE.sscs.mutsPerRead.txt | Statistics file for non-SNP mutations per read in SSCS reads | runSscs=True |  
-| Stats/data | SAMPLE.tagstats.txt |  Family size data (in text form)  | Always |  
-| Stats/data | SAMPLE.temp.sort.flagstats.txt | Statistics on initial read counts | Always |  
-| Stats | SAMPLE.report.ipynb | iPython notebook for the HTML report | Always |  
-| Stats | plots | Directory containing statistics plots. | Always |  
-| Stats/plots | SAMPLE.dcs_BasePerPosInclNs.png |  Plot of error rate per cycle for DCS, including Ns | Always |  
-| Stats/plots | SAMPLE.dcs_BasePerPosWithoutNs.png |  Plot of error rate per cycle for DCS  | Always |  
-| Stats/plots | SAMPLE.dcs.iSize_Histogram.png |  Histogram of insert size metrics for un-clipped DCS  | Always |  
-| Stats/plots | SAMPLE.dcs.mutsPerRead.png | Plot of mutations per read in DCS | Always |  
-| Stats/plots | SAMPLE.dcs.targetCoverage.png | Plot of per-target coverage in DCS | Always |  
-| Stats/plots | SAMPLE_family_size.png | Plot of family size distribution | Always |  
-| Stats/plots | SAMPLE_fam_size_relation.png |  Plot of relationship between a:b and b:a families  | Always |  
-| Stats/plots | SAMPLE.sscs_BasePerPosInclNs.png |  Plot of error rate per cycle SSCS, including Ns | runSscs=True |  
-| Stats/plots | SAMPLE.sscs_BasePerPosWithoutNs.png |  Plot of error rate per cycle for SSCS  | runSscs=True |  
-| Stats/plots | SAMPLE.sscs.mutsPerRead.png | Plot of mutations per read in SSCS | runSscs=True |  
+| . | CONFIG_FILE.summary.csv | Summary CSV file with basic statistics for all samples processed with this CONFIG_FILE. |  
+| . | CONFIG_FILE.summaryDepth.pdf | Summary PDF file with depth plots for all samples processed with this CONFIG_FILE. |  
+| . | CONFIG_FILE.summaryFamilySize.pdf | Summary PDF file with family size for all samples processed with this CONFIG_FILE. |  
+| . | CONFIG_FILE.summaryInsertSize.pdf | Summary PDF file with insert size for all samples processed with this CONFIG_FILE. |  
+| . | CONFIG_FILE.summaryMutsByCycle.pdf | Summary PDF file with muts per cycle plots for all samples processed with this CONFIG_FILE. |  
+| SAMP_DIR | SAMPLE_seq1.fastq.gz | Input read 1 file | Input |  
+| SAMP_DIR | SAMPLE_seq2.fastq.gz | Input read 2 file | Input |  
+| SAMP_DIR | Final | Directory containing final bam and vcf files | Always |  
+| SAMP_DIR/Final | dcs | Directory containing final dcs files | Always |  
+| SAMP_DIR/Final/dcs | FilteredReads | Directory containing reads still filtered after postBlastRecovery | blast_db!=NONE |  
+| SAMP_DIR/Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.ambig.bam | File containing reads still considered ambiguous after postBlastRecovery.  May be empty.  | blast_db!=NONE |  
+| SAMP_DIR/Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.ambig.bam.bai | Index for SAMPLE.dcs.postRecovery.ambig.bam | blast_db!=NONE |  
+| SAMP_DIR/Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.wrongSpecies.bam | File containing reads still considered ambiguous after postBlastRecovery. May be empty. | blast_db!=NONE |  
+| SAMP_DIR/Final/dcs/FilteredReads | SAMPLE.dcs.postRecovery.wrongSpecies.bam.bai | Index for SAMPLE.dcs.postRecovery.wrongSpecies.bam | blast_db!=NONE |  
+| SAMP_DIR/Final/dcs | SAMPLE.dcs.countmuts.csv |  Countmuts file, showing a summary of mutation data for DCS reads.   | Always |  
+| SAMP_DIR/Final/dcs | SAMPLE.dcs.final.bam | Final file for DCS reads, including all reads that overlap the bed file.   | Always |  
+| SAMP_DIR/Final/dcs | SAMPLE.dcs.final.bam.bai | Index for final DCS reads.   | Always |  
+| SAMP_DIR/Final/dcs | SAMPLE.dcs.mutated.bam | File containing DCS reads with non-SNP mutations | Always |  
+| SAMP_DIR/Final/dcs | SAMPLE.dcs.mutated.bam.bai | Index for DCS mutated reads file.   | Always |  
+| SAMP_DIR/Final/dcs | SAMPLE.dcs.snps.vcf | VCF file containing SNPs overlapping bed file in DCS. | Always |  
+| SAMP_DIR/Final/dcs | SAMPLE.dcs.vcf | VCF file containing all variants overlapping bed file in DCS. | Always |  
+| SAMP_DIR/Final | SAMPLE.report.html | Summary report for this sample | Always |  
+| SAMP_DIR/Final | sscs | Directory containing final SSCS files | Always |  
+| SAMP_DIR/Final/sscs | SAMPLE.sscs.countmuts.csv |  Countmuts file, showing a summary of mutation data for SSCS reads.   | runSscs=True |  
+| SAMP_DIR/Final/sscs | SAMPLE.sscs.final.bam | Final file for SSCS reads, including all reads that overlap the bed file.   | Always |  
+| SAMP_DIR/Final/sscs | SAMPLE.sscs.final.bam.bai | Index for final SSCS reads.   | Always |  
+| SAMP_DIR/Final/sscs | SAMPLE.sscs.mutated.bam | File containing SSCS reads with non-SNP mutations | runSscs=True |  
+| SAMP_DIR/Final/sscs | SAMPLE.sscs.mutated.bam.bai | Index for SSCS mutated reads file.   | runSscs=True |  
+| SAMP_DIR/Final/sscs | SAMPLE.sscs.snps.vcf | VCF file containing SNPs overlapping bed file in SSCS. | runSscs=True |  
+| SAMP_DIR/Final/sscs | SAMPLE.sscs.vcf | VCF file containing all variants overlapping bed file in SSCS. | runSscs=True |  
+| SAMP_DIR | Intermediate | Directory containing intermediate checkpointing files | Always |  
+| SAMP_DIR/Intermediate | ConsensusMakerOutputs | Directory for post-consensus maker checkpoint files | Always |  
+| SAMP_DIR/Intermediate/ConsensusMakerOutputs | SAMPLE_aln_seq1.fq.gz | Read 1 file for raw on-target determination | Always |  
+| SAMP_DIR/Intermediate/ConsensusMakerOutputs | SAMPLE_aln_seq2.fq.gz | Read 2 file for raw on-target determination | Always |  
+| SAMP_DIR/Intermediate/ConsensusMakerOutputs | SAMPLE_read1_dcs.fq.gz |  DCS Read 1 File  | Always |  
+| SAMP_DIR/Intermediate/ConsensusMakerOutputs | SAMPLE_read1_sscs.fq.gz |  SSCS Read 1 file  | Always |  
+| SAMP_DIR/Intermediate/ConsensusMakerOutputs | SAMPLE_read2_dcs.fq.gz |  DCS Read 2 File  | Always |  
+| SAMP_DIR/Intermediate/ConsensusMakerOutputs | SAMPLE_read2_sscs.fq.gz |  SSCS Read 2 file  | Always |  
+| SAMP_DIR/Intermediate | postBlast | Directory for post-BLAST checkpoint files.  Only affects DCS.   | Always |  
+| SAMP_DIR/Intermediate/postBlast | FilteredReads | Directory for reads that got filtered out of DCS processing due to BLAST analysis indicating that they were either the wrong species or ambiguously mapped.   | Always |  
+| SAMP_DIR/Intermediate/postBlast/FilteredReads | SAMPLE_dcs.ambig.sort.bam | Reads that were filtered out due to ambiguous mapping according to BLAST alignment.   | Always |  
+| SAMP_DIR/Intermediate/postBlast/FilteredReads | SAMPLE_dcs.ambig.sort.bam.bai | Index for ambiguous reads file | Always |  
+| SAMP_DIR/Intermediate/postBlast/FilteredReads | SAMPLE_dcs.wrongSpecies.sort.bam | Reads that were filtered out due to BLAST alignment indicating that they were from the wrong species, or where species of origin could not be determined.   | Always |  
+| SAMP_DIR/Intermediate/postBlast/FilteredReads | SAMPLE_dcs.wrongSpecies.sort.bam.bai | Index for wrong-species file | Always |  
+| SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.blast.xml | BLAST xml output | Always |  
+| SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.preBlast.mutated.bam | DCS with potential non-SNP variants that were submitted to BLAST. | Always |  
+| SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.preBlast.unmutated.bam | DCS reads without non-SNP variants.   | Always |  
+| SAMP_DIR | logs | Directory containing log files for this sample.   | Always |  
+| SAMP_DIR | Stats | Directory containing statistics files | Always |  
+| SAMP_DIR/Stats | data | Directory containing statistics data files.   | Always |  
+| SAMP_DIR/Stats/data | SAMPLE_cmStats.txt | Statistics from the Consensus Maker | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs_ambiguity_counts.txt | Statistics on ambiguity counts | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs.iSize_Metrics.txt | Statistics on insert size in DCS | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs_MutsPerCycle.dat.csv | Statistics file for non-SNP mutations per cycle in DCS reads | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs.mutsPerRead.txt | Statistics file for non-SNP mutations per read in DCS reads | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs_MutsPerCycle.dat.csv |  Text data of error rate per cycle in unclipped SSCS  | runSscs=True |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs.mutsPerRead.txt | Statistics file for non-SNP mutations per read in SSCS reads | runSscs=True |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs.depth.txt | Per-base coverage and N counts for final DCS  | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs.depth.summary.csv | Per-bed region min, mean, median, and max non-zero depth for final DCS.  | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs.depth.txt | Per-base coverage and N counts for final SSCS  | runSscs=True |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs.depth.summary.csv | Per-bed region min, mean, median, and max non-zero depth for final SSCS.  | runSscs=True |  
+| SAMP_DIR/Stats/data | SAMPLE_dcs.speciesComp.txt | File containing species assignment data for DCS reads | Always |  
+| SAMP_DIR/Stats/data | SAMPLE_mem.dcs.sort.flagstats.txt | Initial alignment statistics for DCS reads | Always |  
+| SAMP_DIR/Stats/data | SAMPLE_mem.sscs.sort.flagstats.txt | Initial alignment statistics for SSCS reads | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs.endClip.metrics.txt | Statistics on fixed end clipping in DCS | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs.overlapClip.metrics.txt | Statistics on overlap clipping in DCS | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs.endClip.metrics.txt | Statistics on fixed end clipping in SSCS | runSscs=True |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs.overlapClip.metrics.txt | Statistics on overlap clipping in SSCS | runSscs=True |  
+| SAMP_DIR/Stats/data | SAMPLE_onTargetCount.txt | Raw on target statistics | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.tagstats.txt |  Family size data (in text form)  | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.temp.sort.flagstats.txt | Statistics on initial read counts | Always |  
+| SAMP_DIR/Stats | SAMPLE.report.ipynb | iPython notebook for the HTML report | Always |  
+| SAMP_DIR/Stats | plots | Directory containing statistics plots. | Always |  
+| SAMP_DIR/Stats/plots | SAMPLE.dcs.iSize_Histogram.png |  Histogram of insert size metrics for un-clipped DCS  | Always |  
+| SAMP_DIR/Stats/plots | SAMPLE.dcs.mutsPerRead.png | Plot of mutations per read in DCS | Always |  
+| SAMP_DIR/Stats/plots | SAMPLE.dcs.targetCoverage.png | Plot of per-target coverage in DCS | Always |  
+| SAMP_DIR/Stats/plots | SAMPLE.dcs_BasePerPosInclNs.png |  Plot of error rate per cycle for DCS, including Ns | Always |  
+| SAMP_DIR/Stats/plots | SAMPLE.dcs_BasePerPosWithoutNs.png |  Plot of error rate per cycle for DCS  | Always |  
+| SAMP_DIR/Stats/plots | SAMPLE.sscs.mutsPerRead.png | Plot of mutations per read in SSCS | runSscs=True |  
+| SAMP_DIR/Stats/plots | SAMPLE.sscs_BasePerPosInclNs.png |  Plot of error rate per cycle SSCS, including Ns | runSscs=True |  
+| SAMP_DIR/Stats/plots | SAMPLE.sscs_BasePerPosWithoutNs.png |  Plot of error rate per cycle for SSCS  | runSscs=True |  
+| SAMP_DIR/Stats/plots | SAMPLE_fam_size_relation.png |  Plot of relationship between a:b and b:a families  | Always |  
+| SAMP_DIR/Stats/plots | SAMPLE_family_size.png | Plot of family size distribution | Always |  
 
 ## 11: Testing the pipeline
 
@@ -518,7 +542,7 @@ located in the 'test' directory. To test the pipeline, change into the
 ```bash
 DS testConfig.csv
 ```
-A final output report can be found in the testData/Final directory and 
+A final set of output reports can be found in the testData/Final directory and 
 be compared to the reports in the ExpectedReports directory located in 
 the parent test directory.
 
@@ -548,7 +572,7 @@ To finish preparing for and executing a rerun, run:
 ```
 
 ## 13: Unlocking following a power failure
-In the event that pipeline execution is interrupted by a power failure, 
+In the event that pipeline execution is interrupted (such as by a power failure), 
 the directory can be unlocked in order to restart using the provided 
 DS-unlock script:
 
