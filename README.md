@@ -1,7 +1,7 @@
 Duplex Sequencing Pipeline
 ======================
 
-Brendan Kohrn, March 30, 2020  
+Brendan Kohrn, October 20, 2020  
 Duplex Sequencing is copyright Scott Kennedy and Larwrence Loeb, 
 University of Washington, Seattle, WA, USA  
 
@@ -16,9 +16,11 @@ University of Washington, Seattle, WA, USA
 7. Configuration File creation
 8. Recovery script creation
 9. Running pipelines
-10. Output file description
-11. Testing the pipeline
-12. Full and partial reruns
+10. Output file descriptions
+11. Extra BAM tags:
+12. Testing the pipeline
+13. Full and partial reruns
+14. Unlocking following a power failure
 
 ## 1: Glossary
 
@@ -358,11 +360,6 @@ This directory structure looks like this:
 
 ```bash
 .
-├── CONFIG_FILE.summary.csv
-├── CONFIG_FILE.summaryDepth.pdf
-├── CONFIG_FILE.summaryFamilySize.pdf
-├── CONFIG_FILE.summaryInsertSize.pdf
-├── CONFIG_FILE.summaryMutsByCycle.pdf
 └──SAMP_DIR
     ├── Final
     │   ├── dcs
@@ -449,11 +446,6 @@ File descriptions are as follows:
 
 | Directory | File name | Description | When Generated |  
 | --------- | ------------ | -------------- | -------- |  
-| . | CONFIG_FILE.summary.csv | Summary CSV file with basic statistics for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryDepth.pdf | Summary PDF file with depth plots for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryFamilySize.pdf | Summary PDF file with family size for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryInsertSize.pdf | Summary PDF file with insert size for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryMutsByCycle.pdf | Summary PDF file with muts per cycle plots for all samples processed with this CONFIG_FILE. |  
 | SAMP_DIR | SAMPLE_seq1.fastq.gz | Input read 1 file | Input |  
 | SAMP_DIR | SAMPLE_seq2.fastq.gz | Input read 2 file | Input |  
 | SAMP_DIR | Final | Directory containing final bam and vcf files | Always |  
@@ -533,7 +525,39 @@ File descriptions are as follows:
 | SAMP_DIR/Stats/plots | SAMPLE_fam_size_relation.png |  Plot of relationship between a:b and b:a families  | Always |  
 | SAMP_DIR/Stats/plots | SAMPLE_family_size.png | Plot of family size distribution | Always |  
 
-## 11: Testing the pipeline
+## 11: Extra BAM tags:
+
+| Tag | Type | Meaning |  
+| --- | ---- | ------- |  
+| XF | String | In SSCS, represents family size.  In DCS, colon-deliniated list of family sizes for ab1:ba2 or ba1:ab2. |  
+| t0 | Integer | With BLAST, TaxID of the species the read matched most closely. Note that negative numbers have special meanings; see below. |  
+| t# | Integer | With BLAST, TaxID of the #th BLAST hit. |  
+| c# | String | With BLAST, the chromosome of the #th BLAST hit. |  
+| p# | Integer | With BLAST, the position of the #th BLAST hit. |  
+| l# | Integer | With BLAST, the length of the #th BLAST hit. |  
+| YB | String | With BLAST, True if a read was BLASTed. |  
+| am | integer | With BLAST, the ambiguity code for the read. See below for meanings. |  
+
+Some negative values for tag t0 have special meanings: 
+
+| t0 value | meaning |  
+| -------- | ------- |  
+| -1 | Between species BLAST tie. |  
+| -3 | No BLAST results. |  
+| -4 | Read was submitted to BLAST, but BLAST did not attempt alignment. |  
+
+Ambiguity codes have manings: 
+
+| am value | meaning |  
+| 0 | BLAST has 1 best match, matches bwa position |  
+| 1 | BLAST has 1 best match, does not match bwa position |  
+| 2 | BLAST has 2+ best matches, correct species |  
+| 3 | BLAST has 2+ best matches, at least one incorrect species |  
+| 4 | BLAST did not attempt alignment, or no blast matches |  
+| 5 | Not BLASTed |  
+
+
+## 12: Testing the pipeline
 
 The newly setup pipeline can be tested using provided data and files 
 located in the 'test' directory. To test the pipeline, change into the 
@@ -546,7 +570,7 @@ A final set of output reports can be found in the testData/Final directory and
 be compared to the reports in the ExpectedReports directory located in 
 the parent test directory.
 
-## 12: Full and partial reruns
+## 13: Full and partial reruns
 
 Sometimes it may be necessary to rerun all or part of the pipeline for 
 various reasons.  In order to facilitate this, we have provided a script 
@@ -571,7 +595,7 @@ To finish preparing for and executing a rerun, run:
 /path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv
 ```
 
-## 13: Unlocking following a power failure
+## 14: Unlocking following a power failure
 In the event that pipeline execution is interrupted (such as by a power failure), 
 the directory can be unlocked in order to restart using the provided 
 DS-unlock script:
