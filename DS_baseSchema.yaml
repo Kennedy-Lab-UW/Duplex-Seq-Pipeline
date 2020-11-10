@@ -105,8 +105,8 @@ properties:
   adapterSeq:
     type: string
     default: "ANNNNNNNNAGATCGGAAGAG"
-    pattern: ^[ACTGRYSWKMBDHVN]*$
-    description: The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included
+    pattern: (^[^\s]*\.fasta$)|(^[ACTGRYSWKMBDHVN]*$)
+    description: The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Alternatively, a fasta file with all possible UMI-adapter conbinations.  
   clipBegin:
     type: integer
     default: 7
