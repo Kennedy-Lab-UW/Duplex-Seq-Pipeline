@@ -90,7 +90,10 @@ def get_maxNs(wildcards):
 def get_cleanup(wildcards):
     return samples.loc[wildcards.sample, "cleanup"]
 def get_adapter_seq(wildcards):
-    return samples.loc[wildcards.sample, "adapterSeq"]
+    my_adapt_seq = samples.loc[wildcards.sample, "adapterSeq"]
+    if ".fasta" in my_adapt_seq:
+        return f"file:{my_adapt_seq}"
+    return my_adapt_seq
 def get_recovery(wildcards):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
 

@@ -41,6 +41,11 @@ def main():
         required=True,
         help="The bed file to compute stats on.")
     parser.add_argument(
+        '--blocks_only',
+        action="store_true",
+        dest="blocks", 
+        help="Use only those sites in blocks for calculating whole-line stats.")
+    parser.add_argument(
         '--logLevel', 
         action="store", 
         dest="logLvl", 
@@ -105,13 +110,16 @@ def main():
 
     # Iterate through the input file
     logging.info("Processing input file...")
-    for lIn in f_in:
+    for i, lIn in enumerate(f_in):
+        if i % 10000 == 0:
+            logging.info(f"Processed {i} lines...")
         if lIn[0] != "#":
             line = Depth_Line(*lIn.strip().split())
             # Iterate through the regions and blocks
             for regIter in bed_dict:
                 # Count the line in any region that contains it
-                if regIter["region"].contains(line.Chrom, int(line.Pos) - 1):
+                if regIter["region"].contains(line.Chrom, int(line.Pos) - 1,
+                                              o.blocks):
                     regIter["depths"].append(int(line.DP))
 
     # Close input file

@@ -89,9 +89,14 @@ addZeros <- function(inData) {
 
 myBed <- read_table2(inBed, col_names = FALSE)
 myFName = paste("Stats/data/",inSampName, ".depth.txt", sep="")
-depth <- addZeros(read_delim(myFName,
+pre_depth <- read_delim(myFName,
                     "\t", escape_double = FALSE, trim_ws = TRUE, 
-                    col_types="cicii")) 
+                    col_types="cicii")
+if (length(row.names(pre_depth)) > 0) {
+  depth <- addZeros(pre_depth)
+} else {
+  depth <- pre_depth
+}
 # Set column names
 bedColNames = c("Chrom","Start","End", "Name","Score","Strand","thickStart","thickEnd","itemRgb","blockCounts","blockSizes","blockStarts")
 numCols = length(colnames(myBed))
@@ -101,6 +106,7 @@ myBed$Start <- myBed$Start + 1
 myBed$End <- myBed$End + 1
 myBed$Target = factor(myBed$Name, levels = c(myBed$Name,"Off_Target"))
 namesVect = c()
+
 if (length(row.names(depth)) > 0) {
   for (dataIter in seq(1,length(row.names(depth)))) {
     myName = "Off_Target"
