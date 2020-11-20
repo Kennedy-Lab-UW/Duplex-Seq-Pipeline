@@ -372,7 +372,7 @@ class MutposEngine:
             for myRegion in self.myBed:
                 for pileup_column in self.inBam.pileup(
                         reference=myRegion.chrom, 
-                        start=myRegion.startPos - 1, 
+                        start=myRegion.startPos, 
                         end=myRegion.endPos,
                         fastafile=self.inFasta, 
                         truncate=True, 
