@@ -222,6 +222,7 @@ def main():
         '--filter',
         action="append",
         dest="filters",
+        default=[],
         help=(
             "Sets filtering behavior.  Can be provided multiple times to "
             "impose multiple filters.  'SNP' will filter out any "
