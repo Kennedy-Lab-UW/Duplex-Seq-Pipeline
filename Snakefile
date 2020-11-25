@@ -1191,7 +1191,7 @@ rule varDict2VCF:
     shell:
         """
         cd {wildcards.runPath}
-        python {params.basePath}/scripts/varDictToVCF.py \
+        python {params.basePath}/scripts/VarDictToVCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.varDict.txt \
         -n {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt \
         -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
