@@ -1078,6 +1078,8 @@ rule makeBufferedBed:
     output:
         outBed = temp("{runPath}/{sample}.vardictBed.bed"),
         temp_sizes = temp("{runPath}/{sample}.ref.genome"),
+    conda:
+        "envs/DS_env_full.yaml"
     shell:
         """
         cd {wildcards.runPath}
