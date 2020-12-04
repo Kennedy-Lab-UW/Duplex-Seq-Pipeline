@@ -1157,8 +1157,7 @@ rule varDict_Ns:
         """
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        -UN -P {params.clip5} \
-        -T $(( {params.readLength}-{params.umiLen}-{params.spacerLen}-{params.clip3} )) \
+        -UN \
         -f {params.vardict_f} -p -K \
         -G {input.inRef} \
         -nmfreq {params.vardict_nmfreq} \
