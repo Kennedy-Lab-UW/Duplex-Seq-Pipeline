@@ -38,11 +38,12 @@ A construct created by comparing two SSCSs.
 A group of reads that shares the same tag sequence.
 
 ## 2: Dependencies:
-This pipeline is known to work with the following minimum versions of 
-the follow required programs:
+
+This pipeline is known to work with the following versions of 
+the following required programs:
 
 * Python3.6+
-* Snakemake>=5.25.0
+* Snakemake=5.25.0
 * Pandas
 * Miniconda/Anaconda=4.7.\*
 * bwa=0.7.17.* (for genome setup)
@@ -51,10 +52,19 @@ the follow required programs:
 * wget (on macOS, install using homebrew; present by default on linux)
 
 Once Python3.6 is installed, snakemake and pandas can be installed using 
-pip3 or using whatever package manager you're using.  Blast can be 
-downloaded in any of several ways, including some package managers 
-(Ubuntu: sudo apt-get install ncbi-blast+).  It can also be installed 
-using conda if desired.  
+pip3 or using whatever package manager you're using.  While other versions of 
+snakemake may work (though definately no earlier that 5.25.0), there may be 
+some issues with using versions later than 5.25.0; those may be resolved by 
+restarting the pipeline when it crashes.  Blast can be downloaded in any of 
+several ways, including some package managers (Ubuntu: sudo apt-get install 
+ncbi-blast+).  It can also be installed using conda if desired.  
+
+The recommended install method and order is: 
+
+1. Install Miniconda
+2. Use conda to install Python3 and Mamba
+3. Use Mamba to install Snakemake, bwa, blast, and pandas, invoking both the 
+bioconda and conda-forge channels.  
 
 ## 3: Setup: 
 
@@ -252,7 +262,11 @@ and will ignore any other columns provided.
 ## 7: Configuration file creation:
 
 Use the ConfigTemplate to create a new file with the appropriate headers. 
-For each row, fill in the information about a particular sample:
+For each row, fill in the information about a particular sample.  Note that in 
+most cases, "path" refers to an absolute path, with the exception of "in1" and 
+"in2", where you just need the name of the input file.  The "blast_db" option 
+is the path to the appropriate .nal or .nhr file, minus the .nal or .nhr 
+extension, but can also be specified as "none" to skip BLAST filtering.
 
 | Header           | Required or Default    | Information |
 | ---------------- | ---------------------- | ----------- |
@@ -263,9 +277,9 @@ For each row, fill in the information about a particular sample:
 | rgsm             | Required               | Read Group Sample |
 | reference        | Required               | The path to the prepared reference genome to use with this sample.  |
 | target_bed       | Required               | A bed file showing where the targets are for this particular sample |  
-| maskBed | NONE | A bed file to use for masking variants. |  
-| blast_db         | Required               | The blast database to use for contaminant filtering; must include your target genome.  |
-| targetTaxonId    | Required               | The taxon ID of the species you are expecting to be present in the sample.  |
+| maskBed | NONE   | A bed file to use for masking variants. |  
+| blast_db         | NONE               | The blast database to use for contaminant filtering; must include your target genome, if used.  |
+| targetTaxonId    | 9606               | The taxon ID of the species you are expecting to be present in the sample.  |
 | baseDir          | Required               | The directory the input files are in, and where the output files will be created. |
 | in1              | Required               | The read1 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.  |
 | in2              | Required               | The read2 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.   |
@@ -278,7 +292,7 @@ For each row, fill in the information about a particular sample:
 | spacerLen        | 1                      | The length of the spacer sequence in this sample |
 | locLen           | 10                     | The localization length to use for this sample |
 | readLen          | 101                    | The length of a read for this sample |  
-| adapterSeq       | "ANNNNNNNNAGATCGGAAGAG" | The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Used by cutadapt for adapter clipping |  
+| adapterSeq       | "ANNNNNNNNAGATCGGAAGAG" | The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Alternatively, a fasta file with all possible UMI-adapter conbinations.  Used by cutadapt for adapter clipping. |  
 | clipBegin        | 7                      | How many bases to clip off the 5' end of the read |
 | clipEnd          | 0                      | How many bases to clip off the 3' end of the read |
 | minClonal        | 0                      | The minimum clonality to use for count_muts generation |
@@ -286,6 +300,7 @@ For each row, fill in the information about a particular sample:
 | minDepth         | 100                    | The minimum depth to use for count_muts generation |
 | maxNs            | 1                      | The maximum proportion of N bases to use for count_muts generation |
 | recovery         | "noRecovery.sh"        | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
+| cluster_dist     | 10                     | How close together variants have to be to be considered 'clustered' |  
 | cm_outputs       | "GB"                   | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
 | cm_sumTypes      | "GT"                   | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
 | cm_filters | "near_indel:clustered" | Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation. |  

@@ -89,6 +89,8 @@ def get_maxNs(wildcards):
     return samples.loc[wildcards.sample, "maxNs"]
 def get_cleanup(wildcards):
     return samples.loc[wildcards.sample, "cleanup"]
+def get_cluster_dist(wildcards):
+    return samples.loc[wildcards.sample, "cluster_dist"]
 def get_adapter_seq(wildcards):
     my_adapt_seq = samples.loc[wildcards.sample, "adapterSeq"]
     if ".fasta" in my_adapt_seq:
@@ -1176,7 +1178,8 @@ rule varDict2VCF:
         basePath = sys.path[0],
         sampName = get_rgsm, 
         minDepth = get_minDepth, 
-        snpLevel = get_snps_threshold
+        snpLevel = get_snps_threshold,
+        cluster_dist = get_cluster_dist
     input:
         inVarDict = "{runPath}/{sample}.{sampType}.varDict.txt", 
         inVarDict_Ns = "{runPath}/{sample}.{sampType}.varDict.Ns.txt", 
@@ -1198,7 +1201,8 @@ rule varDict2VCF:
         -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         --samp_name {params.sampName} \
         --snp_threshold {params.snpLevel} \
-        -d {params.minDepth}
+        -d {params.minDepth} \
+        --cluster_dist {params.cluster_dist}
         cd ..
         """
 
