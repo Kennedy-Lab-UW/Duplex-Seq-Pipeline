@@ -1446,7 +1446,7 @@ rule MutsPerCycle:
         --inVCF Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
         -o {wildcards.sample}.{wildcards.sampType} \
         -l {params.readLength} -b -t 0 -c --text_file \
-        --filter SNP --filter INDEL {params.filter_string}
+        --filter SNP --filter INCLUDE {params.filter_string}
         
         mv {wildcards.sample}.{wildcards.sampType}*.png Stats/plots/
         mv {wildcards.sample}.{wildcards.sampType}_MutsPerCycle.dat.csv Stats/data/

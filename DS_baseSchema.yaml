@@ -164,8 +164,8 @@ properties:
     description: "How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs)."
   cm_filters:
     type: string
-    pattern: ^(.+)?(:.+)+$
-    default: "near_indel:clustered"
+    pattern: ^[a-zA-Z_]+((:[a-zA-Z_]+){0,})$
+    default: "none"
     description: Select which filters to apply durring frequency calculation.  
   runSSCS:
     type: boolean
