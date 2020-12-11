@@ -1218,8 +1218,8 @@ rule maskVariants:
         "envs/DS_env_full.yaml"
     shell:
         """
-        cd {wildcards.runPath)
-        python Mask_VCF.py \
+        cd {wildcards.runPath}
+        python {params.basePath}/scripts/Mask_VCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
         -o {wildcards.sample}.{wildcards.sampType}.masked.vcf \
         -b {input.inMask}

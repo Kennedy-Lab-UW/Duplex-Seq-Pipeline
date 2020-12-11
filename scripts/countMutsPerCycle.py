@@ -41,7 +41,10 @@ class MismatchCounter:
             if read.cigartuples[0][0] == 5:
                 hardclipping = read.cigartuples[0][1]
             if rLen > len(self.mismatch_counts):
-                sys.stderr.write("ERROR: Actual read length longer than given read length! \n")
+                sys.stderr.write(
+                    f"ERROR: Actual read length {rLen} longer than given read "
+                    f"length {len(self.mismatch_counts)}! \n")
+                sys.stderr.write(f"{str(read)}\n")
                 raise Exception
             readMD = read.get_aligned_pairs(False, True)
             md2 = [x for x in readMD if x[0] is not None and x[2] is not None]

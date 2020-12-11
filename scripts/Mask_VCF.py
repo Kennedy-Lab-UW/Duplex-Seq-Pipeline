@@ -54,7 +54,7 @@ def main():
     my_header.addLine(
         "FILTER",
         "masked",
-        description="This position has been masked.")
+        description=f"This position has been masked due to overlap with {o.bed}.")
     # Open output VCF file
     out_vcf = VariantFile(o.out_vcf, 'w', my_header)
     # Open bed file, and extract regions
