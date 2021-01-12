@@ -1,4 +1,14 @@
 CHANGELOG
+v1.1.6: 
+January 12, 2021
+Bugfix: 
+    Fix non-working non-unique mode for countmuts files
+    
+v1.1.5: 
+November 20, 2020
+Bugfix:
+    Fix bug on line 375 with 0-position starts in bed files
+
 v1.1.4
 September 24, 2020
 Bugfixes: 
