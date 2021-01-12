@@ -289,7 +289,7 @@ class countMutsEngine:
                             ] += int(
                                 varIter.samples[
                                     self.inVCF.samps[0]
-                                    ]['AD'].split()[1]
+                                    ]['AD'].split(',')[1]
                                 )
                 elif len(varIter.ref) > len(varIter.alts[0]):
                     # This is a deletion
@@ -300,7 +300,7 @@ class countMutsEngine:
                         self.mutsCounts["dels"][f"{delLen}"] += int(
                             varIter.samples[
                                 self.inVCF.samps[0]
-                                ]['AD'].split()[1]
+                                ]['AD'].split(',')[1]
                             )
                 elif len(varIter.ref) < len(varIter.alts[0]):
                     # This is an insertion
@@ -311,7 +311,7 @@ class countMutsEngine:
                         self.mutsCounts["ins"][f"{insLen}"] += int(
                             varIter.samples[
                                 self.inVCF.samps[0]
-                                ]['AD'].split()[1]
+                                ]['AD'].split(',')[1]
                             )
                 for subreg in self.geneCounts:
                     subregBins = self.geneCounts[subreg]['str'].split(':')
@@ -331,7 +331,7 @@ class countMutsEngine:
                                     ] += int(
                                         varIter.samples[
                                             self.inVCF.samps[0]
-                                            ]['AD'].split()[1]
+                                            ]['AD'].split(',')[1]
                                         )
                         elif len(varIter.ref) > len(varIter.alts[0]):
                             # This is a deletion
@@ -342,7 +342,7 @@ class countMutsEngine:
                                 self.geneCounts[subregion.samtoolsStr()]["dels"][f"{delLen}"] += int(
                                     varIter.samples[
                                         self.inVCF.samps[0]
-                                        ]['AD'].split()[1]
+                                        ]['AD'].split(',')[1]
                                     )
                         elif len(varIter.ref) < len(varIter.alts[0]):
                             # This is an insertion
@@ -353,7 +353,7 @@ class countMutsEngine:
                                 self.geneCounts[subregion.samtoolsStr()]["ins"][f"{insLen}"] += int(
                                     varIter.samples[
                                         self.inVCF.samps[0]
-                                        ]['AD'].split()[1]
+                                        ]['AD'].split(',')[1]
                                     )
                 
                 for subreg in self.blockCounts:
@@ -374,7 +374,7 @@ class countMutsEngine:
                                     ] += int(
                                         varIter.samples[
                                             self.inVCF.samps[0]
-                                            ]['AD'].split()[1]
+                                            ]['AD'].split(',')[1]
                                         )
                         elif len(varIter.ref) > len(varIter.alts[0]):
                             # This is a deletion
@@ -385,7 +385,7 @@ class countMutsEngine:
                                 self.blockCounts[subregion.samtoolsStr()]["dels"][f"{delLen}"] += int(
                                     varIter.samples[
                                         self.inVCF.samps[0]
-                                        ]['AD'].split()[1]
+                                        ]['AD'].split(',')[1]
                                     )
                         elif len(varIter.ref) < len(varIter.alts[0]):
                             # This is an insertion
@@ -396,7 +396,7 @@ class countMutsEngine:
                                 self.blockCounts[subregion.samtoolsStr()]["ins"][f"{insLen}"] += int(
                                     varIter.samples[
                                         self.inVCF.samps[0]
-                                        ]['AD'].split()[1]
+                                        ]['AD'].split(',')[1]
                                     )
     
     def processLines(self, 
