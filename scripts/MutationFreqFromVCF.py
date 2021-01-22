@@ -280,7 +280,8 @@ class countMutsEngine:
                     and int(varIter.samples[self.inVCF.samps[0]]['DP']) >= self.params['minDepth']
                     and 'N' not in varIter.alts[0]
                     ):
-                if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                if (len(varIter.ref) == 1 and len(varIter.alts[0]) == 1 
+                        and varIter.ref in ("C","A","T","G")):
                     if self.params["unique"]:
                         self.mutsCounts[f"{varIter.ref}>{varIter.alts[0]}"] += 1
                     else:
@@ -322,7 +323,8 @@ class countMutsEngine:
                         self.geneCounts[subreg]['str']
                         )
                     if subregion.contains(varIter.chrom, varIter.pos - 1):
-                        if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                        if (len(varIter.ref) == 1 and len(varIter.alts[0]) == 1 
+                                and varIter.ref in ("C","A","T","G")):
                             if self.params["unique"]:
                                 self.geneCounts[subregion.samtoolsStr()][f"{varIter.ref}>{varIter.alts[0]}"] += 1
                             else:
@@ -365,7 +367,8 @@ class countMutsEngine:
                         self.blockCounts[subreg]['str']
                         )
                     if subregion.contains(varIter.chrom, varIter.pos - 1):
-                        if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                        if (len(varIter.ref) == 1 and len(varIter.alts[0]) == 1 
+                                and varIter.ref in ("C","A","T","G")):
                             if self.params["unique"]:
                                 self.blockCounts[subregion.samtoolsStr()][f"{varIter.ref}>{varIter.alts[0]}"] += 1
                             else:
@@ -421,8 +424,9 @@ class countMutsEngine:
                     self.params["minC"], 
                     self.params["maxC"]
                     )
-                self.mutsCounts["DP"] += lnCnts["DP"]
-                self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                if lnCnts['RefBase'] in ("A","G","T","C"):
+                    self.mutsCounts["DP"] += lnCnts["DP"]
+                    self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                 
             linesProcessed += 1
             if linesProcessed % 1000 == 0:
@@ -508,24 +512,25 @@ class countMutsEngine:
                         self.params["minC"], 
                         self.params["maxC"]
                         )
-                    self.geneCounts[regStr]["DP"] += lnCnts["DP"]
-                    self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                    if lnCnts['RefBase'] in ("A","G","T","C"):
+                        self.geneCounts[regStr]["DP"] += lnCnts["DP"]
+                        self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                     
                     
-                    if not ( 
-                            len(subregions) == 1
+                    if not (len(subregions) == 1
                             and subregions[0].startPos == myRegion.startPos
-                            and subregions[0].endPos == myRegion.endPos
-                            ):
-                        for subregion in subregions:
-                            if subregion.contains(myRegion.chrom, pileup_column.reference_pos):
-                                self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
-                                self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                            and subregions[0].endPos == myRegion.endPos):
+                        if lnCnts['RefBase'] in ("A","G","T","C"):
+                            for subregion in subregions:
+                                if subregion.contains(myRegion.chrom, pileup_column.reference_pos):
+                                    self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
+                                    self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                                 
                     if myChrPos not in linesCounted:
                         linesCounted.append(myChrPos)
-                        self.mutsCounts["DP"] += lnCnts["DP"]
-                        self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                        if lnCnts['RefBase'] in ("A","G","T","C"):
+                            self.mutsCounts["DP"] += lnCnts["DP"]
+                            self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                         linesProcessed += 1
                         if linesProcessed % 1000 == 0:
                             logging.info(f"{linesProcessed} lines processed...")
