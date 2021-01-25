@@ -56,7 +56,7 @@ class MismatchCounter:
                     readBase = read.query_sequence[x[0]]
                     refPos = x[1] + 1
 
-                    if refBase not in ("C", "T"):
+                    if refBase not in ("C", "T") and refBase in compBase:
                         refBase = compBase[refBase]
                         readBase = compBase[readBase]
                     snpTest = f"{refChrom}:{refPos}:{refBase}>{readBase}"
@@ -72,6 +72,8 @@ class MismatchCounter:
                         use_variant = False
                     if snpTest not in self.vars and "INCLUDE" in self.filters:
                         # remove non-included variants, if requested
+                        use_variant = False
+                    if refBase not in compBase:
                         use_variant = False
                     if use_variant:
                         #self.debug_file.write(f"{snpTest}\n")
@@ -179,7 +181,7 @@ def is_indel(inVariant):
         return False
 
 def extractVariant(inVarLine):
-    if len(inVarLine.ref) == 1 and len(inVarLine.alts[0]) == 1:
+    if len(inVarLine.ref) in refConvert and len(inVarLine.alts[0]) == 1:
         outStr = (
             f"{inVarLine.chrom}:{inVarLine.pos}"
             f":{refConvert[inVarLine.ref]}>"
