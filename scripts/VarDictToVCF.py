@@ -241,12 +241,12 @@ def main():
                      Type="Integer",
                      description="Number of Ns at this position")
     myHeader.addLine(lineType="FORMAT",
-                     label="AFC",
+                     label="FC",
                      number="A",
                      Type="Integer",
                      description="The number of reads for each allele that are forward mapping")
     myHeader.addLine(lineType="FORMAT",
-                     label="ARC",
+                     label="RC",
                      number="A",
                      Type="Integer",
                      description="The number of reads for each allele that are reverse mapping")
