@@ -187,4 +187,6 @@ ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.png", sep="
        width = 200, 
        height=50*ceiling(length(levels(depth$Target)) / 4), 
        units="mm", 
-       device = "png")
+       device = "png", 
+       limitsize=FALSE
+       )
