@@ -48,7 +48,8 @@ blastAlignment = namedtuple(
     "blastAlignment",
     [
         "alnNum",
-        "ID",
+        "taxID",
+        "chrom",
         "start",
         "end",
         "score"
@@ -59,12 +60,13 @@ blastAlignment = namedtuple(
 def extractBlastData(inRecord):
     alignments = []
     myAlnNum = 0
-    for aln in inRecord.alignments:
+    for i, aln in enumerate(inRecord.alignments):
         for hsp in aln.hsps:
             alignments.append(
                 blastAlignment(
                     myAlnNum,
-                    aln.title,
+                    inRecord.descriptions[i].items[0].taxid, 
+                    inRecord.descriptions[i].items[0].title,
                     hsp.sbjct_start,
                     hsp.sbjct_end,
                     hsp.expect
@@ -87,12 +89,12 @@ def extractBlastData(inRecord):
             if len(tiedAlignments) > 1:
                 # Figure out which alignments are tied for max value
                 # check for type of tie
-                taxIDs = {x.ID.split()[1].split('|')[0] for x in tiedAlignments}
+                taxIDs = {x.taxID for x in tiedAlignments}
                 if len(taxIDs) == 1:
                     # within species tie; possible pseudogene
-                    det["t0"] = int(tiedAlignments[0].ID.split()[1].split('|')[0])
+                    det["t0"] = int(tiedAlignments[0].taxID)
                     for aln in range(len(tiedAlignments)):
-                        det[f"c{aln + 1}"] = tiedAlignments[aln].ID.split()[1].split('|')[1]
+                        det[f"c{aln + 1}"] = tiedAlignments[aln].chrom
                         det[f"p{aln + 1}"] = min(tiedAlignments[aln].start, tiedAlignments[aln].end)
                         det[f"l{aln + 1}"] = abs(tiedAlignments[aln].start - tiedAlignments[aln].end)
                     det["am"] = 2
@@ -101,16 +103,16 @@ def extractBlastData(inRecord):
                     # between species tie; ambiguous.  
                     det["t0"] = -1
                     for aln in range(len(tiedAlignments)):
-                        det[f"t{aln + 1}"] = int(tiedAlignments[aln].ID.split()[1].split('|')[0])
-                        det[f"c{aln + 1}"] = tiedAlignments[aln].ID.split()[1].split('|')[1]
+                        det[f"t{aln + 1}"] = int(tiedAlignments[aln].taxID)
+                        det[f"c{aln + 1}"] = tiedAlignments[aln].chrom
                         det[f"p{aln + 1}"] = min(tiedAlignments[aln].start, tiedAlignments[aln].end)
                         det[f"l{aln + 1}"] = abs(tiedAlignments[aln].start - tiedAlignments[aln].end)
                     det["am"] = 3
                     det["MaxAln"] = len(tiedAlignments)
             else:
                 # Only one best alignment
-                det["t0"] = int(tiedAlignments[0].ID.split()[1].split('|')[0])
-                det["c1"] = tiedAlignments[0].ID.split()[1].split('|')[1]
+                det["t0"] = int(tiedAlignments[0].taxID)
+                det["c1"] = tiedAlignments[0].chrom
                 det["p1"] = min(tiedAlignments[0].start, tiedAlignments[0].end)
                 det["l1"] = abs(tiedAlignments[0].start - tiedAlignments[0].end)
                 det["am"] = 0

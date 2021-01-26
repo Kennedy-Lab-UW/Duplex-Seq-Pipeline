@@ -197,7 +197,7 @@ where GENOME.fa is the input fasta file with the genome, TAXID is the
 NCBI taxonomy ID for the species associated with the genome, and 
 GENOME_taxID.fa is the output labeled genome.  
 
- 2. Sub-database Creation: 
+ 1. Sub-database Creation: 
 
 Create the database using:
 
@@ -206,15 +206,18 @@ makeblastdb \
 -dbtype nucl \  
 -title GENOME \  
 -out GENOME_db \  
--in GENOME_taxID.fa  
+-in GENOME.fa \  
+-taxid TAXID  
 ```
 
-After this, create a .nal file for this database following this template:
+TaxIDs can be found using the NCBI taxonomy website 
+(https://www.ncbi.nlm.nih.gov/taxonomy).  
+
+After this, create a .nal file using:
 
 ```
-#GENOME.nal 
-TITLE GENOME
-DBLIST GENOME_db
+blastdb_aliastool -dblist "GENOME_db" \  
+-dbtype nucl -out GENOME_db -title "GENOME"
 ```
 
 The blastDbSetup.sh script can be used to automate these steps.  It can 
@@ -224,16 +227,15 @@ be run with:
 bash /path/to/pipeline/setupBlastDb/blastDbSetup.sh GENOME.fa TAXON_ID
 ```
 
- 3. Full database creation:
+ 2. Full database creation:
 
 Once you've created all your sub-databases (e.g. GENOME1, GENOME2, 
 GENOME3, ..., GENOME_N), create a .nal file to represent the full 
-database following this template:
+database using:
 
 ```
-#contaminantDb.nal 
-TITLE contaminantDb
-DBLIST GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db
+blastdb_aliastool -dblist "GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db" \  
+-dbtype nucl -out contaminant_db -title "Contaminant Database"
 ```
 
 If, at a later time, you need to change your contaminant database, you 
