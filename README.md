@@ -181,21 +181,7 @@ in the same version (e.g. if your alignment genome uses UCSC chromosome
 names, your genome in the database cannot use NCBI chromosome names, but 
 must also use UCSC chromosome names)**.  
 
-Database setup consists of three steps:
-
- 1. Genome labeling:
-
-Label each record in the genome with the NCBI taxon ID for the species the 
-genome is associated with.  TaxIDs can be found using the NCBI taxonomy 
-website (https://www.ncbi.nlm.nih.gov/taxonomy).  This is done by running:
-
-```
-python3 AddTaxonID.py GENOME.fa TAXID GENOME_taxID.fa
-```
-
-where GENOME.fa is the input fasta file with the genome, TAXID is the 
-NCBI taxonomy ID for the species associated with the genome, and 
-GENOME_taxID.fa is the output labeled genome.  
+Database setup consists of two steps:
 
  1. Sub-database Creation: 
 
@@ -210,6 +196,8 @@ makeblastdb \
 -taxid TAXID  
 ```
 
+where GENOME.fa is the input fasta file with the genome, and TAXID is the 
+NCBI taxonomy ID for the species associated with the genome.
 TaxIDs can be found using the NCBI taxonomy website 
 (https://www.ncbi.nlm.nih.gov/taxonomy).  
 
