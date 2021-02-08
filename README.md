@@ -39,7 +39,7 @@ A group of reads that shares the same tag sequence.
 This pipeline is known to work with the following minimum versions of the follow required programs:
 
 * Python3.6+
-* Snakemake=5.5.\*
+* Snakemake=5.25.0
 * Pandas
 * Miniconda/Anaconda=4.7.\*
 * A GATK3.8.1 .jar file
