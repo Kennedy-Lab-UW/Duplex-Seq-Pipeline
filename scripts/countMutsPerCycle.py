@@ -181,7 +181,7 @@ def is_indel(inVariant):
         return False
 
 def extractVariant(inVarLine):
-    if len(inVarLine.ref) in refConvert and len(inVarLine.alts[0]) == 1:
+    if inVarLine.ref in refConvert and len(inVarLine.alts[0]) == 1:
         outStr = (
             f"{inVarLine.chrom}:{inVarLine.pos}"
             f":{refConvert[inVarLine.ref]}>"

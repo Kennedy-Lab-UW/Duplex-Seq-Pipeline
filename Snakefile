@@ -812,7 +812,7 @@ rule BLAST:
         samtools fasta Intermediate/postBlast/{wildcards.sample}_dcs.preBlast.mutated.bam | \
         blastn -task blastn \
         -db {params.db} \
-        -outfmt 5 \
+        -outfmt 16 \
         -max_hsps 2 \
         -max_target_seqs 2 \
         -num_threads {threads} \
