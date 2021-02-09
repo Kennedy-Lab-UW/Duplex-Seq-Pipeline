@@ -181,11 +181,11 @@ myPlot = myPlot +
     axis.title.y.right = element_text(color='red'), 
     axis.text.x = element_text(angle=90)
   ) + 
-  facet_wrap(. ~ Target, scales = "free_x", ncol = min(length(myBed$Name), 4))
+  facet_wrap(. ~ Target, scales = "free", ncol = min(length(myBed$Name), 1))
 ggsave(filename = paste("Stats/plots/", inSampName, ".targetCoverage.png", sep=""), 
        plot=myPlot, 
        width = 200, 
-       height=50*ceiling(length(levels(depth$Target)) / 4), 
+       height=50*length(levels(depth$Target)), 
        units="mm", 
        device = "png", 
        limitsize=FALSE
