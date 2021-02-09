@@ -8,6 +8,13 @@ set -u
 snakeDir=$(pwd)
 maxCores="${1}"
 
+#Sanity check on the value of maxCores
+if (( $maxCores < 1 )); then 
+    echo "maxCores reflects the maximum number of cores that may be used by the pipeline."
+    echo "maxCores must be an integer >= 1; ${maxCores} < 1" 
+    exit 1
+fi
+
 # Setup test case
 echo "Creating test config file"
 echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,runSSCS,recovery"> test/testConfig.csv
