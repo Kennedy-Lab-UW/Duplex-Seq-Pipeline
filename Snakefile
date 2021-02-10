@@ -1900,7 +1900,7 @@ rule compileReport:
         """
         cd {wildcards.runPath}/Stats
         jupyter nbconvert --to notebook --execute --inplace {wildcards.sample}.report.ipynb
-        jupyter nbconvert --to html {wildcards.sample}.report.ipynb --no-input --stdout > ../Final/{wildcards.sample}.report.html
+        jupyter nbconvert --template classic --to html {wildcards.sample}.report.ipynb --no-input --stdout > ../Final/{wildcards.sample}.report.html
         cd ../../
         """
 
