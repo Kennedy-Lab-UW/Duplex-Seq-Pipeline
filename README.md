@@ -45,7 +45,7 @@ the following required programs:
 * Python3.6+
 * Snakemake=5.25.0
 * Pandas
-* Miniconda/Anaconda=4.7.\*
+* Miniconda=4.7.\*
 * bwa=0.7.17.* (for genome setup)
 * ncbi-blast=>2.6.0 (installed separately, for contaminant database setup)
 * mamba>=0.5.1 (needed for environment setup; install through conda)
@@ -361,7 +361,7 @@ well as a file directory structure for each sample.  The summary files are:
 | summaryMutsByCycle.pdf | A pdf file containing non-SNP mutations per cycle for all samples.  |  
 
 
-This directory structure looks like this:
+This directory structure after a run looks like this:
 
 ```bash
 .
@@ -493,7 +493,7 @@ File descriptions are as follows:
 | SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.blast.xml | BLAST xml output | Always |  
 | SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.preBlast.mutated.bam | DCS with potential non-SNP variants that were submitted to BLAST. | Always |  
 | SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.preBlast.unmutated.bam | DCS reads without non-SNP variants.   | Always |  
-| SAMP_DIR | logs | Directory containing log files for this sample.   | Always |  
+| SAMP_DIR | logs | Directory containing log files for this sample.  Log files are currently empty, but will be filled later.   | Always |  
 | SAMP_DIR | Stats | Directory containing statistics files | Always |  
 | SAMP_DIR/Stats | data | Directory containing statistics data files.   | Always |  
 | SAMP_DIR/Stats/data | SAMPLE_cmStats.txt | Statistics from the Consensus Maker | Always |  

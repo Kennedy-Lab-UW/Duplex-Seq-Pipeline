@@ -112,23 +112,32 @@ simple majority.</p>
 <p>A group of reads that shares the same tag sequence.</p>
 <h2>
 <a id="user-content-2-dependencies" class="anchor" href="#2-dependencies" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>2: Dependencies:</h2>
-<p>This pipeline is known to work with the following minimum versions of
-the follow required programs:</p>
+<p>This pipeline is known to work with the following versions of
+the following required programs:</p>
 <ul>
 <li>Python3.6+</li>
-<li>Snakemake&gt;=5.25.0</li>
+<li>Snakemake=5.25.0</li>
 <li>Pandas</li>
-<li>Miniconda/Anaconda=4.7.*</li>
+<li>Miniconda=4.7.*</li>
 <li>bwa=0.7.17.* (for genome setup)</li>
 <li>ncbi-blast=&gt;2.6.0 (installed separately, for contaminant database setup)</li>
 <li>mamba&gt;=0.5.1 (needed for environment setup; install through conda)</li>
 <li>wget (on macOS, install using homebrew; present by default on linux)</li>
 </ul>
 <p>Once Python3.6 is installed, snakemake and pandas can be installed using
-pip3 or using whatever package manager you're using.  Blast can be
-downloaded in any of several ways, including some package managers
-(Ubuntu: sudo apt-get install ncbi-blast+).  It can also be installed
-using conda if desired.</p>
+pip3 or using whatever package manager you're using.  While other versions of
+snakemake may work (though definately no earlier that 5.25.0), there may be
+some issues with using versions later than 5.25.0; those may be resolved by
+restarting the pipeline when it crashes.  Blast can be downloaded in any of
+several ways, including some package managers (Ubuntu: sudo apt-get install
+ncbi-blast+).  It can also be installed using conda if desired.</p>
+<p>The recommended install method and order is:</p>
+<ol>
+<li>Install Miniconda</li>
+<li>Use conda to install Python3 and Mamba</li>
+<li>Use Mamba to install Snakemake, bwa, blast, and pandas, invoking both the
+bioconda and conda-forge channels.</li>
+</ol>
 <h2>
 <a id="user-content-3-setup" class="anchor" href="#3-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>3: Setup:</h2>
 <p>Find the location where you want the pipeline to be located and clone the
@@ -221,19 +230,8 @@ starting list is:</p>
 in the same version (e.g. if your alignment genome uses UCSC chromosome
 names, your genome in the database cannot use NCBI chromosome names, but
 must also use UCSC chromosome names)</strong>.</p>
-<p>Database setup consists of three steps:</p>
+<p>Database setup consists of two steps:</p>
 <ol>
-<li>Genome labeling:</li>
-</ol>
-<p>Label each record in the genome with the NCBI taxon ID for the species the
-genome is associated with.  TaxIDs can be found using the NCBI taxonomy
-website (<a href="https://www.ncbi.nlm.nih.gov/taxonomy" rel="nofollow">https://www.ncbi.nlm.nih.gov/taxonomy</a>).  This is done by running:</p>
-<pre><code>python3 AddTaxonID.py GENOME.fa TAXID GENOME_taxID.fa
-</code></pre>
-<p>where GENOME.fa is the input fasta file with the genome, TAXID is the
-NCBI taxonomy ID for the species associated with the genome, and
-GENOME_taxID.fa is the output labeled genome.</p>
-<ol start="2">
 <li>Sub-database Creation:</li>
 </ol>
 <p>Create the database using:</p>
@@ -241,26 +239,29 @@ GENOME_taxID.fa is the output labeled genome.</p>
 -dbtype nucl \  
 -title GENOME \  
 -out GENOME_db \  
--in GENOME_taxID.fa  
+-in GENOME.fa \  
+-taxid TAXID  
 </code></pre>
-<p>After this, create a .nal file for this database following this template:</p>
-<pre><code>#GENOME.nal 
-TITLE GENOME
-DBLIST GENOME_db
+<p>where GENOME.fa is the input fasta file with the genome, and TAXID is the
+NCBI taxonomy ID for the species associated with the genome.
+TaxIDs can be found using the NCBI taxonomy website
+(<a href="https://www.ncbi.nlm.nih.gov/taxonomy" rel="nofollow">https://www.ncbi.nlm.nih.gov/taxonomy</a>).</p>
+<p>After this, create a .nal file using:</p>
+<pre><code>blastdb_aliastool -dblist "GENOME_db" \  
+-dbtype nucl -out GENOME_db -title "GENOME"
 </code></pre>
 <p>The blastDbSetup.sh script can be used to automate these steps.  It can
 be run with:</p>
 <pre><code>bash /path/to/pipeline/setupBlastDb/blastDbSetup.sh GENOME.fa TAXON_ID
 </code></pre>
-<ol start="3">
+<ol start="2">
 <li>Full database creation:</li>
 </ol>
 <p>Once you've created all your sub-databases (e.g. GENOME1, GENOME2,
 GENOME3, ..., GENOME_N), create a .nal file to represent the full
-database following this template:</p>
-<pre><code>#contaminantDb.nal 
-TITLE contaminantDb
-DBLIST GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db
+database using:</p>
+<pre><code>blastdb_aliastool -dblist "GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db" \  
+-dbtype nucl -out contaminant_db -title "Contaminant Database"
 </code></pre>
 <p>If, at a later time, you need to change your contaminant database, you
 then only need to rebuild the modified portion, and then update this
@@ -284,7 +285,11 @@ and will ignore any other columns provided.</p>
 <h2>
 <a id="user-content-7-configuration-file-creation" class="anchor" href="#7-configuration-file-creation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>7: Configuration file creation:</h2>
 <p>Use the ConfigTemplate to create a new file with the appropriate headers.
-For each row, fill in the information about a particular sample:</p>
+For each row, fill in the information about a particular sample.  Note that in
+most cases, "path" refers to an absolute path, with the exception of "in1" and
+"in2", where you just need the name of the input file.  The "blast_db" option
+is the path to the appropriate .nal or .nhr file, minus the .nal or .nhr
+extension, but can also be specified as "none" to skip BLAST filtering.</p>
 <table>
 <thead>
 <tr>
@@ -336,12 +341,12 @@ For each row, fill in the information about a particular sample:</p>
 </tr>
 <tr>
 <td>blast_db</td>
-<td>Required</td>
-<td>The blast database to use for contaminant filtering; must include your target genome.</td>
+<td>NONE</td>
+<td>The blast database to use for contaminant filtering; must include your target genome, if used.</td>
 </tr>
 <tr>
 <td>targetTaxonId</td>
-<td>Required</td>
+<td>9606</td>
 <td>The taxon ID of the species you are expecting to be present in the sample.</td>
 </tr>
 <tr>
@@ -407,7 +412,7 @@ For each row, fill in the information about a particular sample:</p>
 <tr>
 <td>adapterSeq</td>
 <td>"ANNNNNNNNAGATCGGAAGAG"</td>
-<td>The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Used by cutadapt for adapter clipping</td>
+<td>The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Alternatively, a fasta file with all possible UMI-adapter conbinations.  Used by cutadapt for adapter clipping.</td>
 </tr>
 <tr>
 <td>clipBegin</td>
@@ -443,6 +448,11 @@ For each row, fill in the information about a particular sample:</p>
 <td>recovery</td>
 <td>"noRecovery.sh"</td>
 <td>The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.</td>
+</tr>
+<tr>
+<td>cluster_dist</td>
+<td>10</td>
+<td>How close together variants have to be to be considered 'clustered'</td>
 </tr>
 <tr>
 <td>cm_outputs</td>
@@ -549,7 +559,7 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 </tbody>
 </table>
-<p>This directory structure looks like this:</p>
+<p>This directory structure after a run looks like this:</p>
 <div class="highlight highlight-source-shell"><pre><span class="pl-c1">.</span>
 └──SAMP_DIR
     ├── Final
@@ -897,7 +907,7 @@ well as a file directory structure for each sample.  The summary files are:</p>
 <tr>
 <td>SAMP_DIR</td>
 <td>logs</td>
-<td>Directory containing log files for this sample.</td>
+<td>Directory containing log files for this sample.  Log files are currently empty, but will be filled later.</td>
 <td>Always</td>
 </tr>
 <tr>
