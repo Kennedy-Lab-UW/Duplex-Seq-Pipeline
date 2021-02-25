@@ -164,12 +164,6 @@ def main():
         dcsReads = float(dcsFlagstats[0].split()[0])
         mappedDcs = float(dcsFlagstats[4].split()[0])
 
-        rawTarget = open(f"{baseDir}/Stats/data/{runID}_onTargetCount.txt", 'r').readlines()
-        if int(rawTarget[1].split()[0]) == 0:
-            rawOnTarget=0
-        else:
-            rawOnTarget=int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0])
-
         print("Processing Tagstats")
         # get tagstats numbers
         tagstatsFile = open(f"{baseDir}/Stats/data/{runID}.tagstats.txt", 'r')
@@ -193,7 +187,7 @@ def main():
         if int(rawTarget[1].split()[0]) == 0:
             rawOnTarget=0
         else:
-            rawOnTarget=f"{round(int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0]),4)}%"
+            rawOnTarget=f"{round(int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0]),4) * 100}%"
 
         # read depth file:
         print("Processing Depth")
