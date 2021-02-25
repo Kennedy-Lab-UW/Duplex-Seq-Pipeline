@@ -597,7 +597,7 @@ rule getOnTarget_cs:
         rglb = get_rglb
     input:
         inBam = "{runPath}/{sample}.{sampType}.prevar.temp.bam",
-        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai"
+        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai",
         inBed = get_target_bed
     output:
         outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
@@ -1650,13 +1650,14 @@ import numpy as np
 5. [Family Size Plots](#Family-Size-Plots:)
 6. [Read Statistics](#Read-Statistics:)
 7. [Alignment Statistics](#Alignment-Statistics:)
-8. [Consensus Making Ratios](#Consensus-Making-Ratios:)
-9. [BLAST Statistics](#BLAST-Statistics:)
-10. [Insert Size Graph](#Insert-size-graph:)
-11. [Depth per Target](#Depth-per-Target:)
-12. [Muts per Cycle](#Muts-per-Cycle:)
-13. [Countmuts output](#Countmuts-output:)
-14. [Depth Summary](#Depth-Summary:)
+8. [On Target Statistics](#On-Target-Statistics:)
+9. [Consensus Making Ratios](#Consensus-Making-Ratios:)
+10. [BLAST Statistics](#BLAST-Statistics:)
+11. [Insert Size Graph](#Insert-size-graph:)
+12. [Depth per Target](#Depth-per-Target:)
+13. [Muts per Cycle](#Muts-per-Cycle:)
+14. [Countmuts output](#Countmuts-output:)
+15. [Depth Summary](#Depth-Summary:)
 """
             ))
         # Glossary
