@@ -431,6 +431,8 @@ This directory structure after a run looks like this:
         │   ├── SAMPLE.sscs.endClip.metrics.txt
         │   ├── SAMPLE.sscs.overlapClip.metrics.txt
         │   ├── SAMPLE_onTargetCount.txt
+        │   ├── SAMPLE.sscs_onTargetCount.txt
+        │   ├── SAMPLE.dcs_onTargetCount.txt
         │   ├── SAMPLE.tagstats.txt
         │   └── SAMPLE.temp.sort.flagstats.txt
         ├── SAMPLE.report.ipynb
@@ -515,6 +517,8 @@ File descriptions are as follows:
 | SAMP_DIR/Stats/data | SAMPLE.sscs.endClip.metrics.txt | Statistics on fixed end clipping in SSCS | runSscs=True |  
 | SAMP_DIR/Stats/data | SAMPLE.sscs.overlapClip.metrics.txt | Statistics on overlap clipping in SSCS | runSscs=True |  
 | SAMP_DIR/Stats/data | SAMPLE_onTargetCount.txt | Raw on target statistics | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs_onTargetCount.txt | SSCS on target statistics | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs_onTargetCount.txt | DCS on target statistics | Always |  
 | SAMP_DIR/Stats/data | SAMPLE.tagstats.txt |  Family size data (in text form)  | Always |  
 | SAMP_DIR/Stats/data | SAMPLE.temp.sort.flagstats.txt | Statistics on initial read counts | Always |  
 | SAMP_DIR/Stats | SAMPLE.report.ipynb | iPython notebook for the HTML report | Always |  
