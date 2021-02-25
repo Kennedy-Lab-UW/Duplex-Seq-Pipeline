@@ -308,6 +308,8 @@ def getReportInput(wildcards):
     # Raw read stats files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.sscs_onTargetCount.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs_onTargetCount.txt')
     #'Consensus Maker Stats File
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.tagstats.txt')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_cmStats.txt')
@@ -580,6 +582,34 @@ rule getOnTarget:
         samtools index ../{output.outBam}
         echo "$(samtools view -c -L {input.inBed} ../{output.outBam}) reads on target" > ../{output.outOnTarget}
         echo "$(samtools view -c ../{output.outBam}) total reads" >> ../{output.outOnTarget}
+        cd ../
+        """
+
+# Calculate # on target raw reads based on outAln1 and outAln2 from makeConsensus
+rule getOnTarget_cs:
+    params:
+        basePath = sys.path[0],
+        sample = get_sample,
+        runPath = get_baseDir,
+        rgpu = get_rgpu,
+        rgpl = get_rgpl,
+        rgsm = get_rgsm,
+        rglb = get_rglb
+    input:
+        inBam = "{runPath}/{sample}.{sampType}.prevar.temp.bam",
+        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai"
+        inBed = get_target_bed
+    output:
+        outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
+    conda:
+       "envs/DS_env_full.yaml"
+    threads: min(max(int(config["maxCores"]/2), 1),4)
+    shell:
+        """
+        set -x
+        cd {params.runPath}
+        echo "$(samtools view -c -L {input.inBed} ../{input.inBam}) reads on target" > ../{output.outOnTarget}
+        echo "$(samtools view -c ../{input.inBam}) total reads" >> ../{output.outOnTarget}
         cd ../
         """
 
@@ -1702,6 +1732,8 @@ import numpy as np
         sscsFlagstats = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt", 'r').readlines()
         dcsFlagstats = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt", 'r').readlines()
         rawTarget = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_onTargetCount.txt", 'r').readlines()
+        sscsTarget = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}.sscs_onTargetCount.txt", 'r').readlines()
+        dcsTarget = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}.dcs_onTargetCount.txt", 'r').readlines()
         # Alignment Statistics:
         rawReads = int(rawFlagstats[0].split()[0])
         sscsReads=int(sscsFlagstats[0].split()[0])
@@ -1712,6 +1744,14 @@ import numpy as np
             rawOnTarget=0
         else:
             rawOnTarget=int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0])
+        if int(sscsTarget[1].split()[0]) == 0:
+            sscsOnTarget=0
+        else:
+            sscsOnTarget=int(sscsTarget[0].split()[0])/int(sscsTarget[1].split()[0])
+        if int(dcsTarget[1].split()[0]) == 0:
+            dcsOnTarget=0
+        else:
+            dcsOnTarget=int(dcsTarget[0].split()[0])/int(dcsTarget[1].split()[0])
         if sscsReads == 0:
             sscsMapped=0
             raw_sscs=0
@@ -1740,9 +1780,16 @@ import numpy as np
             f"  \n"
             f"| | |  \n"
             f"| --- | --- |  \n"
-            f"| Raw on target | {round(rawOnTarget,4)*100}% |  \n"
             f"| SSCS Mapped | {round(sscsMapped, 4)*100}% |  \n"
             f"| DCS Mapped | {round(dcsMapped, 4)*100}% |  \n"
+            f"##On Target Statistics:  \n"
+            f"[Top](#Duplex-Sequencing-Summary)  \n"
+            f"  \n"
+            f"| | |  \n"
+            f"| --- | --- |  \n"
+            f"| Raw on target | {round(rawOnTarget,4)*100}% |  \n"
+            f"| SSCS on target | {round(sscsOnTarget,4)*100}% |  \n"
+            f"| DCS on target | {round(dcsOnTarget,4)*100}% |  \n"
             f"##Consensus Making Ratios:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             f"  \n"

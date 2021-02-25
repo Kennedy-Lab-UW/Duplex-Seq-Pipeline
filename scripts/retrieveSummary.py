@@ -180,7 +180,6 @@ def main():
                 peakProportion = float(line.split()[2])
             maxSize = line.split()[0]
         tagstatsFile.close()
-        sscsOnTarget = "NA"
 
         # read raw on target file
         rawTarget = open(f"{baseDir}/Stats/data/{runID}_onTargetCount.txt", 'r').readlines()
@@ -188,6 +187,19 @@ def main():
             rawOnTarget=0
         else:
             rawOnTarget=f"{round(int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0]),4) * 100}%"
+
+        # read sscs on target file
+        sscsTarget = open(f"{baseDir}/Stats/data/{runID}.sscs_onTargetCount.txt", 'r').readlines()
+        if int(sscsTarget[1].split()[0]) == 0:
+            sscsOnTarget=0
+        else:
+            sscsOnTarget=f"{round(int(sscsTarget[0].split()[0])/int(sscsTarget[1].split()[0]),4) * 100}%"
+        # read dcs on target file
+        dcsTarget = open(f"{baseDir}/Stats/data/{runID}.dcs_onTargetCount.txt", 'r').readlines()
+        if int(dcsTarget[1].split()[0]) == 0:
+            dcsOnTarget=0
+        else:
+            dcsOnTarget=f"{round(int(dcsTarget[0].split()[0])/int(dcsTarget[1].split()[0]),4) * 100}%"
 
         # read depth file:
         print("Processing Depth")
@@ -200,7 +212,6 @@ def main():
                 totDepth += int(line.split('\t')[3])
                 numLocs += 1
                 dcsMaxDepth = max(dcsMaxDepth, int(line.split('\t')[3]))
-        dcsOnTarget = "NA"
         if numLocs != 0:
             dcsMeanDepth = totDepth / numLocs
         else:
