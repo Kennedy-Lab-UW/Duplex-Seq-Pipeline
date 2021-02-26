@@ -47,7 +47,7 @@ the following required programs:
 * Pandas
 * Miniconda=4.7.\*
 * bwa=0.7.17.* (for genome setup)
-* ncbi-blast=>2.6.0 (installed separately, for contaminant database setup)
+* ncbi-blast=2.9.0 (installed separately, for contaminant database setup; note that while an older version can be used for database setup, a newer version CANNOT be used for database setup.)
 * mamba>=0.5.1 (needed for environment setup; install through conda)
 * wget (on macOS, install using homebrew; present by default on linux)
 
@@ -179,7 +179,7 @@ starting list is:
 **It is important that any genome you plan to use for alignment be included in this database, 
 in the same version (e.g. if your alignment genome uses UCSC chromosome 
 names, your genome in the database cannot use NCBI chromosome names, but 
-must also use UCSC chromosome names)**.  
+must also use UCSC chromosome names).  It should also be noted that, while older versions of BLAST can be used for database setup, setup should use at the latest version 2.9.0; databases constructed with later BLAST versions may not work with the pipeline**.  
 
 Database setup consists of two steps:
 

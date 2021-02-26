@@ -17,7 +17,7 @@ dependencies:
   - matplotlib
   - regex
   - biopython
-  - blast
+  - blast=2.9.0
   - bedtools
   - jupyterlab
   - nbconvert
