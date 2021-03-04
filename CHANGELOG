@@ -8,6 +8,7 @@ Bugfixes:
     explicitly convert report to HTML 
     Fix fastq output third line from consensusMaker
     Set quality of N bases from consensusMaker to 0
+    Fix crash on non-CATG bases in the reference genome
 
 New Features:
     Change recovery script format
@@ -28,6 +29,7 @@ New Features:
     Change countMutsPerCycle to allow filtering out mutatios based on VCF filters, and to allow for filtering of near indel variants.  Also allows for an "include" mode that includes only variants in the VCF file.  Modify Snakefile to allow this method to draw from the countmuts filtering parameters.
     Add adapter clipping 
     Add Mamba frontend to setup script.
+    Add readout for % on target SSCS and DCS to summaryCSV, report.
 
 Internal Changes: 
     Add gitignore rule to ignore user-generated recovery scripts
@@ -51,6 +53,7 @@ Internal Changes:
     Change r versioning in DS_env_full
     Add a bed buffering step pre-vardict
     Add bedtools to run environment
+    Change BLAST database setup and application
 
 v1.1.6: 
 January 12, 2021
