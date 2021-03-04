@@ -9,7 +9,7 @@ properties:
     type: string
     pattern: ^[^\s]*$
     description: Library Identifier
-  rbpl:
+  rgpl:
     type: string
     pattern: ^[^\s]*$
     description: Read Group Platform; usually Illumina

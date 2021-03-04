@@ -1042,8 +1042,8 @@ rule endClip:
         -m ../{output.clippingMetrics}
         cd ../
         else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
+        cp {input.inBam} {output.outBam}
+        cp {input.inBai} {output.outBai}
         fi
         """
 

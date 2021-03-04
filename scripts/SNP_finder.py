@@ -91,7 +91,6 @@ def main():
         label="SNP",
         description=f"This variant is probably a SNP, and not a somatic variant."
     )
-
     # Open SNP VCF
     outSNP = VariantFile(o.Fsnp, 'w', inVCF.header)
 
