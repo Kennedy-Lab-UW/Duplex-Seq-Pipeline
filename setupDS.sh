@@ -68,8 +68,9 @@ chmod a+x DS-unlock
 echo "Creating rerun prep script"
 echo "#!/bin/bash" > DS-clean
 echo "" >> DS-clean
-echo "# This is an unlock script for the DS snakemake pipeline" >> DS-clean
-echo "# Run this if the pipeline gets stuck locked for some reason" >> DS-clean
+echo "# This is a script to clean up a run directory prior to a rerun" >> DS-clean
+echo "# Run this if you need to rerun part or all of the pipeline after" >> DS-clean
+echo "# setting the 'rerun_type' column in your config file"
 echo "inConfig=\"\$1\"" >> DS-clean
 echo "snakemake -s ${snakeDir}/ResetSnakefile --use-conda -j 1 --config samples=\"\${inConfig}\"" >> DS-clean
 chmod a+x DS-clean
