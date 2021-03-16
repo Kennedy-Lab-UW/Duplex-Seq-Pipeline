@@ -82,7 +82,7 @@ def consensus_caller(input_reads, cutoff, tag, length_check):
 
         for read in input_reads[1:]:
             if len(read) != len(input_reads[0]):
-                raise Exception((f"Read lengths for tag {tag} used for "
+                raise Exception((f"Read lengths for UMI {tag} used for "
                                  f"calculating the SSCS are not uniform!!!"
                                  ))
 
@@ -144,7 +144,7 @@ def main():
         dest='tag_len',
         type=int,
         default=12,
-        help='Length in bases of the duplex tag sequence.[12]'
+        help='Length in bases of the duplex UMI sequence.[12]'
     )
     parser.add_argument(
         '--spacerlen',
@@ -152,7 +152,7 @@ def main():
         type=int,
         default=5,
         help=(f'Length in bases of the spacer sequence between'
-              f'duplex tag and the start of target DNA. [5]'
+              f'duplex UMI and the start of target DNA. [5]'
               )
     )
     parser.add_argument(
@@ -169,7 +169,7 @@ def main():
         "--tagstats",
         dest='tagstats',
         action="store_true",
-        help="Output tagstats file"
+        help="Output tagstats file containing information about family sizes"
     )
     parser.add_argument(
         '--minmem',
@@ -321,7 +321,7 @@ def main():
     tl = o.tag_len
     sl = o.spcr_len
     ll = o.loc_len
-    print("Parsing tags...")
+    print("Parsing UMIs...")
     alignedReadCount = 0
     if o.numAlignReads != 0:
         fAlign1 = gzip.open(f"{o.prefix}_aln_seq1.fq.gz", 'wt')
@@ -404,7 +404,7 @@ def main():
     if o.numAlignReads != 0:
         fAlign1.close()
         fAlign2.close()
-    print("Sorting reads on tag sequence...")
+    print("Sorting reads on UMI sequence...")
 
     pysam.sort("-n", "-@", f"{o.cores}", "-o", f"{o.prefix}.temp.sort.bam", f"{o.prefix}.temp.bam")
     # Sort by read name, which will be the tag sequence in this case.
@@ -457,7 +457,7 @@ def main():
                     or famSizes['ba:1'] != famSizes['ba:2']
             ):
                 raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
-                                f'not match for tag {tag}'
+                                f'not match for UMI {tag}'
                                 )
 
             for tag_subtype in seq_dict.keys():
