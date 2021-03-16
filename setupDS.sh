@@ -70,7 +70,7 @@ echo "#!/bin/bash" > DS-clean
 echo "" >> DS-clean
 echo "# This is a script to clean up a run directory prior to a rerun" >> DS-clean
 echo "# Run this if you need to rerun part or all of the pipeline after" >> DS-clean
-echo "# setting the 'rerun_type' column in your config file"
+echo "# setting the 'rerun_type' column in your config file" >> DS-clean
 echo "inConfig=\"\$1\"" >> DS-clean
 echo "snakemake -s ${snakeDir}/ResetSnakefile --use-conda -j 1 --config samples=\"\${inConfig}\"" >> DS-clean
 chmod a+x DS-clean
