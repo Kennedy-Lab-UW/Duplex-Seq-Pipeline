@@ -293,7 +293,7 @@ extension, but can also be specified as "none" to skip BLAST filtering.
 | cluster_dist     | 10                     | How close together variants have to be to be considered 'clustered' |  
 | cm_outputs       | "GB"                   | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
 | cm_sumTypes      | "GT"                   | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
-| cm_filters | "near_indel:clustered" | Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation. |  
+| cm_filters | "none" | Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation.  Available filters are: SNP, near_indel, clustered, masked, low_depth|  
 | runSSCS          | false                  | true or false; whether to do full analysis for SSCS data.  |  
 | rerun_type       | 0 (Required for rerun) | What type of rerun you want to do.  0 -> no rerun;  1 -> rerun variant caller;  2 -> rerun postBlastRecovery; 3 -> rerun BLAST and alignment;  4 -> rerun consensus maker.  |  
 

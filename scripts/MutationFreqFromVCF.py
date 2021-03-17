@@ -182,12 +182,12 @@ def getParams():
         "--apply_filters",
         action="store",
         dest="filters",
-        default=["near_indel","clustered"],
+        default=[],
         type=filter_list,
         help=(
             f"A colon-seperated list of filters to apply while counting, "
             f"such as 'low_depth:near_indel:clustered'.  "
-            f"[default = 'near_indel:clustered']")
+            f"[default = '']")
         )
     return(parser.parse_args())
 
