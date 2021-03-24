@@ -1148,7 +1148,6 @@ rule varDict:
         """
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        -UN \
         -f {params.vardict_f} -p \
         -G {input.inRef} \
         -nmfreq {params.vardict_nmfreq} \
@@ -1189,7 +1188,6 @@ rule varDict_Ns:
         """
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        -UN \
         -f {params.vardict_f} -p -K \
         -G {input.inRef} \
         -nmfreq {params.vardict_nmfreq} \
