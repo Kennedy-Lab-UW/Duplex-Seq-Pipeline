@@ -1642,7 +1642,7 @@ import numpy as np
 ##Table of Contents:
 [Top](#Duplex-Sequencing-Summary)  
 1. [Table of Contents](#Table-of-Contents:)
-2. [Glosary](#Glosary:)  
+2. [Glossary](#Glossary:)  
 3. [Parameters](#Parameters:)
 4. [Consensus Maker Statistics](#Consensus-Maker-Statistics:)
 5. [Family Size Plots](#Family-Size-Plots:)
@@ -1660,14 +1660,14 @@ import numpy as np
             ))
         # Glossary
         myCells.append(nbf.v4.new_markdown_cell(
-            f'##Glosary:  \n'
+            f'##Glossary:  \n'
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             f'###Read:  \n'
             f'A single DNA sequence; one half of an Illumina paired-end read.  \n'
             f'###Paired-end read:  \n'
             f'A pair of DNA sequences from the same molecule in the final library; analogous to cluster. Most sequencing facilities will refer to paired-end reads as reads.  \n'
             f'###Family:  \n'
-            f'A group of reads originating from the same end of the same strand of the same original (pre-library preperation) DNA molecule.  \n'
+            f'A group of reads originating from the same end of the same strand of the same original (pre-library preparation) DNA molecule.  \n'
             f'###SSCS:  \n'
             f'A consensus sequence made by comparing all reads in a family at each base, and selecting the most common base at each position for the consensus base if it matches the stringency requirement of what proportion of reads match the base.  \n'
             f'###DCS:  \n'
