@@ -1439,6 +1439,10 @@ rule PlotCoverage:
         {input.inBed} \
         {wildcards.sample}.{wildcards.sampType} \
         {wildcards.sampType}
+        python {params.basePath}/scripts/mergeSubImages.py \
+        {input.inBed} \
+        Stats/plots/{wildcards.sample}.{wildcards.sampType}
+        rm Stats/plots/{wildcards.sample}.{wildcards.sampType}.*.targetCoverage.png
         cd ..
         """
 
