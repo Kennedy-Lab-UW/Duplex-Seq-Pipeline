@@ -1295,9 +1295,11 @@ rule makeDepth:
 rule summaizeDepth:
     params:
         basePath = sys.path[0],
+        inMask = get_mask_bed
     input:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt",
-        inBed = get_target_bed
+        inBed = get_target_bed, 
+
     output:
         outDepthSummary = "{runPath}/Stats/data/{sample}.{sampType}.depth.summary.csv"
     conda:
@@ -1308,7 +1310,8 @@ rule summaizeDepth:
         python {params.basePath}/scripts/DepthSummaryCsv.py \
         -i Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.txt \
         -o Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.summary.csv \
-        -b {input.inBed}
+        -b {input.inBed} \
+        -m {params.inMask}
         cd ../
         """
 
@@ -1324,7 +1327,8 @@ rule makeCountMuts:
         sampName = get_rgsm,
         cm_outputs = get_cm_outputs,
         cm_sums = get_cm_sumTypes, 
-        cm_filters = get_cm_filters
+        cm_filters = get_cm_filters, 
+        inMask = get_mask_bed
     input:
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
@@ -1353,7 +1357,8 @@ rule makeCountMuts:
         -n {params.maxNs} \
         -u \
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.countmuts.csv \
-        --apply_filters {params.cm_filters}
+        --apply_filters {params.cm_filters} \
+        -m {params.inMask}
         cd ..
         """
 

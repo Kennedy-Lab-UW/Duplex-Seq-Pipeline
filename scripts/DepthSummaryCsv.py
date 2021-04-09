@@ -17,6 +17,12 @@ Depth_Line = namedtuple(
     ]
 )
 
+def str_or_nonetype(inStr):
+    if inStr.upper() == "NONE":
+        return(None)
+    else:
+        return(inStr)
+
 def main():
     # Parse in arguments
     parser = ArgumentParser()
@@ -40,6 +46,13 @@ def main():
         dest="bed_file",
         required=True,
         help="The bed file to compute stats on.")
+    parser.add_argument(
+        '-m', '--mask_bed',
+        action='store',
+        dest='mask_bed',
+        help='A bed file with the regions to be masked.',
+        type=str_or_nonetype,
+        default=None)
     parser.add_argument(
         '--blocks_only',
         action="store_true",
@@ -107,7 +120,13 @@ def main():
     else:
         logging.info(f"Using input from {o.in_file}")
         f_in = open(o.in_file,'r')
-
+    # Open masking bed:
+    if o.mask_bed is not None:
+        mask_bed = Bed_File(o.mask_bed)
+        mask_regions = [x for x in mask_bed]
+    else:
+        mask_bed = False
+        mask_regions = []
     # Iterate through the input file
     logging.info("Processing input file...")
     for i, lIn in enumerate(f_in):
@@ -117,9 +136,16 @@ def main():
             line = Depth_Line(*lIn.strip().split())
             # Iterate through the regions and blocks
             for regIter in bed_dict:
+                # check if the line is masked:
+                mask_line = False
+                for mask_iter in mask_regions:
+                    if mask_regions.contains(line.Chrom, int(line.Pos) - 1):
+                        mask_line = True
                 # Count the line in any region that contains it
-                if regIter["region"].contains(line.Chrom, int(line.Pos) - 1,
-                                              o.blocks):
+                if (not mask_line and 
+                        regIter["region"].contains(line.Chrom, 
+                                                   int(line.Pos) - 1,
+                                                   o.blocks)):
                     regIter["depths"].append(int(line.DP))
 
     # Close input file
@@ -136,6 +162,12 @@ def main():
 
     # Write header line
     logging.info("Writing output file...")
+    f_out.write(
+        f"##Input file: {o.in_file}\n"
+        f"##Target bed file: {o.bed_file}\n"
+        f"##Masking bed file: {o.mask_bed}\n")
+    if o.blocks:
+        f_out.write("##Blocks only\n")
     f_out.write(
         "#NAME,"
         "CHROM,"

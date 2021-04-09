@@ -8,6 +8,12 @@ import sys
 from VCF_Parser import *
 from BedParser import *
 
+def str_or_nonetype(inStr):
+    if inStr.upper() == "NONE":
+        return(None)
+    else:
+        return(inStr)
+
 def Wilson(positive,  total) :
     """Get Wilson confidence intervals for a position"""
     if total == 0:
@@ -62,6 +68,13 @@ def getParams():
         help='An input bed file. If None, processes all positions. [%(default)s]', 
         default=None
         )
+    parser.add_argument(
+        '-m', '--mask_bed',
+        action='store',
+        dest='mask_bed',
+        help='A bed file with the regions to be masked.',
+        type=str_or_nonetype,
+        default=None)
     parser.add_argument(
         '-f', '--inFasta', 
         action='store', 
@@ -205,6 +218,7 @@ class countMutsEngine:
                  inFasta, 
                  inVCF, 
                  inBed=None, 
+                 inMaskBed=None, 
                  unique=False, 
                  Nprop=1, 
                  minDepth=1, 
@@ -217,6 +231,7 @@ class countMutsEngine:
            "inBam":inBam, 
            "inFasta":inFasta, 
            "inBed":inBed, 
+           "inMaskBed":inMaskBed, 
            "unique": unique, 
            "Nprop": Nprop, 
            "minDepth": minDepth, 
@@ -241,6 +256,12 @@ class countMutsEngine:
             self.myBed = None
         else:
             self.myBed = Bed_File(inBed)
+        if inMaskBed is None:
+            self.maskBed = []
+        elif "masked" in bed_filters:
+            self.maskBed = [x for x in Bed_File(inMaskBed)]
+        else:
+            self.maskBed = []
         self.mutsCounts = {
             "Aseq": 0, 
             "A>T": 0,
@@ -414,19 +435,25 @@ class countMutsEngine:
                     max_depth=1000000, 
                     min_base_quality = 0
                     ):
-                
-                lnCnts = self.CountLine(
-                    pileup_column, 
-                    roundLevel,
-                    self.params["unique"],
-                    self.params["Nprop"], 
-                    self.params["minDepth"], 
-                    self.params["minC"], 
-                    self.params["maxC"]
-                    )
-                if lnCnts['RefBase'] in ("A","G","T","C"):
-                    self.mutsCounts["DP"] += lnCnts["DP"]
-                    self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                maskLine = False
+                for maskReg in self.maskBed:
+                    if maskReg.contains(
+                            pileup_column.reference_name, 
+                            pileup_column.reference_pos + 1):
+                        maskLine = True
+                if not maskLine:
+                    lnCnts = self.CountLine(
+                        pileup_column, 
+                        roundLevel,
+                        self.params["unique"],
+                        self.params["Nprop"], 
+                        self.params["minDepth"], 
+                        self.params["minC"], 
+                        self.params["maxC"]
+                        )
+                    if lnCnts['RefBase'] in ("A","G","T","C"):
+                        self.mutsCounts["DP"] += lnCnts["DP"]
+                        self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                 
             linesProcessed += 1
             if linesProcessed % 1000 == 0:
@@ -502,38 +529,45 @@ class countMutsEngine:
                         max_depth=1000000, 
                         min_base_quality = 0
                         ):
-                    myChrPos = f"{myRegion.chrom}:{pileup_column.reference_pos + 1}"
-                    lnCnts = self.CountLine(
-                        pileup_column, 
-                        roundLevel,
-                        self.params["unique"],
-                        self.params["Nprop"], 
-                        self.params["minDepth"], 
-                        self.params["minC"], 
-                        self.params["maxC"]
-                        )
-                    if lnCnts['RefBase'] in ("A","G","T","C"):
-                        self.geneCounts[regStr]["DP"] += lnCnts["DP"]
-                        self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                    
-                    
-                    if not (len(subregions) == 1
-                            and subregions[0].startPos == myRegion.startPos
-                            and subregions[0].endPos == myRegion.endPos):
+                    maskLine = False
+                    for maskReg in self.maskBed:
+                        if maskReg.contains(
+                                pileup_column.reference_name, 
+                                pileup_column.reference_pos + 1):
+                            maskLine = True
+                    if not maskLine:
+                        myChrPos = f"{myRegion.chrom}:{pileup_column.reference_pos + 1}"
+                        lnCnts = self.CountLine(
+                            pileup_column, 
+                            roundLevel,
+                            self.params["unique"],
+                            self.params["Nprop"], 
+                            self.params["minDepth"], 
+                            self.params["minC"], 
+                            self.params["maxC"]
+                            )
                         if lnCnts['RefBase'] in ("A","G","T","C"):
-                            for subregion in subregions:
-                                if subregion.contains(myRegion.chrom, pileup_column.reference_pos):
-                                    self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
-                                    self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                                
-                    if myChrPos not in linesCounted:
-                        linesCounted.append(myChrPos)
-                        if lnCnts['RefBase'] in ("A","G","T","C"):
-                            self.mutsCounts["DP"] += lnCnts["DP"]
-                            self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                        linesProcessed += 1
-                        if linesProcessed % 1000 == 0:
-                            logging.info(f"{linesProcessed} lines processed...")
+                            self.geneCounts[regStr]["DP"] += lnCnts["DP"]
+                            self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                        
+                        
+                        if not (len(subregions) == 1
+                                and subregions[0].startPos == myRegion.startPos
+                                and subregions[0].endPos == myRegion.endPos):
+                            if lnCnts['RefBase'] in ("A","G","T","C"):
+                                for subregion in subregions:
+                                    if subregion.contains(myRegion.chrom, pileup_column.reference_pos):
+                                        self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
+                                        self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                                    
+                        if myChrPos not in linesCounted:
+                            linesCounted.append(myChrPos)
+                            if lnCnts['RefBase'] in ("A","G","T","C"):
+                                self.mutsCounts["DP"] += lnCnts["DP"]
+                                self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                            linesProcessed += 1
+                            if linesProcessed % 1000 == 0:
+                                logging.info(f"{linesProcessed} lines processed...")
                     
     
     def CountLine(self, 
@@ -623,6 +657,7 @@ class countMutsEngine:
             f"##Input file: \t{self.params['inBam']}\n"
             f"##Input reference:\t{self.params['inFasta']}\n"
             f"##Input bed:\t{self.params['inBed']}\n"
+            f"##Mask bed:\t{self.params['inMaskBed']}\n"
             f"##Minimum Depth: \t{self.params['minDepth']}\n"
             f"##Clonality: \t{self.params['minC']}-{self.params['maxC']}\n"
             f"##Filters: \t{', '.join(self.params['bad_filters'])}\n"
@@ -941,6 +976,7 @@ def main():
         o.in_fasta, 
         o.inVCF,
         o.inBed, 
+        o.mask_bed, 
         o.unique,
         o.n_cutoff, 
         o.mindepth, 
