@@ -3,7 +3,7 @@ args = commandArgs(trailingOnly=TRUE)
 inBed = args[1]
 inSampName = args[2]
 inSampType = args[3]
-bedLinesPerImage = 4
+bedLinesPerImage = 1
 library(ggplot2)
 library(readr)
 print("Loaded libraries")
@@ -107,6 +107,13 @@ myBed$End <- myBed$End + 1
 myBed$Target = factor(myBed$Name, levels = c(myBed$Name,"Off_Target"))
 namesVect = c()
 
+# Get targets and compute maximum depth / Ns for each bed region
+
+multCalc = data.frame(Name = myBed$Name, 
+  maxDepth=replicate(length(row.names(myBed)),1), 
+  maxNs=replicate(length(row.names(myBed)),1)
+  )
+
 if (length(row.names(depth)) > 0) {
   for (dataIter in seq(1,length(row.names(depth)))) {
     myName = "Off_Target"
@@ -115,6 +122,8 @@ if (length(row.names(depth)) > 0) {
            depth$Pos[dataIter] >= myBed$Start[bedIter] && 
            depth$Pos[dataIter] < myBed$End[bedIter]) {
         myName = myBed$Name[bedIter]
+        multCalc$maxDepth[bedIter] = max(multCalc$maxDepth[bedIter], depth$DP[dataIter])
+        multCalc$maxNs[bedIter] = max(multCalc$maxNs[bedIter], depth$Ns[dataIter])
         break
       }
     }
@@ -123,21 +132,12 @@ if (length(row.names(depth)) > 0) {
   maxDP = max(depth$DP)
   depth$Nfract = depth$Ns / depth$DP * 100
   depth$Nfract[depth$DP == 0] = 0
-  depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
-  maxNs = ceiling(max(depth$Ns[depth$Target != "Off_Target"])/3)*3
-  
+  multCalc$maxNs = ceiling(multCalc$maxNs/3)*3
 } else {
-  maxDP = 1
-  maxNs = 1
   depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
 }
-if (maxNs == 0) {
-  maxNs = 1
-}
-if (maxDP == 0) {
-  maxDP = 1
-}
-multiplier = -maxDP / maxNs
+depth$Target = factor(namesVect, levels = c(myBed$Name,"Off_Target"))
+multCalc$multiplier = -multCalc$maxDepth / multCalc$maxNs
 
 print("processed depth and VCF")
 
@@ -178,6 +178,9 @@ for (pageIter in seq(1,numPages)) {
     minIndex <- (pageIter - 1) * bedLinesPerImage + 1
     maxIndex <- pageIter * bedLinesPerImage
   }
+  maxDP = max(multCalc$maxDepth[multCalc$Name %in% myBed$Name[minIndex:maxIndex]])
+  maxNs = max(multCalc$maxNs[multCalc$Name %in% myBed$Name[minIndex:maxIndex]])
+  multiplier = -maxDP / maxNs
   print(myBed$Name[minIndex:maxIndex])
   myPlot=ggplot(data = depth[depth$Target %in% myBed$Name[minIndex:maxIndex],]) + 
     geom_area(mapping = aes(x = Pos, y = DP), stat="identity") + 
@@ -187,22 +190,27 @@ for (pageIter in seq(1,numPages)) {
     myPlot = myPlot + 
       geom_point(data=myVCF[myVCF$Target %in% myBed$Name[minIndex:maxIndex],], mapping=aes(x=POS, y=maxDP), shape=1)
   }
+  if (pageIter == 1) {
+    myPlot = myPlot + labs(title = inSampName)
+  } else {
+    myPlot = myPlot + labs(title = "")
+  }
   myPlot = myPlot + 
     scale_y_continuous(
+      name="Depth", 
       breaks = c(0, maxDP), 
       sec.axis = sec_axis(~./multiplier, name="Ns (count)", breaks = c(0,maxNs/3, 2*maxNs/3,maxNs), labels = c(0,maxNs/3, 2*maxNs/3,maxNs))) + 
-    labs(title = inSampName) + 
-    theme_bw() + 
+    theme_bw() + xlab("Genome Position") + 
     theme(
       axis.title.y.right = element_text(color='red'), 
-      axis.text.x = element_text(angle=90)
+      axis.text.x = element_text(angle=90), 
     ) + 
-    facet_wrap(. ~ Target, scales = "free", ncol = 1)
+    facet_wrap(. ~ Target, scales = "free_x", ncol = 1)
 ggsave(filename = paste("Stats/plots/", inSampName, ".", pageIter, 
                         ".targetCoverage.png", sep=""), 
        plot = myPlot, 
        width = 200, 
-       height = 50*bedLinesPerImage, 
+       height = 60*bedLinesPerImage, 
        units="mm", 
        device = "png", 
        limitsize=FALSE

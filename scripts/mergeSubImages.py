@@ -9,7 +9,7 @@ def main():
     parser.add_argument("inPrefix")
     o = parser.parse_args()
 
-    bedLinesPerImage = 4
+    bedLinesPerImage = 1
 
     inBed = open(o.inBed, 'r')
     numLines = 0.
