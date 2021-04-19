@@ -258,7 +258,7 @@ class countMutsEngine:
             self.myBed = Bed_File(inBed)
         if inMaskBed is None:
             self.maskBed = []
-        elif "masked" in bed_filters:
+        elif "masked" in bad_filters:
             self.maskBed = [x for x in Bed_File(inMaskBed)]
         else:
             self.maskBed = []

@@ -139,7 +139,7 @@ def main():
                 # check if the line is masked:
                 mask_line = False
                 for mask_iter in mask_regions:
-                    if mask_regions.contains(line.Chrom, int(line.Pos) - 1):
+                    if mask_region.contains(line.Chrom, int(line.Pos) - 1):
                         mask_line = True
                 # Count the line in any region that contains it
                 if (not mask_line and 
