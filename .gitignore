@@ -3,9 +3,19 @@
 .snakemake/
 DS
 DS-dag
+DS-unlock
+DS-clean
 DS_progConfig.yaml
 .env_initialized
 scripts/__pycache__
+
+# Ignore user-generated recovery scripts #
+##########################################
+scripts/RecoveryScripts/*
+!scripts/RecoveryScripts/recoverAmbig.sh
+!scripts/RecoveryScripts/recoverAll.sh
+!scripts/RecoveryScripts/recoverWrongSpecies.sh
+!scripts/RecoveryScripts/NoRecovery.sh
 
 # Test files #
 ##############

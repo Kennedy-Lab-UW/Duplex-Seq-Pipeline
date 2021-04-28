@@ -7,6 +7,7 @@ standard error.
 """
 import sys
 
+
 def main():
     """main function"""
     iterations = 0
@@ -14,7 +15,7 @@ def main():
     reported_iteration = True
     sys.stderr.write("Monitoring Blast Output:\n")
     for line in sys.stdin:
-        if "<Iteration>" in line:
+        if "<query-id>" in line:
             iterations += 1
             reported_iteration = False
         if "<Hit>" in line:
@@ -23,6 +24,7 @@ def main():
             sys.stderr.write(f"{iterations} reads processed\n\t{hits} hits\n")
             reported_iteration = True
         sys.stdout.write(line)
+
 
 if __name__ == "__main__":
     main()

@@ -35,7 +35,7 @@ myPlot = ggplot(data=myInsertSizes, mapping = aes(x=insert_size)) +
   scale_y_continuous(sec.axis = sec_axis(~./max(myInsertSizes$All_Reads.fr_count), name="Cumulative Proportion")) + 
   theme_bw()
 ggsave(
-  filename=paste("Stats/plots/", inSampName, ".iSize_Histogram.tiff", sep=""), 
+  filename=paste("Stats/plots/", inSampName, ".iSize_Histogram.png", sep=""), 
   plot=myPlot, height=6, width=6, units="in", 
-  device = "tiff", compression="lzw"
+  device = "png"
   )

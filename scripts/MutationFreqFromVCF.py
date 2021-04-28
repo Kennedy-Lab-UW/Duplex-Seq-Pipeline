@@ -6,6 +6,13 @@ import pysam
 from math import sqrt
 import sys
 from VCF_Parser import *
+from BedParser import *
+
+def str_or_nonetype(inStr):
+    if inStr.upper() == "NONE":
+        return(None)
+    else:
+        return(inStr)
 
 def Wilson(positive,  total) :
     """Get Wilson confidence intervals for a position"""
@@ -29,107 +36,9 @@ def Wilson(positive,  total) :
 
     return  (phat, positiveCI , negativeCI )
 
-class Bed_File:
-    def __init__(self, inFile):
-        self.file = open(inFile, 'r')
-        
-    def __iter__(self):
-        return(self)
-    
-    def __next__(self):
-        myLine = self.file.readline()
-        if myLine != "":
-            return(Bed_Line(*myLine.strip().split()))
-        else:
-            raise StopIteration
-            
-class Bed_Line:
-    def __init__(self, 
-                 chrom, 
-                 startPos, 
-                 endPos, 
-                 name="",
-                 score="", 
-                 strand="+",
-                 thickStart="", 
-                 thickEnd="",
-                 itemRGB="", 
-                 blockCount="",
-                 blockSizes="", 
-                 blockStarts=""):
-        self.chrom = chrom
-        self.startPos = int(startPos)
-        self.endPos = int(endPos)
-        if name == "":
-            self.name = f"{self.chrom}:{self.startPos}-{self.endPos}"
-        else:
-            self.name = name
-        if score == '':
-            self.score = 0
-        else:
-            self.score = int(score)
-        if strand in (".","+","-"):
-            self.strand = strand
-        else:
-            self.strand = "."
-        if thickStart == "":
-            self.thickStart = self.startPos
-        else:
-            self.thickStart = int(thickStart)
-        if thickEnd == "":
-            self.thickEnd = self.endPos
-        else:
-            self.thickEnd = int(thickEnd)
-        if itemRGB == "":
-            self.itemRBG = None
-        else:
-            self.itemRGB = itemRGB
-        if blockCount == "":
-            self.blockCount = 1
-        else:
-            self.blockCount = int(blockCount)
-        if blockSizes == "":
-            self.blockSizes = [abs(self.endPos - self.startPos)]
-        else:
-            self.blockSizes = [int(x) for x in blockSizes.split(',')]
-        if blockStarts == "":
-            self.blockStarts = [0]
-        else:
-            self.blockStarts = [int(x) for x in blockStarts.split(',')]
-    
-    def samtoolsStr(self):
-        return(f"{self.chrom}:{self.startPos}:{self.endPos}")
-    
-    def get_subregions(self):
-        if self.strand == '+':
-            return([Bed_Line(
-                self.chrom, 
-                self.startPos + self.blockStarts[x], 
-                self.startPos + self.blockStarts[x] + self.blockSizes[x], 
-                f"{self.name}_block{x + 1}", 
-                self.score, 
-                self.strand
-                ) for x in range(len(self.blockStarts))])
-        elif self.strand == '-':
-            return([Bed_Line(
-                self.chrom, 
-                self.startPos + self.blockStarts[-x - 1], 
-                self.startPos + self.blockStarts[-x - 1] + self.blockSizes[-x - 1], 
-                f"{self.name}_block{x + 1}", 
-                self.score, 
-                self.strand
-                ) for x in range(len(self.blockStarts))])
-        
-    def contains(self, inChr, inPos):
-        if (
-                inChr == self.chrom
-                and inPos >= self.startPos
-                and inPos < self.endPos
-                ):
-            return(True)
-        else:
-            return(False)
-    
+def filter_list(inStr):
+    return inStr.split(':')
+
 def getParams():
     parser = ArgumentParser(
         description=(
@@ -159,6 +68,13 @@ def getParams():
         help='An input bed file. If None, processes all positions. [%(default)s]', 
         default=None
         )
+    parser.add_argument(
+        '-m', '--mask_bed',
+        action='store',
+        dest='mask_bed',
+        help='A bed file with the regions to be masked.',
+        type=str_or_nonetype,
+        default=None)
     parser.add_argument(
         '-f', '--inFasta', 
         action='store', 
@@ -275,7 +191,26 @@ def getParams():
             f"Valid options are %(choices)s [default = %(default)s].  "
             )
         )
+    parser.add_argument(
+        "--apply_filters",
+        action="store",
+        dest="filters",
+        default=[],
+        type=filter_list,
+        help=(
+            f"A colon-seperated list of filters to apply while counting, "
+            f"such as 'low_depth:near_indel:clustered'.  "
+            f"[default = '']")
+        )
     return(parser.parse_args())
+
+def check_filters(vcf_filters,bad_filters):
+    good_var = True
+    for vcf_filt in vcf_filters:
+        if vcf_filt in bad_filters:
+            good_var = False
+    return good_var
+
 
 class countMutsEngine:
     def __init__(self, 
@@ -283,22 +218,26 @@ class countMutsEngine:
                  inFasta, 
                  inVCF, 
                  inBed=None, 
+                 inMaskBed=None, 
                  unique=False, 
                  Nprop=1, 
                  minDepth=1, 
                  minC=0, 
                  maxC=1, 
-                 sampName=None
+                 sampName=None,
+                 bad_filters=["near_indel", "clustered"]
                  ):
         self.params = {
            "inBam":inBam, 
            "inFasta":inFasta, 
            "inBed":inBed, 
+           "inMaskBed":inMaskBed, 
            "unique": unique, 
            "Nprop": Nprop, 
            "minDepth": minDepth, 
            "minC": minC, 
-           "maxC": maxC
+           "maxC": maxC,
+           "bad_filters": bad_filters
            }
         if inBam is None:
             self.inBam = pysam.AlignmentFile("-", 'rb')
@@ -317,6 +256,12 @@ class countMutsEngine:
             self.myBed = None
         else:
             self.myBed = Bed_File(inBed)
+        if inMaskBed is None:
+            self.maskBed = []
+        elif "masked" in bad_filters:
+            self.maskBed = [x for x in Bed_File(inMaskBed)]
+        else:
+            self.maskBed = []
         self.mutsCounts = {
             "Aseq": 0, 
             "A>T": 0,
@@ -350,13 +295,14 @@ class countMutsEngine:
             clonality = int(varIter.samples[self.inVCF.samps[0]]['AD'].split(',')[1])/int(varIter.samples[self.inVCF.samps[0]]['DP'])
             if (
                     nProp <= self.params['Nprop'] 
-                    and varIter.filter in ([],["PASS"])
+                    and check_filters(varIter.filter, self.params["bad_filters"])
                     and clonality >= self.params["minC"] 
                     and clonality <= self.params["maxC"]
                     and int(varIter.samples[self.inVCF.samps[0]]['DP']) >= self.params['minDepth']
                     and 'N' not in varIter.alts[0]
                     ):
-                if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                if (len(varIter.ref) == 1 and len(varIter.alts[0]) == 1 
+                        and varIter.ref in ("C","A","T","G")):
                     if self.params["unique"]:
                         self.mutsCounts[f"{varIter.ref}>{varIter.alts[0]}"] += 1
                     else:
@@ -398,7 +344,8 @@ class countMutsEngine:
                         self.geneCounts[subreg]['str']
                         )
                     if subregion.contains(varIter.chrom, varIter.pos - 1):
-                        if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                        if (len(varIter.ref) == 1 and len(varIter.alts[0]) == 1 
+                                and varIter.ref in ("C","A","T","G")):
                             if self.params["unique"]:
                                 self.geneCounts[subregion.samtoolsStr()][f"{varIter.ref}>{varIter.alts[0]}"] += 1
                             else:
@@ -441,7 +388,8 @@ class countMutsEngine:
                         self.blockCounts[subreg]['str']
                         )
                     if subregion.contains(varIter.chrom, varIter.pos - 1):
-                        if len(varIter.ref) == 1 and len(varIter.alts[0]) == 1:
+                        if (len(varIter.ref) == 1 and len(varIter.alts[0]) == 1 
+                                and varIter.ref in ("C","A","T","G")):
                             if self.params["unique"]:
                                 self.blockCounts[subregion.samtoolsStr()][f"{varIter.ref}>{varIter.alts[0]}"] += 1
                             else:
@@ -487,18 +435,25 @@ class countMutsEngine:
                     max_depth=1000000, 
                     min_base_quality = 0
                     ):
-                
-                lnCnts = self.CountLine(
-                    pileup_column, 
-                    roundLevel,
-                    self.params["unique"],
-                    self.params["Nprop"], 
-                    self.params["minDepth"], 
-                    self.params["minC"], 
-                    self.params["maxC"]
-                    )
-                self.mutsCounts["DP"] += lnCnts["DP"]
-                self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                maskLine = False
+                for maskReg in self.maskBed:
+                    if maskReg.contains(
+                            pileup_column.reference_name, 
+                            pileup_column.reference_pos + 1):
+                        maskLine = True
+                if not maskLine:
+                    lnCnts = self.CountLine(
+                        pileup_column, 
+                        roundLevel,
+                        self.params["unique"],
+                        self.params["Nprop"], 
+                        self.params["minDepth"], 
+                        self.params["minC"], 
+                        self.params["maxC"]
+                        )
+                    if lnCnts['RefBase'] in ("A","G","T","C"):
+                        self.mutsCounts["DP"] += lnCnts["DP"]
+                        self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
                 
             linesProcessed += 1
             if linesProcessed % 1000 == 0:
@@ -574,37 +529,45 @@ class countMutsEngine:
                         max_depth=1000000, 
                         min_base_quality = 0
                         ):
-                    myChrPos = f"{myRegion.chrom}:{pileup_column.reference_pos + 1}"
-                    lnCnts = self.CountLine(
-                        pileup_column, 
-                        roundLevel,
-                        self.params["unique"],
-                        self.params["Nprop"], 
-                        self.params["minDepth"], 
-                        self.params["minC"], 
-                        self.params["maxC"]
-                        )
-                    self.geneCounts[regStr]["DP"] += lnCnts["DP"]
-                    self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                    
-                    
-                    if not ( 
-                            len(subregions) == 1
-                            and subregions[0].startPos == myRegion.startPos
-                            and subregions[0].endPos == myRegion.endPos
-                            ):
-                        for subregion in subregions:
-                            if subregion.contains(myRegion.chrom, pileup_column.reference_pos):
-                                self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
-                                self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                                
-                    if myChrPos not in linesCounted:
-                        linesCounted.append(myChrPos)
-                        self.mutsCounts["DP"] += lnCnts["DP"]
-                        self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
-                        linesProcessed += 1
-                        if linesProcessed % 1000 == 0:
-                            logging.info(f"{linesProcessed} lines processed...")
+                    maskLine = False
+                    for maskReg in self.maskBed:
+                        if maskReg.contains(
+                                pileup_column.reference_name, 
+                                pileup_column.reference_pos + 1):
+                            maskLine = True
+                    if not maskLine:
+                        myChrPos = f"{myRegion.chrom}:{pileup_column.reference_pos + 1}"
+                        lnCnts = self.CountLine(
+                            pileup_column, 
+                            roundLevel,
+                            self.params["unique"],
+                            self.params["Nprop"], 
+                            self.params["minDepth"], 
+                            self.params["minC"], 
+                            self.params["maxC"]
+                            )
+                        if lnCnts['RefBase'] in ("A","G","T","C"):
+                            self.geneCounts[regStr]["DP"] += lnCnts["DP"]
+                            self.geneCounts[regStr][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                        
+                        
+                        if not (len(subregions) == 1
+                                and subregions[0].startPos == myRegion.startPos
+                                and subregions[0].endPos == myRegion.endPos):
+                            if lnCnts['RefBase'] in ("A","G","T","C"):
+                                for subregion in subregions:
+                                    if subregion.contains(myRegion.chrom, pileup_column.reference_pos):
+                                        self.blockCounts[subregion.samtoolsStr()]["DP"] += lnCnts["DP"]
+                                        self.blockCounts[subregion.samtoolsStr()][f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                                    
+                        if myChrPos not in linesCounted:
+                            linesCounted.append(myChrPos)
+                            if lnCnts['RefBase'] in ("A","G","T","C"):
+                                self.mutsCounts["DP"] += lnCnts["DP"]
+                                self.mutsCounts[f"{lnCnts['RefBase']}seq"] += lnCnts["DP"]
+                            linesProcessed += 1
+                            if linesProcessed % 1000 == 0:
+                                logging.info(f"{linesProcessed} lines processed...")
                     
     
     def CountLine(self, 
@@ -677,7 +640,9 @@ class countMutsEngine:
                         }
         return(mutsDict)
     
-    def genSummary(self, Fout, overall_mode="GENES", gene_mode="FULL", outputs="GB"):
+    def genSummary(self, Fout, 
+                   overall_mode="GENES", gene_mode="FULL", 
+                   outputs="GB", fliters=["near_indel","clustered"]):
         logging.debug("Generating summary")
         logging.debug(self.mutsCounts)
         logging.debug(self.geneCounts)
@@ -692,8 +657,10 @@ class countMutsEngine:
             f"##Input file: \t{self.params['inBam']}\n"
             f"##Input reference:\t{self.params['inFasta']}\n"
             f"##Input bed:\t{self.params['inBed']}\n"
+            f"##Mask bed:\t{self.params['inMaskBed']}\n"
             f"##Minimum Depth: \t{self.params['minDepth']}\n"
             f"##Clonality: \t{self.params['minC']}-{self.params['maxC']}\n"
+            f"##Filters: \t{', '.join(self.params['bad_filters'])}\n"
             )
         if overall_mode == "GENES":
             outFile.write(
@@ -1009,12 +976,14 @@ def main():
         o.in_fasta, 
         o.inVCF,
         o.inBed, 
+        o.mask_bed, 
         o.unique,
         o.n_cutoff, 
         o.mindepth, 
         o.min_clonality, 
         o.max_clonality, 
-        o.sampName
+        o.sampName, 
+        o.filters
         )
     logging.info("Processing Lines")
     myEngine.processLines(

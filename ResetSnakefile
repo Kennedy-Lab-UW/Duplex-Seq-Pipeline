@@ -1,0 +1,283 @@
+import pandas as pd
+from snakemake.utils import validate
+import multiprocessing as mp
+import sys
+
+configfile: f"{sys.path[0]}/DS_progConfig.yaml"
+# ~ validate(config, "config.schema.yaml")
+
+samples = pd.read_csv(config["samples"]).set_index("sample", drop=False)
+validate(samples, f"{sys.path[0]}/DS_baseSchema.yaml")
+
+
+config["maxCores"] = min(config["maxCores"], mp.cpu_count())
+
+# ~ print(samples.index)
+
+#print(config["maxCores"])
+
+def get_sample(wildcards):
+    return samples.loc[wildcards.sample, "sample"]
+def get_rglb(wildcards):
+    return samples.loc[wildcards.sample, "rglb"]
+def get_rgpl(wildcards):
+    return samples.loc[wildcards.sample, "rgpl"]
+def get_rgpu(wildcards):
+    return samples.loc[wildcards.sample, "rgpu"]
+def get_rgsm(wildcards):
+    return samples.loc[wildcards.sample, "rgsm"]
+def get_reference(wildcards):
+    return samples.loc[wildcards.sample, "reference"]
+def get_target_bed(wildcards):
+    return samples.loc[wildcards.sample, "target_bed"]
+def get_blast_db(wildcards):
+    return samples.loc[wildcards.sample, "blast_db"]
+def get_blast_db_path(wildcards):
+    if samples.loc[wildcards.sample, "blast_db"].upper() == "NONE":
+        return "NONE.nal"
+    else:
+        return f'{samples.loc[wildcards.sample, "blast_db"]}.nal'
+def get_target_taxon(wildcards):
+    return samples.loc[wildcards.sample, "targetTaxonId"]
+def get_baseDir(wildcards):
+    return samples.loc[wildcards.sample, "baseDir"]
+def get_in1(wildcards):
+    return f'{samples.loc[wildcards.sample, "baseDir"]}/{samples.loc[wildcards.sample, "in1"]}'
+def get_in2(wildcards):
+    return f'{samples.loc[wildcards.sample, "baseDir"]}/{samples.loc[wildcards.sample, "in2"]}'
+def get_mqFilt(wildcards):
+    return samples.loc[wildcards.sample, "mqFilt"]
+def get_minMem(wildcards):
+    return samples.loc[wildcards.sample, "minMem"]
+def get_maxMem(wildcards):
+    return samples.loc[wildcards.sample, "maxMem"]
+def get_cutOff(wildcards):
+    return samples.loc[wildcards.sample, "cutOff"]
+def get_nCutOff(wildcards):
+    return samples.loc[wildcards.sample, "nCutOff"]
+def get_umiLen(wildcards):
+    return samples.loc[wildcards.sample, "umiLen"]
+def get_spacerLen(wildcards):
+    return samples.loc[wildcards.sample, "spacerLen"]
+def get_locLen(wildcards):
+    return samples.loc[wildcards.sample, "locLen"]
+def get_readLen(wildcards):
+    return samples.loc[wildcards.sample, "readLen"]
+def get_clipBegin(wildcards):
+    return samples.loc[wildcards.sample, "clipBegin"]
+def get_clipEnd(wildcards):
+    return samples.loc[wildcards.sample, "clipEnd"]
+def get_runSSCS(wildcards):
+    return samples.loc[wildcards.sample, "runSSCS"]
+def get_runDCS(wildcards):
+    return samples.loc[wildcards.sample, "runDCS"]
+def get_makeDCS(wildcards):
+    return samples.loc[wildcards.sample, "makeDCS"]
+def get_cm_outputs(wildcards):
+    return samples.loc[wildcards.sample, "cm_outputs"]
+def get_cm_sumTypes(wildcards):
+    return samples.loc[wildcards.sample, "cm_sumTypes"]
+def get_minClonal(wildcards):
+    return samples.loc[wildcards.sample, "minClonal"]
+def get_maxClonal(wildcards):
+    return samples.loc[wildcards.sample, "maxClonal"]
+def get_minDepth(wildcards):
+    return samples.loc[wildcards.sample, "minDepth"]
+def get_maxNs(wildcards):
+    return samples.loc[wildcards.sample, "maxNs"]
+def get_cleanup(wildcards):
+    return samples.loc[wildcards.sample, "cleanup"]
+def get_recovery(wildcards):
+    return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
+def get_rerun_type(wildcards):
+    return samples.loc[wildcards.sample, "rerun_type"]
+
+def getGeneralPrepedFiles():
+    outList = []
+    anyRerun = False
+    for sampIter in samples.index:
+        if samples.loc[sampIter, "rerun_type"] > 0:
+            outList.append(f".{sampIter}.preparedForRun")
+            anyRerun = True
+    if anyRerun:
+        outList.append(f"{config['samples']}.summary.csv.temp")
+        outList.append(f"{config['samples']}.summaryDepth.pdf.temp")
+        outList.append(f"{config['samples']}.summaryInsertSize.pdf.temp")
+        outList.append(f"{config['samples']}.summaryMutsByCycle.pdf.temp")
+        outList.append(f"{config['samples']}.summaryFamilySize.pdf.temp")
+    return outList
+
+def getSamplePrepedFiles(wildcards):
+    outList = []
+    sscsTest = get_runSSCS(wildcards)
+    blastTest = get_blast_db_path(wildcards) != "NONE.nal"
+    rerun_type = get_rerun_type(wildcards)
+    if rerun_type > 0:
+        # remove post blast recovery files
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/"
+            f"{wildcards.sample}.report.html.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.countmuts.csv.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.vcf.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.snps.vcf.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.mutated.bam.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.mutated.bam.bai.temp"
+        )
+        if sscsTest:
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.countmuts.csv.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.vcf.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.snps.vcf.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.mutated.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.mutated.bam.bai.temp"
+            )
+    if rerun_type > 1:
+        # remove post blast files
+        if blastTest:
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
+                f"{wildcards.sample}_dcs.postRecovery.ambig.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
+                f"{wildcards.sample}_dcs.postRecovery.ambig.bam.bai.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
+                f"{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
+                f"{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam.bai.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+                f"{wildcards.sample}.dcs.final.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+                f"{wildcards.sample}.dcs.final.bam.bai.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
+                f"FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
+                f"FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.bai.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
+                f"FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
+                f"FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai.temp"
+            )
+    if rerun_type > 2:
+        if blastTest:
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
+                f"{wildcards.sample}_dcs.blast.xml.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
+                f"{wildcards.sample}_dcs.preBlast.mutated.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
+                f"{wildcards.sample}_dcs.preBlast.unmutated.bam.temp"
+            )
+        else:
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+                f"{wildcards.sample}.dcs.final.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+                f"{wildcards.sample}.dcs.final.bam.bai.temp"
+            )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+            f"{wildcards.sample}.sscs.final.bam.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+            f"{wildcards.sample}.sscs.final.bam.bai.temp"
+        )
+    if rerun_type > 3:
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
+            f"{wildcards.sample}_read1_dcs.fq.gz.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
+            f"{wildcards.sample}_read2_dcs.fq.gz.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
+            f"{wildcards.sample}_read1_sscs.fq.gz.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
+            f"{wildcards.sample}_read2_sscs.fq.gz.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
+            f"{wildcards.sample}_aln_seq1.fq.gz.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
+            f"{wildcards.sample}_aln_seq2.fq.gz.temp"
+        )
+    return outList
+
+rule all:
+    input:
+        getGeneralPrepedFiles()
+    output:
+        temp(touch(".preparedForRun"))
+
+rule prepFile:
+    input:
+        "{file}"    
+    output:
+        temp("{file}.temp")
+    shell:
+        """
+        mv {input} {output}
+        """
+    
+rule prepSample:
+    input:
+        getSamplePrepedFiles
+    output:
+        temp(touch(".{sample}.preparedForRun"))

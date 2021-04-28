@@ -8,19 +8,23 @@ class iteratorWrapper:
         self.it = inIterator
         self.finalValue = finalValue
         self.endIter = False
+
     def __iter__(self):
-        return(self)
+        return self
+
     def __next__(self):
         try:
             temp = next(self.it)
         except StopIteration:
-            if self.endIter == False:
+            if self.endIter is False:
                 temp = self.finalValue
                 self.endIter = True
             else:
-                raise(StopIteration)
-        return(temp)
+                raise StopIteration
+        return temp
+
     next = __next__
+
 
 def checkPosition(line, matchingIds):
     bwaChr = line.reference_name
@@ -31,30 +35,30 @@ def checkPosition(line, matchingIds):
         blastChr = line.get_tag(f"c{xIter}")
         blastPos = line.get_tag(f"p{xIter}")
         if (
-                blastChr == bwaChr 
-                and (blastPos >= bwaPos - 2 * lineLen 
+                blastChr == bwaChr
+                and (blastPos >= bwaPos - 2 * lineLen
                      or blastPos <= bwaPos + 2 * lineLen
-                     )
-                ):
+        )
+        ):
             # Maps correctly
             matching.append(xIter)
     if len(matching) == 0:
-        return(False)
+        return (False)
     else:
-        return(True)
-    
+        return True
+
 
 def main():
     parser = ArgumentParser()
     parser.add_argument('outPrefix')
     parser.add_argument('taxID', type=int)
     o = parser.parse_args()
-    
+
     inBam = pysam.AlignmentFile("-", 'rb')
     outGoodBam = pysam.AlignmentFile("-", 'wb', template=inBam)
     outBadBam = pysam.AlignmentFile(f"{o.outPrefix}.wrongSpecies.bam", 'wb', template=inBam)
     outAmbigBam = pysam.AlignmentFile(f"{o.outPrefix}.ambig.bam", 'wb', template=inBam)
-    outTextID = open(f"{o.outPrefix}.speciesComp.txt" ,'w')
+    outTextID = open(f"{o.outPrefix}.speciesComp.txt", 'w')
     FinalValue = pysam.AlignedSegment()
     tmpTup = namedtuple("tmpTup", ['query_name'])
     try:
@@ -73,13 +77,13 @@ def main():
             addedTag = False
             for xIter in lineStorage:
                 if not xIter.has_tag("t0"):
-                    xIter.set_tag("t0",o.taxID, 'i')
+                    xIter.set_tag("t0", o.taxID, 'i')
                     xIter.set_tag("am", 5, 'i')
                     xIter.set_tag("YB", "False", 'Z')
                     addedTag = True
-                    
+
             tagVals = [x.get_tag("t0") for x in lineStorage]
-            tagSet=set(tagVals)
+            tagSet = set(tagVals)
             testSet = {o.taxID, -1}
             tagTest = tagSet - testSet
             if len(tagTest) == 0:
@@ -90,7 +94,7 @@ def main():
                     # blast indeterminate
                     altTaxID = -1
             elif len(tagTest) == 1:
-                if o.taxID in tagSet and addedTag == False:
+                if o.taxID in tagSet and addedTag is False:
                     # indeterminate
                     altTaxID = -1
                 else:
@@ -99,18 +103,18 @@ def main():
             else:
                 # multiple bad determinations
                 altTaxID = -1
-            
+
             # increment counter
-            
+
             for lIter in lineStorage:
-                lIter.set_tag("t0",altTaxID, 'i')
-            
+                lIter.set_tag("t0", altTaxID, 'i')
+
             # check altTaxID
             if altTaxID == o.taxID:
                 # correct species read pair
                 # process pseudogene checking
                 amVals = [x.get_tag("am") for x in lineStorage]
-                amSet=set(amVals)
+                amSet = set(amVals)
                 amTSet = {0, 5}
                 amTest = amSet - amTSet
                 if len(amTest) == 1:
@@ -129,10 +133,10 @@ def main():
                                 anyMatch = True
                         if not anyMatch:
                             for lIter in lineStorage:
-                                lIter.set_tag("t0",-1, 'i')
+                                lIter.set_tag("t0", -1, 'i')
                                 outBadBam.write(lIter)
                             altTaxID = -1
-                            
+
                         elif True in [len(matchingInds[x]) > 1 for x in matchingInds]:
                             # multiple correct species hit; mark ambiguous
                             for lIter in lineStorage:
@@ -155,14 +159,14 @@ def main():
                             else:
                                 for lIter in lineStorage:
                                     if lIter.get_tag('am') != 5:
-                                        lIter.set_tag("am", 1,'i')
+                                        lIter.set_tag("am", 1, 'i')
                                     outAmbigBam.write(lIter)
                     elif 2 in amTest:
                         for lIter in lineStorage:
                             outAmbigBam.write(lIter)
                     else:
                         for lIter in lineStorage:
-                            lIter.set_tag("t0",-1, 'i')
+                            lIter.set_tag("t0", -1, 'i')
                             outBadBam.write(lIter)
                 elif len(amTest) == 0:
                     testInd = [x for x in range(len(amVals)) if amVals[x] == 0]
@@ -199,7 +203,7 @@ def main():
                             else:
                                 for lIter in lineStorage:
                                     if lIter.get_tag('am') != 5:
-                                        lIter.set_tag("am", 1,'i')
+                                        lIter.set_tag("am", 1, 'i')
                                     outAmbigBam.write(lIter)
                 else:
                     for lIter in lineStorage:
@@ -207,18 +211,19 @@ def main():
             else:
                 for lIter in lineStorage:
                     outBadBam.write(lIter)
-            
+
             taxID_dict[altTaxID] += len(lineStorage)
-            
+
             firstLine = line
             lineStorage = [firstLine]
-    
+
     for tID in taxID_dict:
         outTextID.write(f"{tID}\t{taxID_dict[tID]}\n")
     inBam.close()
     outGoodBam.close()
     outBadBam.close()
     outTextID.close()
+
 
 if __name__ == "__main__":
     main()
