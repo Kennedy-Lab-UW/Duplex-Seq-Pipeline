@@ -89,8 +89,13 @@ def get_maxNs(wildcards):
     return samples.loc[wildcards.sample, "maxNs"]
 def get_cleanup(wildcards):
     return samples.loc[wildcards.sample, "cleanup"]
+def get_cluster_dist(wildcards):
+    return samples.loc[wildcards.sample, "cluster_dist"]
 def get_adapter_seq(wildcards):
-    return samples.loc[wildcards.sample, "adapterSeq"]
+    my_adapt_seq = samples.loc[wildcards.sample, "adapterSeq"]
+    if ".fasta" in my_adapt_seq:
+        return f"file:{my_adapt_seq}"
+    return my_adapt_seq
 def get_recovery(wildcards):
     return f'{sys.path[0]}/scripts/RecoveryScripts/{samples.loc[wildcards.sample, "recovery"]}'
 
@@ -303,6 +308,8 @@ def getReportInput(wildcards):
     # Raw read stats files
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.temp.sort.flagstats.txt')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_onTargetCount.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.sscs_onTargetCount.txt')
+    outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.dcs_onTargetCount.txt')
     #'Consensus Maker Stats File
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}.tagstats.txt')
     outArgs.append(f'{samples.loc[wildcards.sample, "baseDir"]}/Stats/data/{wildcards.sample}_cmStats.txt')
@@ -578,6 +585,34 @@ rule getOnTarget:
         cd ../
         """
 
+# Calculate # on target raw reads based on outAln1 and outAln2 from makeConsensus
+rule getOnTarget_cs:
+    params:
+        basePath = sys.path[0],
+        sample = get_sample,
+        runPath = get_baseDir,
+        rgpu = get_rgpu,
+        rgpl = get_rgpl,
+        rgsm = get_rgsm,
+        rglb = get_rglb
+    input:
+        inBam = "{runPath}/{sample}.{sampType}.prevar.temp.bam",
+        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai",
+        inBed = get_target_bed
+    output:
+        outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
+    conda:
+       "envs/DS_env_full.yaml"
+    threads: min(max(int(config["maxCores"]/2), 1),4)
+    shell:
+        """
+        set -x
+        cd {params.runPath}
+        echo "$(samtools view -c -L {input.inBed} ../{input.inBam}) reads on target" > ../{output.outOnTarget}
+        echo "$(samtools view -c ../{input.inBam}) total reads" >> ../{output.outOnTarget}
+        cd ../
+        """
+
 # Align SSCS and DCS to provided reference genome, and sort based on position
 rule alignReads:
     params:
@@ -807,7 +842,7 @@ rule BLAST:
         samtools fasta Intermediate/postBlast/{wildcards.sample}_dcs.preBlast.mutated.bam | \
         blastn -task blastn \
         -db {params.db} \
-        -outfmt 5 \
+        -outfmt 16 \
         -max_hsps 2 \
         -max_target_seqs 2 \
         -num_threads {threads} \
@@ -1007,8 +1042,8 @@ rule endClip:
         -m ../{output.clippingMetrics}
         cd ../
         else
-        ln -s {input.inBam} {output.outBam}
-        ln -s {input.inBai} {output.outBai}
+        cp {input.inBam} {output.outBam}
+        cp {input.inBai} {output.outBai}
         fi
         """
 
@@ -1075,6 +1110,8 @@ rule makeBufferedBed:
     output:
         outBed = temp("{runPath}/{sample}.vardictBed.bed"),
         temp_sizes = temp("{runPath}/{sample}.ref.genome"),
+    conda:
+        "envs/DS_env_full.yaml"
     shell:
         """
         cd {wildcards.runPath}
@@ -1111,7 +1148,6 @@ rule varDict:
         """
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        -UN \
         -f {params.vardict_f} -p \
         -G {input.inRef} \
         -nmfreq {params.vardict_nmfreq} \
@@ -1152,8 +1188,6 @@ rule varDict_Ns:
         """
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
-        -UN -P {params.clip5} \
-        -T $(( {params.readLength}-{params.umiLen}-{params.spacerLen}-{params.clip3} )) \
         -f {params.vardict_f} -p -K \
         -G {input.inRef} \
         -nmfreq {params.vardict_nmfreq} \
@@ -1172,7 +1206,8 @@ rule varDict2VCF:
         basePath = sys.path[0],
         sampName = get_rgsm, 
         minDepth = get_minDepth, 
-        snpLevel = get_snps_threshold
+        snpLevel = get_snps_threshold,
+        cluster_dist = get_cluster_dist
     input:
         inVarDict = "{runPath}/{sample}.{sampType}.varDict.txt", 
         inVarDict_Ns = "{runPath}/{sample}.{sampType}.varDict.Ns.txt", 
@@ -1186,7 +1221,7 @@ rule varDict2VCF:
     shell:
         """
         cd {wildcards.runPath}
-        python {params.basePath}/scripts/varDictToVCF.py \
+        python {params.basePath}/scripts/VarDictToVCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.varDict.txt \
         -n {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt \
         -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
@@ -1194,7 +1229,8 @@ rule varDict2VCF:
         -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         --samp_name {params.sampName} \
         --snp_threshold {params.snpLevel} \
-        -d {params.minDepth}
+        -d {params.minDepth} \
+        --cluster_dist {params.cluster_dist}
         cd ..
         """
 
@@ -1210,8 +1246,8 @@ rule maskVariants:
         "envs/DS_env_full.yaml"
     shell:
         """
-        cd {wildcards.runPath)
-        python Mask_VCF.py \
+        cd {wildcards.runPath}
+        python {params.basePath}/scripts/Mask_VCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
         -o {wildcards.sample}.{wildcards.sampType}.masked.vcf \
         -b {input.inMask}
@@ -1259,9 +1295,11 @@ rule makeDepth:
 rule summaizeDepth:
     params:
         basePath = sys.path[0],
+        inMask = get_mask_bed
     input:
         inDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt",
-        inBed = get_target_bed
+        inBed = get_target_bed, 
+
     output:
         outDepthSummary = "{runPath}/Stats/data/{sample}.{sampType}.depth.summary.csv"
     conda:
@@ -1272,7 +1310,8 @@ rule summaizeDepth:
         python {params.basePath}/scripts/DepthSummaryCsv.py \
         -i Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.txt \
         -o Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.summary.csv \
-        -b {input.inBed}
+        -b {input.inBed} \
+        -m {params.inMask}
         cd ../
         """
 
@@ -1288,7 +1327,8 @@ rule makeCountMuts:
         sampName = get_rgsm,
         cm_outputs = get_cm_outputs,
         cm_sums = get_cm_sumTypes, 
-        cm_filters = get_cm_filters
+        cm_filters = get_cm_filters, 
+        inMask = get_mask_bed
     input:
         inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf",
         inBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
@@ -1317,7 +1357,8 @@ rule makeCountMuts:
         -n {params.maxNs} \
         -u \
         -o Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.countmuts.csv \
-        --apply_filters {params.cm_filters}
+        --apply_filters {params.cm_filters} \
+        -m {params.inMask}
         cd ..
         """
 
@@ -1403,6 +1444,10 @@ rule PlotCoverage:
         {input.inBed} \
         {wildcards.sample}.{wildcards.sampType} \
         {wildcards.sampType}
+        python {params.basePath}/scripts/mergeSubImages.py \
+        {input.inBed} \
+        Stats/plots/{wildcards.sample}.{wildcards.sampType}
+        rm Stats/plots/{wildcards.sample}.{wildcards.sampType}.*.targetCoverage.png
         cd ..
         """
 
@@ -1438,7 +1483,7 @@ rule MutsPerCycle:
         --inVCF Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
         -o {wildcards.sample}.{wildcards.sampType} \
         -l {params.readLength} -b -t 0 -c --text_file \
-        --filter SNP --filter INDEL {params.filter_string}
+        --filter SNP --filter INCLUDE {params.filter_string}
         
         mv {wildcards.sample}.{wildcards.sampType}*.png Stats/plots/
         mv {wildcards.sample}.{wildcards.sampType}_MutsPerCycle.dat.csv Stats/data/
@@ -1606,31 +1651,32 @@ import numpy as np
 ##Table of Contents:
 [Top](#Duplex-Sequencing-Summary)  
 1. [Table of Contents](#Table-of-Contents:)
-2. [Glosary](#Glosary:)  
+2. [Glossary](#Glossary:)  
 3. [Parameters](#Parameters:)
 4. [Consensus Maker Statistics](#Consensus-Maker-Statistics:)
 5. [Family Size Plots](#Family-Size-Plots:)
 6. [Read Statistics](#Read-Statistics:)
 7. [Alignment Statistics](#Alignment-Statistics:)
-8. [Consensus Making Ratios](#Consensus-Making-Ratios:)
-9. [BLAST Statistics](#BLAST-Statistics:)
-10. [Insert Size Graph](#Insert-size-graph:)
-11. [Depth per Target](#Depth-per-Target:)
-12. [Muts per Cycle](#Muts-per-Cycle:)
-13. [Countmuts output](#Countmuts-output:)
-14. [Depth Summary](#Depth-Summary:)
+8. [On Target Statistics](#On-Target-Statistics:)
+9. [Consensus Making Ratios](#Consensus-Making-Ratios:)
+10. [BLAST Statistics](#BLAST-Statistics:)
+11. [Insert Size Graph](#Insert-size-graph:)
+12. [Depth per Target](#Depth-per-Target:)
+13. [Muts per Cycle](#Muts-per-Cycle:)
+14. [Countmuts output](#Countmuts-output:)
+15. [Depth Summary](#Depth-Summary:)
 """
             ))
         # Glossary
         myCells.append(nbf.v4.new_markdown_cell(
-            f'##Glosary:  \n'
+            f'##Glossary:  \n'
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             f'###Read:  \n'
             f'A single DNA sequence; one half of an Illumina paired-end read.  \n'
             f'###Paired-end read:  \n'
             f'A pair of DNA sequences from the same molecule in the final library; analogous to cluster. Most sequencing facilities will refer to paired-end reads as reads.  \n'
             f'###Family:  \n'
-            f'A group of reads originating from the same end of the same strand of the same original (pre-library preperation) DNA molecule.  \n'
+            f'A group of reads originating from the same end of the same strand of the same original (pre-library preparation) DNA molecule.  \n'
             f'###SSCS:  \n'
             f'A consensus sequence made by comparing all reads in a family at each base, and selecting the most common base at each position for the consensus base if it matches the stringency requirement of what proportion of reads match the base.  \n'
             f'###DCS:  \n'
@@ -1694,6 +1740,8 @@ import numpy as np
         sscsFlagstats = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_mem.sscs.sort.flagstats.txt", 'r').readlines()
         dcsFlagstats = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_mem.dcs.sort.flagstats.txt", 'r').readlines()
         rawTarget = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}_onTargetCount.txt", 'r').readlines()
+        sscsTarget = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}.sscs_onTargetCount.txt", 'r').readlines()
+        dcsTarget = open(f"{wildcards.runPath}/Stats/data/{wildcards.sample}.dcs_onTargetCount.txt", 'r').readlines()
         # Alignment Statistics:
         rawReads = int(rawFlagstats[0].split()[0])
         sscsReads=int(sscsFlagstats[0].split()[0])
@@ -1704,6 +1752,14 @@ import numpy as np
             rawOnTarget=0
         else:
             rawOnTarget=int(rawTarget[0].split()[0])/int(rawTarget[1].split()[0])
+        if int(sscsTarget[1].split()[0]) == 0:
+            sscsOnTarget=0
+        else:
+            sscsOnTarget=int(sscsTarget[0].split()[0])/int(sscsTarget[1].split()[0])
+        if int(dcsTarget[1].split()[0]) == 0:
+            dcsOnTarget=0
+        else:
+            dcsOnTarget=int(dcsTarget[0].split()[0])/int(dcsTarget[1].split()[0])
         if sscsReads == 0:
             sscsMapped=0
             raw_sscs=0
@@ -1732,9 +1788,16 @@ import numpy as np
             f"  \n"
             f"| | |  \n"
             f"| --- | --- |  \n"
-            f"| Raw on target | {round(rawOnTarget,4)*100}% |  \n"
             f"| SSCS Mapped | {round(sscsMapped, 4)*100}% |  \n"
             f"| DCS Mapped | {round(dcsMapped, 4)*100}% |  \n"
+            f"##On Target Statistics:  \n"
+            f"[Top](#Duplex-Sequencing-Summary)  \n"
+            f"  \n"
+            f"| | |  \n"
+            f"| --- | --- |  \n"
+            f"| Raw on target | {round(rawOnTarget,4)*100}% |  \n"
+            f"| SSCS on target | {round(sscsOnTarget,4)*100}% |  \n"
+            f"| DCS on target | {round(dcsOnTarget,4)*100}% |  \n"
             f"##Consensus Making Ratios:  \n"
             f"[Top](#Duplex-Sequencing-Summary)  \n"
             f"  \n"
@@ -1892,7 +1955,7 @@ rule compileReport:
         """
         cd {wildcards.runPath}/Stats
         jupyter nbconvert --to notebook --execute --inplace {wildcards.sample}.report.ipynb
-        jupyter nbconvert --to html {wildcards.sample}.report.ipynb --no-input --stdout > ../Final/{wildcards.sample}.report.html
+        jupyter nbconvert --template classic --to html {wildcards.sample}.report.ipynb --no-input --stdout > ../Final/{wildcards.sample}.report.html
         cd ../../
         """
 

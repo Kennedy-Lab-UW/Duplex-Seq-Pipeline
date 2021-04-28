@@ -8,15 +8,22 @@ set -u
 snakeDir=$(pwd)
 maxCores="${1}"
 
+#Sanity check on the value of maxCores
+if (( $maxCores < 1 )); then 
+    echo "maxCores reflects the maximum number of cores that may be used by the pipeline."
+    echo "maxCores must be an integer >= 1; ${maxCores} < 1" 
+    exit 1
+fi
+
 # Setup test case
 echo "Creating test config file"
-echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,runSSCS,recovery"> test/testConfig.csv
-echo "test1,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery.sh" >> test/testConfig.csv
-echo "test2,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverAmbig.sh" >> test/testConfig.csv
-echo "test3,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverWrongSpecies.sh" >> test/testConfig.csv
-echo "test4,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,recoverAll.sh" >> test/testConfig.csv
-echo "test5,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,FALSE,noRecovery.sh" >> test/testConfig.csv
-echo "test6,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,7,0,0,0.1,100,1,TRUE,noRecovery.sh" >> test/testConfig.csv
+echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,maskBed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,adapterSeq,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,recovery,cluster_dist,cm_outputs,cm_sumTypes,cm_filters,runSSCS,rerun_type" > test/testConfig.csv
+echo "test1,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test2,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverAmbig.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test3,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverWrongSpecies.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test4,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverAll.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test5,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,none,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test6,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,TRUE,0" >> test/testConfig.csv
 
 
 # Set up progConfig file
@@ -61,8 +68,9 @@ chmod a+x DS-unlock
 echo "Creating rerun prep script"
 echo "#!/bin/bash" > DS-clean
 echo "" >> DS-clean
-echo "# This is an unlock script for the DS snakemake pipeline" >> DS-clean
-echo "# Run this if the pipeline gets stuck locked for some reason" >> DS-clean
+echo "# This is a script to clean up a run directory prior to a rerun" >> DS-clean
+echo "# Run this if you need to rerun part or all of the pipeline after" >> DS-clean
+echo "# setting the 'rerun_type' column in your config file" >> DS-clean
 echo "inConfig=\"\$1\"" >> DS-clean
 echo "snakemake -s ${snakeDir}/ResetSnakefile --use-conda -j 1 --config samples=\"\${inConfig}\"" >> DS-clean
 chmod a+x DS-clean

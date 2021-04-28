@@ -1,7 +1,7 @@
 Duplex Sequencing Pipeline
 ======================
 
-Brendan Kohrn, March 30, 2020  
+Brendan Kohrn, April 26, 2021  
 Duplex Sequencing is copyright Scott Kennedy and Larwrence Loeb, 
 University of Washington, Seattle, WA, USA  
 
@@ -16,9 +16,11 @@ University of Washington, Seattle, WA, USA
 7. Configuration File creation
 8. Recovery script creation
 9. Running pipelines
-10. Output file description
-11. Testing the pipeline
-12. Full and partial reruns
+10. Output file descriptions
+11. Extra BAM tags:
+12. Testing the pipeline
+13. Full and partial reruns
+14. Unlocking following a power failure
 
 ## 1: Glossary
 
@@ -36,23 +38,33 @@ A construct created by comparing two SSCSs.
 A group of reads that shares the same tag sequence.
 
 ## 2: Dependencies:
-This pipeline is known to work with the following minimum versions of 
-the follow required programs:
+
+This pipeline is known to work with the following versions of 
+the following required programs:
 
 * Python3.6+
-* Snakemake>=5.25.0
+* Snakemake=5.25.0
 * Pandas
-* Miniconda/Anaconda=4.7.\*
+* Miniconda=4.7.\*
 * bwa=0.7.17.* (for genome setup)
-* ncbi-blast=>2.6.0 (installed separately, for contaminant database setup)
+* ncbi-blast=2.9.0 (installed separately, for contaminant database setup; note that while an older version can be used for database setup, a newer version CANNOT be used for database setup.)
 * mamba>=0.5.1 (needed for environment setup; install through conda)
 * wget (on macOS, install using homebrew; present by default on linux)
 
 Once Python3.6 is installed, snakemake and pandas can be installed using 
-pip3 or using whatever package manager you're using.  Blast can be 
-downloaded in any of several ways, including some package managers 
-(Ubuntu: sudo apt-get install ncbi-blast+).  It can also be installed 
-using conda if desired.  
+pip3 or using whatever package manager you're using.  While other versions of 
+snakemake may work (though definately no earlier that 5.25.0), there may be 
+some issues with using versions later than 5.25.0; those may be resolved by 
+restarting the pipeline when it crashes.  Blast can be downloaded in any of 
+several ways, including some package managers (Ubuntu: sudo apt-get install 
+ncbi-blast+).  It can also be installed using conda if desired.  
+
+The recommended install method and order is: 
+
+1. Install Miniconda
+2. Use conda to install Python3 and Mamba
+3. Use Mamba to install Snakemake, bwa, blast, and pandas, invoking both the 
+bioconda and conda-forge channels.  
 
 ## 3: Setup: 
 
@@ -167,25 +179,11 @@ starting list is:
 **It is important that any genome you plan to use for alignment be included in this database, 
 in the same version (e.g. if your alignment genome uses UCSC chromosome 
 names, your genome in the database cannot use NCBI chromosome names, but 
-must also use UCSC chromosome names)**.  
+must also use UCSC chromosome names).  It should also be noted that, while older versions of BLAST can be used for database setup, setup should use at the latest version 2.9.0; databases constructed with later BLAST versions may not work with the pipeline**.  
 
-Database setup consists of three steps:
+Database setup consists of two steps:
 
- 1. Genome labeling:
-
-Label each record in the genome with the NCBI taxon ID for the species the 
-genome is associated with.  TaxIDs can be found using the NCBI taxonomy 
-website (https://www.ncbi.nlm.nih.gov/taxonomy).  This is done by running:
-
-```
-python3 AddTaxonID.py GENOME.fa TAXID GENOME_taxID.fa
-```
-
-where GENOME.fa is the input fasta file with the genome, TAXID is the 
-NCBI taxonomy ID for the species associated with the genome, and 
-GENOME_taxID.fa is the output labeled genome.  
-
- 2. Sub-database Creation: 
+ 1. Sub-database Creation: 
 
 Create the database using:
 
@@ -194,15 +192,20 @@ makeblastdb \
 -dbtype nucl \  
 -title GENOME \  
 -out GENOME_db \  
--in GENOME_taxID.fa  
+-in GENOME.fa \  
+-taxid TAXID  
 ```
 
-After this, create a .nal file for this database following this template:
+where GENOME.fa is the input fasta file with the genome, and TAXID is the 
+NCBI taxonomy ID for the species associated with the genome.
+TaxIDs can be found using the NCBI taxonomy website 
+(https://www.ncbi.nlm.nih.gov/taxonomy).  
+
+After this, create a .nal file using:
 
 ```
-#GENOME.nal 
-TITLE GENOME
-DBLIST GENOME_db
+blastdb_aliastool -dblist "GENOME_db" \  
+-dbtype nucl -out GENOME_db -title "GENOME"
 ```
 
 The blastDbSetup.sh script can be used to automate these steps.  It can 
@@ -212,16 +215,15 @@ be run with:
 bash /path/to/pipeline/setupBlastDb/blastDbSetup.sh GENOME.fa TAXON_ID
 ```
 
- 3. Full database creation:
+ 2. Full database creation:
 
 Once you've created all your sub-databases (e.g. GENOME1, GENOME2, 
 GENOME3, ..., GENOME_N), create a .nal file to represent the full 
-database following this template:
+database using:
 
 ```
-#contaminantDb.nal 
-TITLE contaminantDb
-DBLIST GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db
+blastdb_aliastool -dblist "GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db" \  
+-dbtype nucl -out contaminant_db -title "Contaminant Database"
 ```
 
 If, at a later time, you need to change your contaminant database, you 
@@ -250,7 +252,11 @@ and will ignore any other columns provided.
 ## 7: Configuration file creation:
 
 Use the ConfigTemplate to create a new file with the appropriate headers. 
-For each row, fill in the information about a particular sample:
+For each row, fill in the information about a particular sample.  Note that in 
+most cases, "path" refers to an absolute path, with the exception of "in1" and 
+"in2", where you just need the name of the input file.  The "blast_db" option 
+is the path to the appropriate .nal or .nhr file, minus the .nal or .nhr 
+extension, but can also be specified as "none" to skip BLAST filtering.
 
 | Header           | Required or Default    | Information |
 | ---------------- | ---------------------- | ----------- |
@@ -261,9 +267,9 @@ For each row, fill in the information about a particular sample:
 | rgsm             | Required               | Read Group Sample |
 | reference        | Required               | The path to the prepared reference genome to use with this sample.  |
 | target_bed       | Required               | A bed file showing where the targets are for this particular sample |  
-| maskBed | NONE | A bed file to use for masking variants. |  
-| blast_db         | Required               | The blast database to use for contaminant filtering; must include your target genome.  |
-| targetTaxonId    | Required               | The taxon ID of the species you are expecting to be present in the sample.  |
+| maskBed | NONE   | A bed file to use for masking variants. |  
+| blast_db         | NONE               | The blast database to use for contaminant filtering; must include your target genome, if used.  |
+| targetTaxonId    | 9606               | The taxon ID of the species you are expecting to be present in the sample.  |
 | baseDir          | Required               | The directory the input files are in, and where the output files will be created. |
 | in1              | Required               | The read1 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.  |
 | in2              | Required               | The read2 fastq (or fastq.gz, or fq.gz, or fq) file for this sample. Note that this is just the name of the file, and not the full path.   |
@@ -276,7 +282,7 @@ For each row, fill in the information about a particular sample:
 | spacerLen        | 1                      | The length of the spacer sequence in this sample |
 | locLen           | 10                     | The localization length to use for this sample |
 | readLen          | 101                    | The length of a read for this sample |  
-| adapterSeq       | "ANNNNNNNNAGATCGGAAGAG" | The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Used by cutadapt for adapter clipping |  
+| adapterSeq       | "ANNNNNNNNAGATCGGAAGAG" | The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Alternatively, a fasta file with all possible UMI-adapter conbinations.  Used by cutadapt for adapter clipping. |  
 | clipBegin        | 7                      | How many bases to clip off the 5' end of the read |
 | clipEnd          | 0                      | How many bases to clip off the 3' end of the read |
 | minClonal        | 0                      | The minimum clonality to use for count_muts generation |
@@ -284,9 +290,10 @@ For each row, fill in the information about a particular sample:
 | minDepth         | 100                    | The minimum depth to use for count_muts generation |
 | maxNs            | 1                      | The maximum proportion of N bases to use for count_muts generation |
 | recovery         | "noRecovery.sh"        | The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.  |  
+| cluster_dist     | 10                     | How close together variants have to be to be considered 'clustered' |  
 | cm_outputs       | "GB"                   | Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -> output GENE sections for each bed line; B -> output 'BLOCK' sections for each block in the bed line (if present); 'N' -> Only output overall frequencies.  Overrides all other options. |  
 | cm_sumTypes      | "GT"                   | How to calculate OVERALL and GENE blocks for countmuts output. The first character controls summing for overall: G -> OVERALL = sum(GENEs); B -> OVERALL = sum(BLOCKs).  In sum(GENEs) mode, this will ignore BLOCKs for the purposes of calculating OVERALL.  The second character controls summing for each GENE: T -> GENE = Whole gene, ignoring BLOCKs; B -> GENE = sum(BLOCKs).  |
-| cm_filters | "near_indel:clustered" | Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation. |  
+| cm_filters | "none" | Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation.  Available filters are: SNP, near_indel, clustered, masked, low_depth.  |  
 | runSSCS          | false                  | true or false; whether to do full analysis for SSCS data.  |  
 | rerun_type       | 0 (Required for rerun) | What type of rerun you want to do.  0 -> no rerun;  1 -> rerun variant caller;  2 -> rerun postBlastRecovery; 3 -> rerun BLAST and alignment;  4 -> rerun consensus maker.  |  
 
@@ -354,15 +361,10 @@ well as a file directory structure for each sample.  The summary files are:
 | summaryMutsByCycle.pdf | A pdf file containing non-SNP mutations per cycle for all samples.  |  
 
 
-This directory structure looks like this:
+This directory structure after a run looks like this:
 
 ```bash
 .
-├── CONFIG_FILE.summary.csv
-├── CONFIG_FILE.summaryDepth.pdf
-├── CONFIG_FILE.summaryFamilySize.pdf
-├── CONFIG_FILE.summaryInsertSize.pdf
-├── CONFIG_FILE.summaryMutsByCycle.pdf
 └──SAMP_DIR
     ├── Final
     │   ├── dcs
@@ -429,6 +431,8 @@ This directory structure looks like this:
         │   ├── SAMPLE.sscs.endClip.metrics.txt
         │   ├── SAMPLE.sscs.overlapClip.metrics.txt
         │   ├── SAMPLE_onTargetCount.txt
+        │   ├── SAMPLE.sscs_onTargetCount.txt
+        │   ├── SAMPLE.dcs_onTargetCount.txt
         │   ├── SAMPLE.tagstats.txt
         │   └── SAMPLE.temp.sort.flagstats.txt
         ├── SAMPLE.report.ipynb
@@ -449,11 +453,6 @@ File descriptions are as follows:
 
 | Directory | File name | Description | When Generated |  
 | --------- | ------------ | -------------- | -------- |  
-| . | CONFIG_FILE.summary.csv | Summary CSV file with basic statistics for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryDepth.pdf | Summary PDF file with depth plots for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryFamilySize.pdf | Summary PDF file with family size for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryInsertSize.pdf | Summary PDF file with insert size for all samples processed with this CONFIG_FILE. |  
-| . | CONFIG_FILE.summaryMutsByCycle.pdf | Summary PDF file with muts per cycle plots for all samples processed with this CONFIG_FILE. |  
 | SAMP_DIR | SAMPLE_seq1.fastq.gz | Input read 1 file | Input |  
 | SAMP_DIR | SAMPLE_seq2.fastq.gz | Input read 2 file | Input |  
 | SAMP_DIR | Final | Directory containing final bam and vcf files | Always |  
@@ -496,7 +495,7 @@ File descriptions are as follows:
 | SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.blast.xml | BLAST xml output | Always |  
 | SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.preBlast.mutated.bam | DCS with potential non-SNP variants that were submitted to BLAST. | Always |  
 | SAMP_DIR/Intermediate/postBlast | SAMPLE_dcs.preBlast.unmutated.bam | DCS reads without non-SNP variants.   | Always |  
-| SAMP_DIR | logs | Directory containing log files for this sample.   | Always |  
+| SAMP_DIR | logs | Directory containing log files for this sample.  Log files are currently empty, but will be filled later.   | Always |  
 | SAMP_DIR | Stats | Directory containing statistics files | Always |  
 | SAMP_DIR/Stats | data | Directory containing statistics data files.   | Always |  
 | SAMP_DIR/Stats/data | SAMPLE_cmStats.txt | Statistics from the Consensus Maker | Always |  
@@ -518,6 +517,8 @@ File descriptions are as follows:
 | SAMP_DIR/Stats/data | SAMPLE.sscs.endClip.metrics.txt | Statistics on fixed end clipping in SSCS | runSscs=True |  
 | SAMP_DIR/Stats/data | SAMPLE.sscs.overlapClip.metrics.txt | Statistics on overlap clipping in SSCS | runSscs=True |  
 | SAMP_DIR/Stats/data | SAMPLE_onTargetCount.txt | Raw on target statistics | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.sscs_onTargetCount.txt | SSCS on target statistics | Always |  
+| SAMP_DIR/Stats/data | SAMPLE.dcs_onTargetCount.txt | DCS on target statistics | Always |  
 | SAMP_DIR/Stats/data | SAMPLE.tagstats.txt |  Family size data (in text form)  | Always |  
 | SAMP_DIR/Stats/data | SAMPLE.temp.sort.flagstats.txt | Statistics on initial read counts | Always |  
 | SAMP_DIR/Stats | SAMPLE.report.ipynb | iPython notebook for the HTML report | Always |  
@@ -533,7 +534,39 @@ File descriptions are as follows:
 | SAMP_DIR/Stats/plots | SAMPLE_fam_size_relation.png |  Plot of relationship between a:b and b:a families  | Always |  
 | SAMP_DIR/Stats/plots | SAMPLE_family_size.png | Plot of family size distribution | Always |  
 
-## 11: Testing the pipeline
+## 11: Extra BAM tags:
+
+| Tag | Type | Meaning |  
+| --- | ---- | ------- |  
+| XF | String | In SSCS, represents family size.  In DCS, colon-deliniated list of family sizes for ab1:ba2 or ba1:ab2. |  
+| t0 | Integer | With BLAST, TaxID of the species the read matched most closely. Note that negative numbers have special meanings; see below. |  
+| t# | Integer | With BLAST, TaxID of the #th BLAST hit. |  
+| c# | String | With BLAST, the chromosome of the #th BLAST hit. |  
+| p# | Integer | With BLAST, the position of the #th BLAST hit. |  
+| l# | Integer | With BLAST, the length of the #th BLAST hit. |  
+| YB | String | With BLAST, True if a read was BLASTed. |  
+| am | integer | With BLAST, the ambiguity code for the read. See below for meanings. |  
+
+Some negative values for tag t0 have special meanings: 
+
+| t0 value | meaning |  
+| -------- | ------- |  
+| -1 | Between species BLAST tie. |  
+| -3 | No BLAST results. |  
+| -4 | Read was submitted to BLAST, but BLAST did not attempt alignment. |  
+
+Ambiguity codes have manings: 
+
+| am value | meaning |  
+| 0 | BLAST has 1 best match, matches bwa position |  
+| 1 | BLAST has 1 best match, does not match bwa position |  
+| 2 | BLAST has 2+ best matches, correct species |  
+| 3 | BLAST has 2+ best matches, at least one incorrect species |  
+| 4 | BLAST did not attempt alignment, or no blast matches |  
+| 5 | Not BLASTed |  
+
+
+## 12: Testing the pipeline
 
 The newly setup pipeline can be tested using provided data and files 
 located in the 'test' directory. To test the pipeline, change into the 
@@ -546,7 +579,7 @@ A final set of output reports can be found in the testData/Final directory and
 be compared to the reports in the ExpectedReports directory located in 
 the parent test directory.
 
-## 12: Full and partial reruns
+## 13: Full and partial reruns
 
 Sometimes it may be necessary to rerun all or part of the pipeline for 
 various reasons.  In order to facilitate this, we have provided a script 
@@ -571,7 +604,7 @@ To finish preparing for and executing a rerun, run:
 /path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv
 ```
 
-## 13: Unlocking following a power failure
+## 14: Unlocking following a power failure
 In the event that pipeline execution is interrupted (such as by a power failure), 
 the directory can be unlocked in order to restart using the provided 
 DS-unlock script:

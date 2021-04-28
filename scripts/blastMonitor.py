@@ -15,7 +15,7 @@ def main():
     reported_iteration = True
     sys.stderr.write("Monitoring Blast Output:\n")
     for line in sys.stdin:
-        if "<Iteration>" in line:
+        if "<query-id>" in line:
             iterations += 1
             reported_iteration = False
         if "<Hit>" in line:

@@ -1,18 +1,25 @@
+set -e
+set -u
 set -x
 
 inGenome="$1"
 inTaxID="$2"
 myPath=${0/blastDbSetup.sh/}
 
-python3 ${myPath}/AddTaxonID.py ${inGenome} ${inTaxID} ${inGenome/.fa/_taxID.fa}
+genomeName=$(basename ${inGenome})
+baseGenomeName=${genomeName%%.fa?(sta)}
+
+if [ genomeName == baseGenomeName ]; then
+    echo "Genome must be a .fa or .fasta file"
+    exit 1
+fi
 
 makeblastdb \
 -dbtype nucl \
--title ${inGenome/.fa*/} \
--out ${inGenome/.fa*/}_db \
--in ${inGenome/.fa/_taxID.fa}
+-title ${baseGenomeName} \
+-out ${baseGenomeName}_db \
+-in ${inGenome} \
+-taxid ${inTaxID}
 
-echo "#${inGenome/.fa*/}.nal"  > ${inGenome/.fa*/}.nal
-echo "TITLE ${inGenome/.fa*/}" >> ${inGenome/.fa*/}.nal
-echo "DBLIST ${inGenome/.fa*/}_db" >> ${inGenome/.fa*/}.nal
-
+blastdb_aliastool -dblist "${baseGenomeName}_db" \
+-dbtype nucl -out ${baseGenomeName}_db -title "${baseGenomeName}"

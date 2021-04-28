@@ -241,13 +241,13 @@ def main():
                      Type="Integer",
                      description="Number of Ns at this position")
     myHeader.addLine(lineType="FORMAT",
-                     label="AFC",
-                     number="A",
+                     label="FC",
+                     number="R",
                      Type="Integer",
                      description="The number of reads for each allele that are forward mapping")
     myHeader.addLine(lineType="FORMAT",
-                     label="ARC",
-                     number="A",
+                     label="RC",
+                     number="R",
                      Type="Integer",
                      description="The number of reads for each allele that are reverse mapping")
     myHeader.addLine(lineType="FORMAT",
@@ -370,12 +370,7 @@ def main():
                 continue
             if (
                     myVariants[vcfIter].chrom == myVariants[vcfIter2].chrom
-                    and myVariants[vcfIter].pos + o.cluster_dist >= myVariants[vcfIter2].pos
-                    and "SNP" not in myVariants[vcfIter2].filter):
-                nearby_variants.append(vcfIter2)
-            elif (
-                    myVariants[vcfIter].chrom == myVariants[vcfIter2].chrom
-                    and myVariants[vcfIter].pos - o.cluster_dist <= myVariants[vcfIter2].pos
+                    and abs(myVariants[vcfIter].pos - myVariants[vcfIter2].pos) <= o.cluster_dist
                     and "SNP" not in myVariants[vcfIter2].filter):
                 nearby_variants.append(vcfIter2)
         if len(nearby_variants) > 0:

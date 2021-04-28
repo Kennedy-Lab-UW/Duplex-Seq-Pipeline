@@ -1,3 +1,7 @@
-#TestBlastDb.nal
-TITLE testBlastDb
-DBLIST testBlastDb
+#
+# Alias file created 01/26/2021 11:20:21
+#
+TITLE Full test contaminant database
+DBLIST "test_hg38" "test_rheMac10" 
+NSEQ 3
+LENGTH 15923

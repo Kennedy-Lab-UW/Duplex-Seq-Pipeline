@@ -77,7 +77,7 @@
               <article class="markdown-body entry-content" itemprop="text" id="grip-content">
                 <h1>
 <a id="user-content-duplex-sequencing-pipeline" class="anchor" href="#duplex-sequencing-pipeline" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Duplex Sequencing Pipeline</h1>
-<p>Brendan Kohrn, March 30, 2020<br>
+<p>Brendan Kohrn, April 26, 2021<br>
 Duplex Sequencing is copyright Scott Kennedy and Larwrence Loeb,
 University of Washington, Seattle, WA, USA</p>
 <h2>
@@ -92,9 +92,11 @@ University of Washington, Seattle, WA, USA</p>
 <li>Configuration File creation</li>
 <li>Recovery script creation</li>
 <li>Running pipelines</li>
-<li>Output file description</li>
+<li>Output file descriptions</li>
+<li>Extra BAM tags:</li>
 <li>Testing the pipeline</li>
 <li>Full and partial reruns</li>
+<li>Unlocking following a power failure</li>
 </ol>
 <h2>
 <a id="user-content-1-glossary" class="anchor" href="#1-glossary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>1: Glossary</h2>
@@ -110,23 +112,32 @@ simple majority.</p>
 <p>A group of reads that shares the same tag sequence.</p>
 <h2>
 <a id="user-content-2-dependencies" class="anchor" href="#2-dependencies" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>2: Dependencies:</h2>
-<p>This pipeline is known to work with the following minimum versions of
-the follow required programs:</p>
+<p>This pipeline is known to work with the following versions of
+the following required programs:</p>
 <ul>
 <li>Python3.6+</li>
-<li>Snakemake&gt;=5.25.0</li>
+<li>Snakemake=5.25.0</li>
 <li>Pandas</li>
-<li>Miniconda/Anaconda=4.7.*</li>
+<li>Miniconda=4.7.*</li>
 <li>bwa=0.7.17.* (for genome setup)</li>
-<li>ncbi-blast=&gt;2.6.0 (installed separately, for contaminant database setup)</li>
+<li>ncbi-blast=2.9.0 (installed separately, for contaminant database setup; note that while an older version can be used for database setup, a newer version CANNOT be used for database setup.)</li>
 <li>mamba&gt;=0.5.1 (needed for environment setup; install through conda)</li>
 <li>wget (on macOS, install using homebrew; present by default on linux)</li>
 </ul>
 <p>Once Python3.6 is installed, snakemake and pandas can be installed using
-pip3 or using whatever package manager you're using.  Blast can be
-downloaded in any of several ways, including some package managers
-(Ubuntu: sudo apt-get install ncbi-blast+).  It can also be installed
-using conda if desired.</p>
+pip3 or using whatever package manager you're using.  While other versions of
+snakemake may work (though definately no earlier that 5.25.0), there may be
+some issues with using versions later than 5.25.0; those may be resolved by
+restarting the pipeline when it crashes.  Blast can be downloaded in any of
+several ways, including some package managers (Ubuntu: sudo apt-get install
+ncbi-blast+).  It can also be installed using conda if desired.</p>
+<p>The recommended install method and order is:</p>
+<ol>
+<li>Install Miniconda</li>
+<li>Use conda to install Python3 and Mamba</li>
+<li>Use Mamba to install Snakemake, bwa, blast, and pandas, invoking both the
+bioconda and conda-forge channels.</li>
+</ol>
 <h2>
 <a id="user-content-3-setup" class="anchor" href="#3-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>3: Setup:</h2>
 <p>Find the location where you want the pipeline to be located and clone the
@@ -218,20 +229,9 @@ starting list is:</p>
 <p><strong>It is important that any genome you plan to use for alignment be included in this database,
 in the same version (e.g. if your alignment genome uses UCSC chromosome
 names, your genome in the database cannot use NCBI chromosome names, but
-must also use UCSC chromosome names)</strong>.</p>
-<p>Database setup consists of three steps:</p>
+must also use UCSC chromosome names).  It should also be noted that, while older versions of BLAST can be used for database setup, setup should use at the latest version 2.9.0; databases constructed with later BLAST versions may not work with the pipeline</strong>.</p>
+<p>Database setup consists of two steps:</p>
 <ol>
-<li>Genome labeling:</li>
-</ol>
-<p>Label each record in the genome with the NCBI taxon ID for the species the
-genome is associated with.  TaxIDs can be found using the NCBI taxonomy
-website (<a href="https://www.ncbi.nlm.nih.gov/taxonomy" rel="nofollow">https://www.ncbi.nlm.nih.gov/taxonomy</a>).  This is done by running:</p>
-<pre><code>python3 AddTaxonID.py GENOME.fa TAXID GENOME_taxID.fa
-</code></pre>
-<p>where GENOME.fa is the input fasta file with the genome, TAXID is the
-NCBI taxonomy ID for the species associated with the genome, and
-GENOME_taxID.fa is the output labeled genome.</p>
-<ol start="2">
 <li>Sub-database Creation:</li>
 </ol>
 <p>Create the database using:</p>
@@ -239,26 +239,29 @@ GENOME_taxID.fa is the output labeled genome.</p>
 -dbtype nucl \  
 -title GENOME \  
 -out GENOME_db \  
--in GENOME_taxID.fa  
+-in GENOME.fa \  
+-taxid TAXID  
 </code></pre>
-<p>After this, create a .nal file for this database following this template:</p>
-<pre><code>#GENOME.nal 
-TITLE GENOME
-DBLIST GENOME_db
+<p>where GENOME.fa is the input fasta file with the genome, and TAXID is the
+NCBI taxonomy ID for the species associated with the genome.
+TaxIDs can be found using the NCBI taxonomy website
+(<a href="https://www.ncbi.nlm.nih.gov/taxonomy" rel="nofollow">https://www.ncbi.nlm.nih.gov/taxonomy</a>).</p>
+<p>After this, create a .nal file using:</p>
+<pre><code>blastdb_aliastool -dblist "GENOME_db" \  
+-dbtype nucl -out GENOME_db -title "GENOME"
 </code></pre>
 <p>The blastDbSetup.sh script can be used to automate these steps.  It can
 be run with:</p>
 <pre><code>bash /path/to/pipeline/setupBlastDb/blastDbSetup.sh GENOME.fa TAXON_ID
 </code></pre>
-<ol start="3">
+<ol start="2">
 <li>Full database creation:</li>
 </ol>
 <p>Once you've created all your sub-databases (e.g. GENOME1, GENOME2,
 GENOME3, ..., GENOME_N), create a .nal file to represent the full
-database following this template:</p>
-<pre><code>#contaminantDb.nal 
-TITLE contaminantDb
-DBLIST GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db
+database using:</p>
+<pre><code>blastdb_aliastool -dblist "GENOME1_db GENOME2_db GENOME3_db ... GENOME_N_db" \  
+-dbtype nucl -out contaminant_db -title "Contaminant Database"
 </code></pre>
 <p>If, at a later time, you need to change your contaminant database, you
 then only need to rebuild the modified portion, and then update this
@@ -282,7 +285,11 @@ and will ignore any other columns provided.</p>
 <h2>
 <a id="user-content-7-configuration-file-creation" class="anchor" href="#7-configuration-file-creation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>7: Configuration file creation:</h2>
 <p>Use the ConfigTemplate to create a new file with the appropriate headers.
-For each row, fill in the information about a particular sample:</p>
+For each row, fill in the information about a particular sample.  Note that in
+most cases, "path" refers to an absolute path, with the exception of "in1" and
+"in2", where you just need the name of the input file.  The "blast_db" option
+is the path to the appropriate .nal or .nhr file, minus the .nal or .nhr
+extension, but can also be specified as "none" to skip BLAST filtering.</p>
 <table>
 <thead>
 <tr>
@@ -334,12 +341,12 @@ For each row, fill in the information about a particular sample:</p>
 </tr>
 <tr>
 <td>blast_db</td>
-<td>Required</td>
-<td>The blast database to use for contaminant filtering; must include your target genome.</td>
+<td>NONE</td>
+<td>The blast database to use for contaminant filtering; must include your target genome, if used.</td>
 </tr>
 <tr>
 <td>targetTaxonId</td>
-<td>Required</td>
+<td>9606</td>
 <td>The taxon ID of the species you are expecting to be present in the sample.</td>
 </tr>
 <tr>
@@ -405,7 +412,7 @@ For each row, fill in the information about a particular sample:</p>
 <tr>
 <td>adapterSeq</td>
 <td>"ANNNNNNNNAGATCGGAAGAG"</td>
-<td>The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Used by cutadapt for adapter clipping</td>
+<td>The adapter sequence used in library preperation, with UMI bases as Ns, and spacer sequence included.  Alternatively, a fasta file with all possible UMI-adapter conbinations.  Used by cutadapt for adapter clipping.</td>
 </tr>
 <tr>
 <td>clipBegin</td>
@@ -443,6 +450,11 @@ For each row, fill in the information about a particular sample:</p>
 <td>The recovery script to use in attempting to recover ambiguously mapped reads (as determine by blast alignment vs bwa alignment).  Recovery script creation is discussed in 8; below.</td>
 </tr>
 <tr>
+<td>cluster_dist</td>
+<td>10</td>
+<td>How close together variants have to be to be considered 'clustered'</td>
+</tr>
+<tr>
 <td>cm_outputs</td>
 <td>"GB"</td>
 <td>Select which sections of the countmuts to output, in addition to 'OVERALL'.  String of one or more of 'G', 'B', and 'N'.  G -&gt; output GENE sections for each bed line; B -&gt; output 'BLOCK' sections for each block in the bed line (if present); 'N' -&gt; Only output overall frequencies.  Overrides all other options.</td>
@@ -454,8 +466,8 @@ For each row, fill in the information about a particular sample:</p>
 </tr>
 <tr>
 <td>cm_filters</td>
-<td>"near_indel:clustered"</td>
-<td>Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation.</td>
+<td>"none"</td>
+<td>Select which filters to apply during frequency calculation. These filters will also be applied during muts_per_cycle calculation.  Available filters are: SNP, near_indel, clustered, masked, low_depth.</td>
 </tr>
 <tr>
 <td>runSSCS</td>
@@ -547,13 +559,8 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 </tbody>
 </table>
-<p>This directory structure looks like this:</p>
+<p>This directory structure after a run looks like this:</p>
 <div class="highlight highlight-source-shell"><pre><span class="pl-c1">.</span>
-├── CONFIG_FILE.summary.csv
-├── CONFIG_FILE.summaryDepth.pdf
-├── CONFIG_FILE.summaryFamilySize.pdf
-├── CONFIG_FILE.summaryInsertSize.pdf
-├── CONFIG_FILE.summaryMutsByCycle.pdf
 └──SAMP_DIR
     ├── Final
     │   ├── dcs
@@ -620,6 +627,8 @@ well as a file directory structure for each sample.  The summary files are:</p>
         │   ├── SAMPLE.sscs.endClip.metrics.txt
         │   ├── SAMPLE.sscs.overlapClip.metrics.txt
         │   ├── SAMPLE_onTargetCount.txt
+        │   ├── SAMPLE.sscs_onTargetCount.txt
+        │   ├── SAMPLE.dcs_onTargetCount.txt
         │   ├── SAMPLE.tagstats.txt
         │   └── SAMPLE.temp.sort.flagstats.txt
         ├── SAMPLE.report.ipynb
@@ -645,36 +654,6 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>.</td>
-<td>CONFIG_FILE.summary.csv</td>
-<td>Summary CSV file with basic statistics for all samples processed with this CONFIG_FILE.</td>
-<td></td>
-</tr>
-<tr>
-<td>.</td>
-<td>CONFIG_FILE.summaryDepth.pdf</td>
-<td>Summary PDF file with depth plots for all samples processed with this CONFIG_FILE.</td>
-<td></td>
-</tr>
-<tr>
-<td>.</td>
-<td>CONFIG_FILE.summaryFamilySize.pdf</td>
-<td>Summary PDF file with family size for all samples processed with this CONFIG_FILE.</td>
-<td></td>
-</tr>
-<tr>
-<td>.</td>
-<td>CONFIG_FILE.summaryInsertSize.pdf</td>
-<td>Summary PDF file with insert size for all samples processed with this CONFIG_FILE.</td>
-<td></td>
-</tr>
-<tr>
-<td>.</td>
-<td>CONFIG_FILE.summaryMutsByCycle.pdf</td>
-<td>Summary PDF file with muts per cycle plots for all samples processed with this CONFIG_FILE.</td>
-<td></td>
-</tr>
 <tr>
 <td>SAMP_DIR</td>
 <td>SAMPLE_seq1.fastq.gz</td>
@@ -930,7 +909,7 @@ well as a file directory structure for each sample.  The summary files are:</p>
 <tr>
 <td>SAMP_DIR</td>
 <td>logs</td>
-<td>Directory containing log files for this sample.</td>
+<td>Directory containing log files for this sample.  Log files are currently empty, but will be filled later.</td>
 <td>Always</td>
 </tr>
 <tr>
@@ -1061,6 +1040,18 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 <tr>
 <td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.sscs_onTargetCount.txt</td>
+<td>SSCS on target statistics</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
+<td>SAMPLE.dcs_onTargetCount.txt</td>
+<td>DCS on target statistics</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Stats/data</td>
 <td>SAMPLE.tagstats.txt</td>
 <td>Family size data (in text form)</td>
 <td>Always</td>
@@ -1146,7 +1137,91 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tbody>
 </table>
 <h2>
-<a id="user-content-11-testing-the-pipeline" class="anchor" href="#11-testing-the-pipeline" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>11: Testing the pipeline</h2>
+<a id="user-content-11-extra-bam-tags" class="anchor" href="#11-extra-bam-tags" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>11: Extra BAM tags:</h2>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>XF</td>
+<td>String</td>
+<td>In SSCS, represents family size.  In DCS, colon-deliniated list of family sizes for ab1:ba2 or ba1:ab2.</td>
+</tr>
+<tr>
+<td>t0</td>
+<td>Integer</td>
+<td>With BLAST, TaxID of the species the read matched most closely. Note that negative numbers have special meanings; see below.</td>
+</tr>
+<tr>
+<td>t#</td>
+<td>Integer</td>
+<td>With BLAST, TaxID of the #th BLAST hit.</td>
+</tr>
+<tr>
+<td>c#</td>
+<td>String</td>
+<td>With BLAST, the chromosome of the #th BLAST hit.</td>
+</tr>
+<tr>
+<td>p#</td>
+<td>Integer</td>
+<td>With BLAST, the position of the #th BLAST hit.</td>
+</tr>
+<tr>
+<td>l#</td>
+<td>Integer</td>
+<td>With BLAST, the length of the #th BLAST hit.</td>
+</tr>
+<tr>
+<td>YB</td>
+<td>String</td>
+<td>With BLAST, True if a read was BLASTed.</td>
+</tr>
+<tr>
+<td>am</td>
+<td>integer</td>
+<td>With BLAST, the ambiguity code for the read. See below for meanings.</td>
+</tr>
+</tbody>
+</table>
+<p>Some negative values for tag t0 have special meanings:</p>
+<table>
+<thead>
+<tr>
+<th>t0 value</th>
+<th>meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-1</td>
+<td>Between species BLAST tie.</td>
+</tr>
+<tr>
+<td>-3</td>
+<td>No BLAST results.</td>
+</tr>
+<tr>
+<td>-4</td>
+<td>Read was submitted to BLAST, but BLAST did not attempt alignment.</td>
+</tr>
+</tbody>
+</table>
+<p>Ambiguity codes have manings:</p>
+<p>| am value | meaning |<br>
+| 0 | BLAST has 1 best match, matches bwa position |<br>
+| 1 | BLAST has 1 best match, does not match bwa position |<br>
+| 2 | BLAST has 2+ best matches, correct species |<br>
+| 3 | BLAST has 2+ best matches, at least one incorrect species |<br>
+| 4 | BLAST did not attempt alignment, or no blast matches |<br>
+| 5 | Not BLASTed |</p>
+<h2>
+<a id="user-content-12-testing-the-pipeline" class="anchor" href="#12-testing-the-pipeline" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>12: Testing the pipeline</h2>
 <p>The newly setup pipeline can be tested using provided data and files
 located in the 'test' directory. To test the pipeline, change into the
 'test' directory and invoking at the command prompt:</p>
@@ -1155,7 +1230,7 @@ located in the 'test' directory. To test the pipeline, change into the
 be compared to the reports in the ExpectedReports directory located in
 the parent test directory.</p>
 <h2>
-<a id="user-content-12-full-and-partial-reruns" class="anchor" href="#12-full-and-partial-reruns" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>12: Full and partial reruns</h2>
+<a id="user-content-13-full-and-partial-reruns" class="anchor" href="#13-full-and-partial-reruns" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>13: Full and partial reruns</h2>
 <p>Sometimes it may be necessary to rerun all or part of the pipeline for
 various reasons.  In order to facilitate this, we have provided a script
 (DS-clean) which will prepare samples to rerun based on the "rerun_type"
@@ -1205,7 +1280,7 @@ in those cases.</p>
 <div class="highlight highlight-source-shell"><pre>/path/to/Duplex-Seq-Pipeline/DS-clean CONFIG_CSV.csv
 /path/to/Duplex-Seq-Pipeline/DS CONFIG_CSV.csv</pre></div>
 <h2>
-<a id="user-content-13-unlocking-following-a-power-failure" class="anchor" href="#13-unlocking-following-a-power-failure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>13: Unlocking following a power failure</h2>
+<a id="user-content-14-unlocking-following-a-power-failure" class="anchor" href="#14-unlocking-following-a-power-failure" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>14: Unlocking following a power failure</h2>
 <p>In the event that pipeline execution is interrupted (such as by a power failure),
 the directory can be unlocked in order to restart using the provided
 DS-unlock script:</p>
