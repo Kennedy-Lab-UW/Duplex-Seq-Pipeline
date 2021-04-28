@@ -4,7 +4,6 @@
 set -e
 set -o pipefail
 set -u
-set
 
 snakeDir=$(pwd)
 maxCores="${1}"
