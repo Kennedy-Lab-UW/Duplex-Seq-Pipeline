@@ -4,6 +4,7 @@
 set -e
 set -o pipefail
 set -u
+set
 
 snakeDir=$(pwd)
 maxCores="${1}"
@@ -17,13 +18,13 @@ fi
 
 # Setup test case
 echo "Creating test config file"
-echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,maskBed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,adapterSeq,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,recovery,cluster_dist,cm_outputs,cm_sumTypes,,runSSCS,rerun_type" > test/testConfig.csv
-echo "test1,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
-echo "test2,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverAmbig.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
-echo "test3,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverWrongSpecies.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
-echo "test4,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverAll.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
-echo "test5,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,none,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
-echo "test6,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,none,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,TRUE,0" >> test/testConfig.csv
+echo "sample,rglb,rgpl,rgpu,rgsm,reference,target_bed,maskBed,blast_db,targetTaxonId,baseDir,in1,in2,mqFilt,minMem,maxMem,cutOff,nCutOff,umiLen,spacerLen,locLen,readLen,adapterSeq,clipBegin,clipEnd,minClonal,maxClonal,minDepth,maxNs,recovery,cluster_dist,cm_outputs,cm_sumTypes,cm_filters,runSSCS,rerun_type" > test/testConfig.csv
+echo "test1,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test2,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverAmbig.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test3,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverWrongSpecies.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test4,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,recoverAll.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test5,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,none,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,FALSE,0" >> test/testConfig.csv
+echo "test6,test,test,test,test,${snakeDir}/test/testRef/testRef.fa,${snakeDir}/test/testTarget/test.bed,NONE,${snakeDir}/test/testBlastDb/testBlastDb,9606,testData,testSeq1.fastq.gz,testSeq2.fastq.gz,0,3,200,0.7,0.02,8,1,8,150,ANNNNNNNNAGATCGGAAGAG,7,0,0,0.1,100,1,noRecovery.sh,10,GB,GT,none,TRUE,0" >> test/testConfig.csv
 
 
 # Set up progConfig file
