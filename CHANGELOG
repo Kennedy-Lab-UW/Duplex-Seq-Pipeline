@@ -1,4 +1,10 @@
 CHANGELOG
+v2.1.0:
+Bugfix:
+    Fix spelling on some rule names
+New Features:
+    Populate log files, add missing log files, and normalize log file names
+
 v2.0.1:
 Bugfix: 
 Fix a bug where providing a masking bed caused the pipeline to crash at DepthSummaryCsv.py

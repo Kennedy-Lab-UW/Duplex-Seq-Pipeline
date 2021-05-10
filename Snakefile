@@ -489,7 +489,10 @@ rule makeConsensus:
     threads: min(max(int(config["maxCores"]/2), 1),4)
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {params.runPath}
         pwd
         ls
@@ -519,6 +522,7 @@ rule makeConsensus:
         mv {wildcards.sample}.tagstats.txt Stats/data/
         mv {wildcards.sample}_fam*.png Stats/plots/
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Need to add adapter seq to DS_baseSchema.yaml, config file.
@@ -533,8 +537,14 @@ rule clipAdapters:
         out2 = temp("{runPath}/{sample}_read2_{sampType}.adaptClip.fq.gz"),
     conda:
        "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_clipAdapters.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         cutadapt \
         -a {params.adapterSeq} -A {params.adapterSeq} \
@@ -543,6 +553,7 @@ rule clipAdapters:
         Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read1_{wildcards.sampType}.fq.gz \
         Intermediate/ConsensusMakerOutputs/{wildcards.sample}_read2_{wildcards.sampType}.fq.gz
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 # Calculate # on target raw reads based on outAln1 and outAln2 from makeConsensus
@@ -566,10 +577,15 @@ rule getOnTarget:
         outOnTarget = "{runPath}/Stats/data/{sample}_onTargetCount.txt"
     conda:
        "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_aln_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {params.runPath}
         bwa mem \
         -L 1,1 \
@@ -583,6 +599,7 @@ rule getOnTarget:
         echo "$(samtools view -c -L {input.inBed} ../{output.outBam}) reads on target" > ../{output.outOnTarget}
         echo "$(samtools view -c ../{output.outBam}) total reads" >> ../{output.outOnTarget}
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Calculate # on target raw reads based on outAln1 and outAln2 from makeConsensus
@@ -603,14 +620,20 @@ rule getOnTarget_cs:
         outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
     conda:
        "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {params.runPath}
         echo "$(samtools view -c -L {input.inBed} ../{input.inBam}) reads on target" > ../{output.outOnTarget}
         echo "$(samtools view -c ../{input.inBam}) total reads" >> ../{output.outOnTarget}
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Align SSCS and DCS to provided reference genome, and sort based on position
@@ -636,10 +659,13 @@ rule alignReads:
        "envs/DS_env_full.yaml"
     threads: min(max(int(config["maxCores"]/2), 1),4)
     log:
-         "{runPath}/logs/{sample}_bwa_{sampType}.log"
+         "{runPath}/logs/{sample}_{sampType}_bwa.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         mkdir {wildcards.runPath}/{wildcards.sample}.{wildcards.sampType}.alignReads.samtoolsTemp
         cd {params.runPath}
         bwa mem \
@@ -654,6 +680,7 @@ rule alignReads:
         -o {wildcards.sample}_mem.{wildcards.sampType}.sort.bam -
         samtools index {wildcards.sample}_mem.{wildcards.sampType}.sort.bam
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Filter out secondary and supplamentery alignments prior to BLAST filters.
@@ -670,10 +697,13 @@ rule PreBlastFilter:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_PreBlastFilter_dcs.log"
+        "{runPath}/logs/{sample}_dcs_PreBlastFilter.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
         samtools view -b -F 0x900 \
         -U {wildcards.sample}_mem.dcs.SecSup.bam \
@@ -681,6 +711,7 @@ rule PreBlastFilter:
         {wildcards.sample}_mem.dcs.sort.bam
         samtools index {wildcards.sample}_mem.dcs.nonSecSup.bam
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Make bam index for temporary bam files
@@ -693,7 +724,6 @@ rule makeTempBai:
        "envs/DS_env_full.yaml"
     shell:
         """
-        set -x
         samtools index {input.inBam} {output.outBai}
         """
 
@@ -707,7 +737,6 @@ rule makeBai:
        "envs/DS_env_full.yaml"
     shell:
         """
-        set -x
         samtools index {input.inBam} {output.outBai}
         """
 
@@ -719,13 +748,19 @@ rule getFlagstats:
         outBai = "{runPath}/Stats/data/{fileBase}.flagstats.txt"
     conda:
        "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{fileBase}_getFlagstats.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
         samtools flagstat {wildcards.fileBase}.bam \
         > Stats/data/{wildcards.fileBase}.flagstats.txt
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Do naive variant calling to allow us to not include reads that just have 
@@ -745,16 +780,20 @@ rule PreBlastProcessing1:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_preBlast1_dcs.log"
+        "{runPath}/logs/{sample}_dcs_preBlast1.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/BamToMutposVCF.py \
         --inBam {wildcards.sample}_mem.dcs.nonSecSup.bam \
         --inFasta {input.inRef} -o {wildcards.sample}_dcs.vars.vcf \
         --samp_name {params.rgsm}
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Get SNPs from naive variant calling
@@ -770,16 +809,20 @@ rule PreBlastProcessing2:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_preBlast2_dcs.log"
+        "{runPath}/logs/{sample}_dcs_preBlast2.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/SNP_finder.py \
         --in_file {wildcards.sample}_dcs.vars.vcf \
         -o {wildcards.sample}_dcs.Markedvars.vcf \
         -s {wildcards.sample}_dcs.snps.vcf
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Separate out reads with non-SNP variants for examination with BLAST
@@ -799,10 +842,13 @@ rule PreBlastProcessing3:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_preBlast3_dcs.log"
+        "{runPath}/logs/{sample}_dcs_preBlast3.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/countMutsPerCycle.py  \
         --inFile {wildcards.sample}_mem.dcs.nonSecSup.bam \
@@ -816,6 +862,7 @@ rule PreBlastProcessing3:
         Intermediate/postBlast/{wildcards.sample}_dcs.preBlast.unmutated.bam
         
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # BLAST reads with non-SNP variants
@@ -833,10 +880,13 @@ rule BLAST:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_blast_dcs.log"
+        "{runPath}/logs/{sample}_dcs_blast.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
 
         samtools fasta Intermediate/postBlast/{wildcards.sample}_dcs.preBlast.mutated.bam | \
@@ -850,6 +900,7 @@ rule BLAST:
         > Intermediate/postBlast/{wildcards.sample}_dcs.blast.xml
 
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Label reads with taxIDs based on BLAST results
@@ -865,16 +916,20 @@ rule PostBlastProcessing1:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_postBlast1_dcs.log"
+        "{runPath}/logs/{sample}_dcs_postBlast1.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/blastFilter.py \
         Intermediate/postBlast/{wildcards.sample}_dcs.preBlast.mutated.bam \
         Intermediate/postBlast/{wildcards.sample}_dcs.blast.xml \
         {wildcards.sample}_dcs
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 # Multi-step process.  
 # 1. Merge species-labeled and unblasted reads into a single bam file
@@ -903,10 +958,13 @@ rule PostBlastProcessing2:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_postBlast2_dcs.log"
+        "{runPath}/logs/{sample}_dcs_postBlast2.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
+        {{
         cd {wildcards.runPath}
 
         mkdir {wildcards.sample}.dcs.postBlast1.samtoolsTemp
@@ -932,6 +990,7 @@ rule PostBlastProcessing2:
         {wildcards.sample}_dcs.ambig.bam
         mv {wildcards.sample}_dcs.speciesComp.txt Stats/data/{wildcards.sample}_dcs.speciesComp.txt
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Run user-defined recovery script
@@ -952,9 +1011,13 @@ rule postBlastRecovery:
     conda:
         "envs/DS_env_recovery.yaml"
     log:
-        "{runPath}/logs/{sample}_postBlast2_dcs.log"
+        "{runPath}/logs/{sample}_dcs_postBlastRecovery.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         bash {input.inRecoveryScript} \
         Intermediate/postBlast/FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam \
@@ -967,6 +1030,7 @@ rule postBlastRecovery:
         mv {wildcards.sample}_dcs.postRecovery.wrongSpecies.bam \
         Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Count number of reads in files after post-blast recovery with different 
@@ -981,14 +1045,21 @@ rule CountAmbig:
         "{runPath}/Stats/data/{sample}.dcs_ambiguity_counts.txt"
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_dcs_countAmbig.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         python3 {params.basePath}/scripts/countAmbiguityClasses.py \
         Stats/data/{wildcards.sample}.dcs \
         {wildcards.sample}_dcs.postRecovery.recovered.temp.bam \
         Final/dcs/FilteredReads/{wildcards.sample}_dcs.postRecovery.ambig.bam
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 rule makePreEndClip:
@@ -999,9 +1070,16 @@ rule makePreEndClip:
         outBam = temp("{runPath}/{sample}.{sampType}.prevar.temp.bam")
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_makePreEndClip.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cp {input.inBam} {output.outBam}
+        }} 2>&1 | tee -a {log}
         """
 
 rule endClip:
@@ -1023,10 +1101,14 @@ rule endClip:
     conda:
        "envs/DS_env_full.yaml"
     log:
-         "{runPath}/logs/{sample}_endClip_{sampType}.log"
+         "{runPath}/logs/{sample}_{sampType}_endClip.log"
 
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         if [ "$(( {params.clip5}+{params.clip3} ))" -gt "0" ]
         then
         cd {params.runPath}
@@ -1045,6 +1127,7 @@ rule endClip:
         cp {input.inBam} {output.outBam}
         cp {input.inBai} {output.outBai}
         fi
+        }} 2>&1 | tee -a {log}
         """
 
 rule overlapClip:
@@ -1063,9 +1146,13 @@ rule overlapClip:
     conda:
        "envs/DS_env_full.yaml"
     log:
-         "{runPath}/logs/{sample}_overlapClip_{sampType}.log"
+         "{runPath}/logs/{sample}_{sampType}_overlapClip.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {params.runPath}
         fgbio ClipBam \
         -i ../{input.inBam} \
@@ -1075,6 +1162,7 @@ rule overlapClip:
         --clip-overlapping-reads true \
         -m ../{output.clippingMetrics}
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 rule FinalFilter:
@@ -1089,16 +1177,19 @@ rule FinalFilter:
     conda:
          "envs/DS_env_full.yaml"
     log:
-         "{runPath}/logs/{sample}_finalFilter_{sampType}.log"
+         "{runPath}/logs/{sample}_{sampType}_finalFilter.log"
     shell:
         """
+        set -e
+        set -o pipefail
         set -x
-
+        {{
         cd {params.runPath}
         samtools view -b -L {params.inBed} \
         {wildcards.sample}.{wildcards.sampType}.overlapClip.temp.bam \
         > Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 rule makeBufferedBed:
@@ -1112,13 +1203,20 @@ rule makeBufferedBed:
         temp_sizes = temp("{runPath}/{sample}.ref.genome"),
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_makeBufferedBed.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         cut -f 1,2 {input.inRef}.fai > {wildcards.sample}.ref.genome
         bedtools slop -i {input.inBed} -g {wildcards.sample}.ref.genome \
         -b {params.readLength} > {wildcards.sample}.vardictBed.bed
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 rule varDict:
@@ -1144,8 +1242,14 @@ rule varDict:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.txt"), 
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_varDict.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
         -f {params.vardict_f} -p \
@@ -1159,6 +1263,7 @@ rule varDict:
         --adaptor {params.vardict_adaptor} \
         > {wildcards.sample}.{wildcards.sampType}.varDict.txt
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 rule varDict_Ns:
@@ -1184,8 +1289,14 @@ rule varDict_Ns:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.Ns.txt"), 
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_varDictNs.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         vardict-java -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
         -f {params.vardict_f} -p -K \
@@ -1199,6 +1310,7 @@ rule varDict_Ns:
         --adaptor {params.vardict_adaptor} \
         > {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 rule varDict2VCF:
@@ -1218,8 +1330,14 @@ rule varDict2VCF:
         outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_varDict2VCF.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         python {params.basePath}/scripts/VarDictToVCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.varDict.txt \
@@ -1232,6 +1350,7 @@ rule varDict2VCF:
         -d {params.minDepth} \
         --cluster_dist {params.cluster_dist}
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 rule maskVariants:
@@ -1244,14 +1363,21 @@ rule maskVariants:
         outVCF = temp("{runPath}/{sample}.{sampType}.masked.vcf")
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_maskVariants.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         python {params.basePath}/scripts/Mask_VCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
         -o {wildcards.sample}.{wildcards.sampType}.masked.vcf \
         -b {input.inMask}
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 rule make_final_VCF:
@@ -1259,9 +1385,16 @@ rule make_final_VCF:
         in_VCF = get_final_vcf
     output:
         out_VCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_makeFinalVCF.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
             cp {input.in_VCF} {output.out_VCF}
+        }} 2>&1 | tee -a {log}
         """
 
 rule makeDepth:
@@ -1281,6 +1414,10 @@ rule makeDepth:
          "{runPath}/logs/{sample}_makeDepth_{sampType}.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {params.runPath}
         python {params.basePath}/scripts/makeDepthFile.py \
         -i ../{input.inBam} \
@@ -1290,9 +1427,10 @@ rule makeDepth:
         
         mv {wildcards.sample}.{wildcards.sampType}.depth.txt Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.txt
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
-rule summaizeDepth:
+rule summarizeDepth:
     params:
         basePath = sys.path[0],
         inMask = get_mask_bed
@@ -1304,8 +1442,14 @@ rule summaizeDepth:
         outDepthSummary = "{runPath}/Stats/data/{sample}.{sampType}.depth.summary.csv"
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_summarizeDepth.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         python {params.basePath}/scripts/DepthSummaryCsv.py \
         -i Stats/data/{wildcards.sample}.{wildcards.sampType}.depth.txt \
@@ -1313,6 +1457,7 @@ rule summaizeDepth:
         -b {input.inBed} \
         -m {params.inMask}
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Make countMuts file from VCF file
@@ -1339,8 +1484,14 @@ rule makeCountMuts:
         outCountMuts = "{runPath}/Final/{sampType}/{sample}.{sampType}.countmuts.csv", 
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_makeCountMuts.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {params.runPath}
         # BamToCountMuts:
         python {params.basePath}/scripts/MutationFreqFromVCF.py \
@@ -1360,6 +1511,7 @@ rule makeCountMuts:
         --apply_filters {params.cm_filters} \
         -m {params.inMask}
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 # Collect insert size data
@@ -1379,9 +1531,13 @@ rule InsertSize:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_stats_{sampType}.log"
+        "{runPath}/logs/{sample}_{sampType}_getInsertSize.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {params.runPath}
         # Plot insert-size histogram (using unfiltered and unclipped data)
         echo "# Dummy insert size file" > Stats/data/{wildcards.sample}.{wildcards.sampType}.iSize_Metrics.txt
@@ -1403,6 +1559,7 @@ rule InsertSize:
         H=../{output.out_iSizeHist} M=0.5 \
         TMP_DIR=picardTempDir
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Create insert size plot
@@ -1415,12 +1572,19 @@ rule PlotInsertSize:
         "{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.png"
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_plotInsertSize.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         Rscript {params.basePath}/scripts/plotInsertSize.R \
         {wildcards.sample}.{wildcards.sampType}
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 # Create coverage plot
@@ -1436,9 +1600,13 @@ rule PlotCoverage:
     conda:
         "envs/DS_env_full.yaml"
     log:
-        "{runPath}/logs/{sample}_stats_{sampType}.log"
+        "{runPath}/logs/{sample}_{sampType}_plotCoverage.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}
         Rscript {params.basePath}/scripts/MakeDepthPlot.R \
         {input.inBed} \
@@ -1449,6 +1617,7 @@ rule PlotCoverage:
         Stats/plots/{wildcards.sample}.{wildcards.sampType}
         rm Stats/plots/{wildcards.sample}.{wildcards.sampType}.*.targetCoverage.png
         cd ..
+        }} 2>&1 | tee -a {log}
         """
 
 # Plot number of non-SNP variants per sequencing cycle
@@ -1474,9 +1643,13 @@ rule MutsPerCycle:
     conda:
          "envs/DS_env_full.yaml"
     log:
-         "{runPath}/logs/{sample}_stats_{sampType}.log"
+         "{runPath}/logs/{sample}_{sampType}_MutsPerCycle.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {params.runPath}
         python3 {params.basePath}/scripts/countMutsPerCycle.py  \
         --inFile Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
@@ -1490,6 +1663,7 @@ rule MutsPerCycle:
         mv {wildcards.sample}.{wildcards.sampType}.mutsPerRead.txt Stats/data/
         mv {wildcards.sample}.{wildcards.sampType}.badReads.t0.bam Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.mutated.bam
         cd ../
+        }} 2>&1 | tee -a {log}
         """
 
 # Convert TIFF figures created by R into PNG figures
@@ -1951,12 +2125,19 @@ rule compileReport:
         "{runPath}/Final/{sample}.report.html"
     conda:
         "envs/DS_env_full.yaml"
+    log:
+        "{runPath}/logs/{sample}_compileReport.log"
     shell:
         """
+        set -e
+        set -o pipefail
+        set -x
+        {{
         cd {wildcards.runPath}/Stats
         jupyter nbconvert --to notebook --execute --inplace {wildcards.sample}.report.ipynb
         jupyter nbconvert --template classic --to html {wildcards.sample}.report.ipynb --no-input --stdout > ../Final/{wildcards.sample}.report.html
         cd ../../
+        }} 2>&1 | tee -a {log}
         """
 
 # Ruleorders
