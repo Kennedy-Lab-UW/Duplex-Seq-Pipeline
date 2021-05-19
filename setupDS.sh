@@ -45,7 +45,7 @@ echo "#!/bin/bash" > DS
 echo "" >> DS
 echo "# This is a run script for the DS snakemake pipeline" >> DS
 echo "inConfig=\"\$1\"" >> DS
-echo "snakemake -s ${snakeDir}/Snakefile --use-conda -j ${maxCores} --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\"" >> DS
+echo "snakemake -s ${snakeDir}/Snakefile --use-conda --keep-going -j ${maxCores} --conda-prefix ${snakeDir}/.snakemake --config samples=\"\${inConfig}\"" >> DS
 chmod a+x DS
 
 echo "Creating dag script"
