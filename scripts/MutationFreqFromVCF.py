@@ -439,7 +439,7 @@ class countMutsEngine:
                 for maskReg in self.maskBed:
                     if maskReg.contains(
                             pileup_column.reference_name, 
-                            pileup_column.reference_pos + 1):
+                            pileup_column.reference_pos):
                         maskLine = True
                 if not maskLine:
                     lnCnts = self.CountLine(
@@ -533,7 +533,7 @@ class countMutsEngine:
                     for maskReg in self.maskBed:
                         if maskReg.contains(
                                 pileup_column.reference_name, 
-                                pileup_column.reference_pos + 1):
+                                pileup_column.reference_pos):
                             maskLine = True
                     if not maskLine:
                         myChrPos = f"{myRegion.chrom}:{pileup_column.reference_pos + 1}"
