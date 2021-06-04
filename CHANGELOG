@@ -1,4 +1,8 @@
 CHANGELOG
+v2.1.1: 
+Bugfix:
+    Fix issue where masking in countmuts file was not applied correctly
+
 v2.1.0:
 Bugfix:
     Fix spelling on some rule names
