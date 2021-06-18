@@ -138,6 +138,14 @@ def getSamplePrepedFiles(wildcards):
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
             f"{wildcards.sample}.dcs.mutated.bam.bai.temp"
         )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.final.bam.temp"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.final.bam.bai.temp"
+        )
         if sscsTest:
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
@@ -159,8 +167,23 @@ def getSamplePrepedFiles(wildcards):
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
                 f"{wildcards.sample}.sscs.mutated.bam.bai.temp"
             )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.final.bam.temp"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.final.bam.bai.temp"
+            )
     if rerun_type > 1:
         # remove post blast files
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/"
+            f"preVariantCalling/{wildcards.sample}.dcs.prevar.bam.temp")
+        if sscsTest:
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/"
+                f"preVariantCalling/{wildcards.sample}.sscs.prevar.bam.temp")
         if blastTest:
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
@@ -177,14 +200,6 @@ def getSamplePrepedFiles(wildcards):
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
                 f"{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam.bai.temp"
-            )
-            outList.append(
-                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-                f"{wildcards.sample}.dcs.final.bam.temp"
-            )
-            outList.append(
-                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-                f"{wildcards.sample}.dcs.final.bam.bai.temp"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
@@ -211,7 +226,7 @@ def getSamplePrepedFiles(wildcards):
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
                 f"{wildcards.sample}_dcs.preBlast.mutated.bam.temp"
-            )
+            )   
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
                 f"{wildcards.sample}_dcs.preBlast.unmutated.bam.temp"
