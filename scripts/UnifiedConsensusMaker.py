@@ -282,7 +282,8 @@ def main():
     # Counter for number of families
     familyCtr = 0
     # Counter for DCS UMIs with bad UMIs
-    badUMIs = 0
+    monoNtUMIs = 0
+    nUMIs = 0
     # Counter for reads processed
     readsCtr = 0
     # Counter for low familiy size families
@@ -450,7 +451,29 @@ def main():
             qual_dict[line.query_name.split('#')[1]].append(
                 list(line.query_qualities)
             )
-
+        elif "N" in tag:
+            famSizes = {x: len(seq_dict[x]) for x in seq_dict}
+            if (famSizes['ab:1'] != famSizes['ab:2']
+                    or famSizes['ba:1'] != famSizes['ba:2']):
+                raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
+                                f'not match for UMI {tag}')
+            for tag_subtype in seq_dict.keys():
+                if famSizes[tag_subtype] > 0:
+                    tag_count_dict[famSizes[tag_subtype]] += 1
+            nUMIs += 1
+        elif ('A' * o.rep_filt in tag
+                or 'C' * o.rep_filt in tag
+                or 'G' * o.rep_filt in tag
+                or 'T' * o.rep_filt in tag):
+            famSizes = {x: len(seq_dict[x]) for x in seq_dict}
+            if (famSizes['ab:1'] != famSizes['ab:2']
+                    or famSizes['ba:1'] != famSizes['ba:2']):
+                raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
+                                f'not match for UMI {tag}')
+            for tag_subtype in seq_dict.keys():
+                if famSizes[tag_subtype] > 0:
+                    tag_count_dict[famSizes[tag_subtype]] += 1
+            monoNtUMIs += 1
         else:
             famSizes = {x: len(seq_dict[x]) for x in seq_dict}
             if (famSizes['ab:1'] != famSizes['ab:2']
@@ -596,14 +619,7 @@ def main():
                         dcs_read_2_qual = [0 for x in range(read2_dcs_len)]
                 else:
                     failedDcs += 1
-                if (read1_dcs_len != 0
-                        and read2_dcs_len != 0
-                        and tag.count('N') == 0
-                        and 'A' * o.rep_filt not in tag
-                        and 'C' * o.rep_filt not in tag
-                        and 'G' * o.rep_filt not in tag
-                        and 'T' * o.rep_filt not in tag
-                ):
+                if read1_dcs_len != 0 and read2_dcs_len != 0:
                     r1QualStr = ''.join(chr(x + 33) for x in dcs_read_1_qual)
                     r2QualStr = ''.join(chr(x + 33) for x in dcs_read_2_qual)
                     read1_dcs_fq_file.write(
@@ -618,13 +634,6 @@ def main():
                         f"+\n"
                         f"{r2QualStr}\n"
                     )
-                elif (tag.count('N') != 0
-                      or 'A' * o.rep_filt in tag
-                      or 'C' * o.rep_filt in tag
-                      or 'G' * o.rep_filt in tag
-                      or 'T' * o.rep_filt in tag
-                ):
-                    badUMIs += 1
 
             if line != FinalValue:
                 readsCtr += 1
@@ -709,7 +718,8 @@ def main():
         f"{familyCtr} families processed\n"
         f"\t{zeroFamilySize} unrepresented families\n"
         f"\t{smallFamilySize} families with family size < {o.minmem}\n"
-        f"\t{badUMIs} families (DCS pairs) filtered for UMIs with mononucleotide repeats\n"
+        f"\t{monoNtUMIs} families (DCS pairs) filtered for UMIs with mononucleotide repeats\n"
+        f"\t{nUMIs} families filtered for Ns in the UMI\n"
         f"{numSSCS} SSCS made\n"
         f"\t{highN_SSCS} SSCS filtered for excessive Ns\n"
         f"{numDCS} DCS made\n"
@@ -727,7 +737,8 @@ def main():
         f"{familyCtr} families processed\n"
         f"\t{zeroFamilySize} unrepresented families\n"
         f"\t{smallFamilySize} families with family size < {o.minmem}, but > 0\n"
-        f"\t{badUMIs} families (DCS pairs) filtered for UMIs with mononucleotide repeats\n"
+        f"\t{monoNtUMIs} families (DCS pairs) filtered for UMIs with mononucleotide repeats\n"
+        f"\t{nUMIs} families filtered for Ns in the UMI\n"
         f"{numSSCS} SSCS made\n"
         f"\t{highN_SSCS} SSCS filtered for excessive Ns\n"
         f"{numDCS} DCS made\n"

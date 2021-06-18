@@ -1,4 +1,9 @@
 CHANGELOG
+v2.1.2: 
+Internal Reorganization:
+    Instead of removing families containing Ns or mononucleotide repeats in UMIs after all consensus making happened, do it before any consensus making hapens.  The tagstats output removes unchanged at this time; the only difference will be in the SSCS output, which will not contain reads with UMIs that contain Ns or mononucleotide repeats (it did previously).  
+    Track number of N-containing UMIs in CM_stats file.  
+
 v2.1.1: 
 Bugfix:
     Fix issue where masking in countmuts file was not applied correctly
