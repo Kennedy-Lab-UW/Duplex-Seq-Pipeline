@@ -138,6 +138,13 @@ ncbi-blast+).  It can also be installed using conda if desired.</p>
 <li>Use Mamba to install Snakemake, bwa, blast, and pandas, invoking both the
 bioconda and conda-forge channels.</li>
 </ol>
+<p>NOTE: At the moment, we are seeing an issue in Mac OS X that seems to be due to
+mislinking of the scheduler library
+(see <a href="https://github.com/Kennedy-Lab-UW/Duplex-Seq-Pipeline/issues/95">https://github.com/Kennedy-Lab-UW/Duplex-Seq-Pipeline/issues/95</a>); we're
+not sure if or when this will be fixed.  While this doesn't happen using a
+newer version of Snakemake, the newer version of snakemake contains other
+issues that we are still working on resolving
+(<a href="https://github.com/snakemake/snakemake/issues/771">https://github.com/snakemake/snakemake/issues/771</a>).</p>
 <h2>
 <a id="user-content-3-setup" class="anchor" href="#3-setup" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>3: Setup:</h2>
 <p>Find the location where you want the pipeline to be located and clone the
@@ -563,86 +570,89 @@ well as a file directory structure for each sample.  The summary files are:</p>
 <div class="highlight highlight-source-shell"><pre><span class="pl-c1">.</span>
 └──SAMP_DIR
     ├── Final
-    │   ├── dcs
-    │   │   ├── FilteredReads
-    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
-    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
-    │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
-    │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
-    │   │   ├── SAMPLE.dcs.countmuts.csv
-    │   │   ├── SAMPLE.dcs.final.bam
-    │   │   ├── SAMPLE.dcs.final.bam.bai
-    │   │   ├── SAMPLE.dcs.mutated.bam
-    │   │   ├── SAMPLE.dcs.mutated.bam.bai
-    │   │   ├── SAMPLE.dcs.snps.vcf
-    │   │   └── SAMPLE.dcs.vcf
-    │   ├── SAMPLE.report.html
-    │   └── sscs
-    │       ├── SAMPLE.sscs.countmuts.csv
-    │       ├── SAMPLE.sscs.final.bam
-    │       ├── SAMPLE.sscs.final.bam.bai
-    │       ├── SAMPLE.sscs.mutated.bam
-    │       ├── SAMPLE.sscs.mutated.bam.bai
-    │       ├── SAMPLE.sscs.snps.vcf
-    │       └── SAMPLE.sscs.vcf
+    │   ├── dcs
+    │   │   ├── FilteredReads
+    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam
+    │   │   │   ├── SAMPLE_dcs.postRecovery.ambig.bam.bai
+    │   │   │   ├── SAMPLE_dcs.postRecovery.wrongSpecies.bam
+    │   │   │   └── SAMPLE_dcs.postRecovery.wrongSpecies.bam.bai
+    │   │   ├── SAMPLE.dcs.countmuts.csv
+    │   │   ├── SAMPLE.dcs.final.bam
+    │   │   ├── SAMPLE.dcs.final.bam.bai
+    │   │   ├── SAMPLE.dcs.mutated.bam
+    │   │   ├── SAMPLE.dcs.mutated.bam.bai
+    │   │   ├── SAMPLE.dcs.snps.vcf
+    │   │   └── SAMPLE.dcs.vcf
+    │   ├── SAMPLE.report.html
+    │   └── sscs
+    │       ├── SAMPLE.sscs.countmuts.csv
+    │       ├── SAMPLE.sscs.final.bam
+    │       ├── SAMPLE.sscs.final.bam.bai
+    │       ├── SAMPLE.sscs.mutated.bam
+    │       ├── SAMPLE.sscs.mutated.bam.bai
+    │       ├── SAMPLE.sscs.snps.vcf
+    │       └── SAMPLE.sscs.vcf
     ├── Intermediate
-    │   ├── ConsensusMakerOutputs
-    │   │   ├── SAMPLE_aln_seq1.fq.gz
-    │   │   ├── SAMPLE_aln_seq2.fq.gz
-    │   │   ├── SAMPLE_read1_dcs.fq.gz
-    │   │   ├── SAMPLE_read1_sscs.fq.gz
-    │   │   ├── SAMPLE_read2_dcs.fq.gz
-    │   │   └── SAMPLE_read2_sscs.fq.gz
-    │   └── postBlast
-    │       ├── FilteredReads
-    │       │   ├── SAMPLE_dcs.ambig.sort.bam
-    │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
-    │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
-    │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
-    │       ├── SAMPLE_dcs.blast.xml
-    │       ├── SAMPLE_dcs.preBlast.mutated.bam
-    │       └── SAMPLE_dcs.preBlast.unmutated.bam
+    │   ├── ConsensusMakerOutputs
+    │   │   ├── SAMPLE_aln_seq1.fq.gz
+    │   │   ├── SAMPLE_aln_seq2.fq.gz
+    │   │   ├── SAMPLE_read1_dcs.fq.gz
+    │   │   ├── SAMPLE_read1_sscs.fq.gz
+    │   │   ├── SAMPLE_read2_dcs.fq.gz
+    │   │   └── SAMPLE_read2_sscs.fq.gz
+    │   ├── preVariantCalling
+    │   │   ├── SAMPLE.dcs.prevar.bam
+    │   │   └── SAMPLE.sscs.prevar.bam
+    │   └── postBlast
+    │       ├── FilteredReads
+    │       │   ├── SAMPLE_dcs.ambig.sort.bam
+    │       │   ├── SAMPLE_dcs.ambig.sort.bam.bai
+    │       │   ├── SAMPLE_dcs.wrongSpecies.sort.bam
+    │       │   └── SAMPLE_dcs.wrongSpecies.sort.bam.bai
+    │       ├── SAMPLE_dcs.blast.xml
+    │       ├── SAMPLE_dcs.preBlast.mutated.bam
+    │       └── SAMPLE_dcs.preBlast.unmutated.bam
     ├── logs
-    │   └── Log files
+    │   └── Log files
     ├── testSeq1.fastq.gz
     ├── testSeq2.fastq.gz
     └── Stats
-        ├── data
-        │   ├── SAMPLE_cmStats.txt
-        │   ├── SAMPLE.dcs_ambiguity_counts.txt
-        │   ├── SAMPLE.dcs.iSize_Metrics.txt
-        │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
-        │   ├── SAMPLE.dcs.mutsPerRead.txt
-        │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
-        │   ├── SAMPLE.sscs.mutsPerRead.txt
-        │   ├── SAMPLE.dcs.depth.txt
-        │   ├── SAMPLE.dcs.depth.summary.csv
-        │   ├── SAMPLE.sscs.depth.txt
-        │   ├── SAMPLE.sscs.depth.summary.csv
-        │   ├── SAMPLE_dcs.speciesComp.txt
-        │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
-        │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
-        │   ├── SAMPLE.dcs.endClip.metrics.txt
-        │   ├── SAMPLE.dcs.overlapClip.metrics.txt
-        │   ├── SAMPLE.sscs.endClip.metrics.txt
-        │   ├── SAMPLE.sscs.overlapClip.metrics.txt
-        │   ├── SAMPLE_onTargetCount.txt
-        │   ├── SAMPLE.sscs_onTargetCount.txt
-        │   ├── SAMPLE.dcs_onTargetCount.txt
-        │   ├── SAMPLE.tagstats.txt
-        │   └── SAMPLE.temp.sort.flagstats.txt
-        ├── SAMPLE.report.ipynb
-        └── plots
-            ├── SAMPLE.dcs.iSize_Histogram.png
-            ├── SAMPLE.dcs.mutsPerRead.png
-            ├── SAMPLE.dcs.targetCoverage.png
-            ├── SAMPLE.dcs_BasePerPosInclNs.png
-            ├── SAMPLE.dcs_BasePerPosWithoutNs.png
-            ├── SAMPLE.sscs.mutsPerRead.png
-            ├── SAMPLE.sscs_BasePerPosInclNs.png
-            ├── SAMPLE.sscs_BasePerPosWithoutNs.png
-            ├── SAMPLE_fam_size_relation.png
-            └── SAMPLE_family_size.png</pre></div>
+        ├── data
+        │   ├── SAMPLE_cmStats.txt
+        │   ├── SAMPLE.dcs_ambiguity_counts.txt
+        │   ├── SAMPLE.dcs.iSize_Metrics.txt
+        │   ├── SAMPLE.dcs_MutsPerCycle.dat.csv
+        │   ├── SAMPLE.dcs.mutsPerRead.txt
+        │   ├── SAMPLE.sscs_MutsPerCycle.dat.csv
+        │   ├── SAMPLE.sscs.mutsPerRead.txt
+        │   ├── SAMPLE.dcs.depth.txt
+        │   ├── SAMPLE.dcs.depth.summary.csv
+        │   ├── SAMPLE.sscs.depth.txt
+        │   ├── SAMPLE.sscs.depth.summary.csv
+        │   ├── SAMPLE_dcs.speciesComp.txt
+        │   ├── SAMPLE_mem.dcs.sort.flagstats.txt
+        │   ├── SAMPLE_mem.sscs.sort.flagstats.txt
+        │   ├── SAMPLE.dcs.endClip.metrics.txt
+        │   ├── SAMPLE.dcs.overlapClip.metrics.txt
+        │   ├── SAMPLE.sscs.endClip.metrics.txt
+        │   ├── SAMPLE.sscs.overlapClip.metrics.txt
+        │   ├── SAMPLE_onTargetCount.txt
+        │   ├── SAMPLE.sscs_onTargetCount.txt
+        │   ├── SAMPLE.dcs_onTargetCount.txt
+        │   ├── SAMPLE.tagstats.txt
+        │   └── SAMPLE.temp.sort.flagstats.txt
+        ├── SAMPLE.report.ipynb
+        └── plots
+            ├── SAMPLE.dcs.iSize_Histogram.png
+            ├── SAMPLE.dcs.mutsPerRead.png
+            ├── SAMPLE.dcs.targetCoverage.png
+            ├── SAMPLE.dcs_BasePerPosInclNs.png
+            ├── SAMPLE.dcs_BasePerPosWithoutNs.png
+            ├── SAMPLE.sscs.mutsPerRead.png
+            ├── SAMPLE.sscs_BasePerPosInclNs.png
+            ├── SAMPLE.sscs_BasePerPosWithoutNs.png
+            ├── SAMPLE_fam_size_relation.png
+            └── SAMPLE_family_size.png</pre></div>
 <p>File descriptions are as follows:</p>
 <table>
 <thead>
@@ -854,6 +864,24 @@ well as a file directory structure for each sample.  The summary files are:</p>
 </tr>
 <tr>
 <td>SAMP_DIR/Intermediate</td>
+<td>preVariantCalling</td>
+<td>Directory for pre-variant calling checkpoint files</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Intermediate/preVariantCalling</td>
+<td>SAMPLE.dcs.prevar.bam</td>
+<td>DCS pre-variant file</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Intermediate/preVariantCalling</td>
+<td>SAMPLE.sscs.prevar.bam</td>
+<td>SSCS pre-variant file</td>
+<td>Always</td>
+</tr>
+<tr>
+<td>SAMP_DIR/Intermediate/</td>
 <td>postBlast</td>
 <td>Directory for post-BLAST checkpoint files.  Only affects DCS.</td>
 <td>Always</td>
