@@ -469,22 +469,16 @@ def main():
             if o.write_sscs is True:
 
                 if len(seq_dict['ab:1']) != 0 and len(seq_dict['ab:2']) != 0:
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ab:1']
-                    )
                     corrQualStr = pysam.qualities_to_qualitystring(
-                        corrected_qual_score)
+                        [x if x < 41 else 41 for x in qual_dict['ab:1']])
                     read1_sscs_fq_file.write(f"@{tag}#ab/1 XF:Z:{seq_dict['ab:1'][1]}\n"
                                              f"{seq_dict['ab:1'][0]}\n"
                                              f"+\n"
                                              f"{corrQualStr}\n"
                                              )
 
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ab:2']
-                    )
                     corrQualStr = pysam.qualities_to_qualitystring(
-                        corrected_qual_score)
+                        [x if x < 41 else 41 for x in qual_dict['ab:2']])
                     read2_sscs_fq_file.write(f"@{tag}#ab/2 XF:Z:{seq_dict['ab:2'][1]}\n"
                                              f"{seq_dict['ab:2'][0]}\n"
                                              f"+\n"
@@ -492,22 +486,16 @@ def main():
                                              )
 
                 if len(seq_dict['ba:1']) != 0 and len(seq_dict['ba:2']) != 0:
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ba:1']
-                    )
                     corrQualStr = pysam.qualities_to_qualitystring(
-                        corrected_qual_score)
+                        [x if x < 41 else 41 for x in qual_dict['ba:1']])
                     read1_sscs_fq_file.write(f"@{tag}#ba/1 XF:Z:{seq_dict['ba:1'][1]}\n"
                                              f"{seq_dict['ba:1'][0]}\n"
                                              f"+\n"
                                              f"{corrQualStr}\n"
                                              )
 
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ba:2']
-                    )
                     corrQualStr = pysam.qualities_to_qualitystring(
-                        corrected_qual_score)
+                        [x if x < 41 else 41 for x in qual_dict['ba:2']])
                     read2_sscs_fq_file.write(f"@{tag}#ba/2 XF:Z:{seq_dict['ba:2'][1]}\n"
                                              f"{seq_dict['ba:2'][0]}\n"
                                              f"+\n"
@@ -526,10 +514,10 @@ def main():
                         ),
                         seq_dict['ab:1'][1], seq_dict['ba:2'][1]
                     ]
-                    dcs_read_1_qual = map(
-                        lambda x: x if x < 41 else 41,
-                        qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], dcs_read_1[0])
-                    )
+                    r1QualStr = pysam.qualities_to_qualitystring([
+                        x if x < 41 else 41 for x in 
+                        qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], 
+                            dcs_read_1[0])])
                     read1_dcs_len = len(dcs_read_1[0])
                     fam_size_x_axis.append(int(seq_dict['ab:1'][1]))
                     fam_size_y_axis.append(int(seq_dict['ba:2'][1]))
@@ -551,10 +539,10 @@ def main():
                         ),
                         seq_dict['ba:1'][1], seq_dict['ab:2'][1]
                     ]
-                    dcs_read_2_qual = map(
-                        lambda x: x if x < 41 else 41,
-                        qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], dcs_read_2[0])
-                    )
+                    r2QualStr = pysam.qualities_to_qualitystring([
+                        x if x < 41 else 41 for x in 
+                        qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], 
+                            dcs_read_2[0])])
                     read2_dcs_len = len(dcs_read_2[0])
 
                     if dcs_read_2[0].count('N') / read2_dcs_len > o.Ncutoff:
@@ -564,8 +552,6 @@ def main():
                 else:
                     failedDcs += 1
                 if read1_dcs_len != 0 and read2_dcs_len != 0:
-                    r1QualStr = pysam.qualities_to_qualitystring(dcs_read_1_qual)
-                    r2QualStr = pysam.qualities_to_qualitystring(dcs_read_2_qual)
                     read1_dcs_fq_file.write(
                         f"@{tag}/1 XF:Z:{dcs_read_1[1]}:{dcs_read_1[2]}\n"
                         f"{dcs_read_1[0]}\n"
