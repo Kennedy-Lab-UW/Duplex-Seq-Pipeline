@@ -335,13 +335,13 @@ def main():
                     f"@{temp_read1_entry.query_name}\n"
                     f"{temp_read1_entry.query_sequence[o.tag_len + o.spcr_len:]}\n"
                     f"+\n"
-                    f"{''.join(chr(x + 33) for x in temp_read1_entry.query_qualities[o.tag_len + o.spcr_len:])}\n"
+                    f"{pysam.qualities_to_qualitystring(temp_read1_entry.query_qualities[o.tag_len + o.spcr_len:])}\n"
                 )
                 fAlign2.write(
                     f"@{line.query_name}\n"
                     f"{line.query_sequence[o.tag_len + o.spcr_len:]}\n"
                     f"+\n"
-                    f"{''.join(chr(x + 33) for x in line.query_qualities[o.tag_len + o.spcr_len:])}\n"
+                    f"{pysam.qualities_to_qualitystring(line.query_qualities[o.tag_len + o.spcr_len:])}\n"
                 )
                 alignedReadCount += 1
         paired_end_count += 1
