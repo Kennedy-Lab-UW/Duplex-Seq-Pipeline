@@ -4,6 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.6.*
+  - cython
   - bwa=0.7.17.*
   - samtools=1.9.*
   - picard=2.20.*
