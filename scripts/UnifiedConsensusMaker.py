@@ -437,7 +437,6 @@ def main():
         list(first_line.query_qualities)
     )
     tag_count_dict = defaultdict(lambda: 0)
-
     print("Creating consensus reads...")
 
     for line in iteratorWrapper(in_bam_file.fetch(until_eof=True), FinalValue):
@@ -451,190 +450,189 @@ def main():
             qual_dict[line.query_name.split('#')[1]].append(
                 list(line.query_qualities)
             )
-        elif "N" in tag:
-            famSizes = {x: len(seq_dict[x]) for x in seq_dict}
-            if (famSizes['ab:1'] != famSizes['ab:2']
-                    or famSizes['ba:1'] != famSizes['ba:2']):
-                raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
-                                f'not match for UMI {tag}')
-            for tag_subtype in seq_dict.keys():
-                if famSizes[tag_subtype] > 0:
-                    tag_count_dict[famSizes[tag_subtype]] += 1
-            nUMIs += 1
-        elif ('A' * o.rep_filt in tag
-                or 'C' * o.rep_filt in tag
-                or 'G' * o.rep_filt in tag
-                or 'T' * o.rep_filt in tag):
-            famSizes = {x: len(seq_dict[x]) for x in seq_dict}
-            if (famSizes['ab:1'] != famSizes['ab:2']
-                    or famSizes['ba:1'] != famSizes['ba:2']):
-                raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
-                                f'not match for UMI {tag}')
-            for tag_subtype in seq_dict.keys():
-                if famSizes[tag_subtype] > 0:
-                    tag_count_dict[famSizes[tag_subtype]] += 1
-            monoNtUMIs += 1
-        else:
-            famSizes = {x: len(seq_dict[x]) for x in seq_dict}
-            if (famSizes['ab:1'] != famSizes['ab:2']
-                    or famSizes['ba:1'] != famSizes['ba:2']
-            ):
-                raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
-                                f'not match for UMI {tag}'
-                                )
+        else: 
+            if "N" in tag:
+                famSizes = {x: len(seq_dict[x]) for x in seq_dict}
+                if (famSizes['ab:1'] != famSizes['ab:2']
+                        or famSizes['ba:1'] != famSizes['ba:2']):
+                    raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
+                                    f'not match for UMI {tag}')
+                for tag_subtype in seq_dict.keys():
+                    if famSizes[tag_subtype] > 0:
+                        tag_count_dict[famSizes[tag_subtype]] += 1
+                nUMIs += 1
+            elif ('A' * o.rep_filt in tag
+                    or 'C' * o.rep_filt in tag
+                    or 'G' * o.rep_filt in tag
+                    or 'T' * o.rep_filt in tag):
+                famSizes = {x: len(seq_dict[x]) for x in seq_dict}
+                if (famSizes['ab:1'] != famSizes['ab:2']
+                        or famSizes['ba:1'] != famSizes['ba:2']):
+                    raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
+                                    f'not match for UMI {tag}')
+                for tag_subtype in seq_dict.keys():
+                    if famSizes[tag_subtype] > 0:
+                        tag_count_dict[famSizes[tag_subtype]] += 1
+                monoNtUMIs += 1
+            else:
+                famSizes = {x: len(seq_dict[x]) for x in seq_dict}
+                if (famSizes['ab:1'] != famSizes['ab:2']
+                        or famSizes['ba:1'] != famSizes['ba:2']
+                ):
+                    raise Exception(f'ERROR: Read counts for Read1 and Read 2 do '
+                                    f'not match for UMI {tag}'
+                                    )
 
-            for tag_subtype in seq_dict.keys():
+                for tag_subtype in seq_dict.keys():
 
-                if famSizes[tag_subtype] > 0:
-                    tag_count_dict[famSizes[tag_subtype]] += 1
-                    familyCtr += 1
-                if famSizes[tag_subtype] == 0:
-                    zeroFamilySize += 1
-                elif famSizes[tag_subtype] < o.minmem:
-                    seq_dict[tag_subtype] = []
-                    qual_dict[tag_subtype] = []
-                    smallFamilySize += 1
-                elif o.minmem <= famSizes[tag_subtype] <= o.maxmem:
-                    # Tag types w/o reads should not be submitted as long as 
-                    # minmem is > 0
-                    seq_dict[tag_subtype] = [
-                        consensus_caller(seq_dict[tag_subtype],
-                                         o.cutoff,
-                                         tag,
-                                         True
-                                         ),
-                        str(famSizes[tag_subtype])
-                    ]
-                    qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype], seq_dict[tag_subtype][0])
-                    numSSCS += 1
-                elif famSizes[tag_subtype] > o.maxmem:
-                    seq_dict[tag_subtype] = [
-                        consensus_caller(seq_dict[tag_subtype][:o.maxmem],
-                                         o.cutoff,
-                                         tag,
-                                         True
-                                         ),
-                        str(famSizes[tag_subtype])
-                    ]
-                    qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype], seq_dict[tag_subtype][0])
-                    numSSCS += 1
-            if o.write_sscs is True:
+                    if famSizes[tag_subtype] > 0:
+                        tag_count_dict[famSizes[tag_subtype]] += 1
+                        familyCtr += 1
+                    if famSizes[tag_subtype] == 0:
+                        zeroFamilySize += 1
+                    elif famSizes[tag_subtype] < o.minmem:
+                        seq_dict[tag_subtype] = []
+                        qual_dict[tag_subtype] = []
+                        smallFamilySize += 1
+                    elif o.minmem <= famSizes[tag_subtype] <= o.maxmem:
+                        # Tag types w/o reads should not be submitted as long as 
+                        # minmem is > 0
+                        seq_dict[tag_subtype] = [
+                            consensus_caller(seq_dict[tag_subtype],
+                                             o.cutoff,
+                                             tag,
+                                             True
+                                             ),
+                            str(famSizes[tag_subtype])
+                        ]
+                        qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype], seq_dict[tag_subtype][0])
+                        numSSCS += 1
+                    elif famSizes[tag_subtype] > o.maxmem:
+                        seq_dict[tag_subtype] = [
+                            consensus_caller(seq_dict[tag_subtype][:o.maxmem],
+                                             o.cutoff,
+                                             tag,
+                                             True
+                                             ),
+                            str(famSizes[tag_subtype])
+                        ]
+                        qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype], seq_dict[tag_subtype][0])
+                        numSSCS += 1
+                if o.write_sscs is True:
+                    if len(seq_dict['ab:1']) != 0 and len(seq_dict['ab:2']) != 0:
+                        corrected_qual_score = map(
+                            lambda x: x if x < 41 else 41, qual_dict['ab:1']
+                        )
+                        corrQualStr = ''.join(
+                            chr(x + 33) for x in corrected_qual_score
+                        )
+                        read1_sscs_fq_file.write(f"@{tag}#ab/1 XF:Z:{seq_dict['ab:1'][1]}\n"
+                                                 f"{seq_dict['ab:1'][0]}\n"
+                                                 f"+\n"
+                                                 f"{corrQualStr}\n"
+                                                 )
 
-                if len(seq_dict['ab:1']) != 0 and len(seq_dict['ab:2']) != 0:
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ab:1']
-                    )
-                    corrQualStr = ''.join(
-                        chr(x + 33) for x in corrected_qual_score
-                    )
-                    read1_sscs_fq_file.write(f"@{tag}#ab/1 XF:Z:{seq_dict['ab:1'][1]}\n"
-                                             f"{seq_dict['ab:1'][0]}\n"
-                                             f"+\n"
-                                             f"{corrQualStr}\n"
-                                             )
+                        corrected_qual_score = map(
+                            lambda x: x if x < 41 else 41, qual_dict['ab:2']
+                        )
+                        corrQualStr = ''.join(
+                            chr(x + 33) for x in corrected_qual_score
+                        )
+                        read2_sscs_fq_file.write(f"@{tag}#ab/2 XF:Z:{seq_dict['ab:2'][1]}\n"
+                                                 f"{seq_dict['ab:2'][0]}\n"
+                                                 f"+\n"
+                                                 f"{corrQualStr}\n"
+                                                 )
 
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ab:2']
-                    )
-                    corrQualStr = ''.join(
-                        chr(x + 33) for x in corrected_qual_score
-                    )
-                    read2_sscs_fq_file.write(f"@{tag}#ab/2 XF:Z:{seq_dict['ab:2'][1]}\n"
-                                             f"{seq_dict['ab:2'][0]}\n"
-                                             f"+\n"
-                                             f"{corrQualStr}\n"
-                                             )
+                    if len(seq_dict['ba:1']) != 0 and len(seq_dict['ba:2']) != 0:
+                        corrected_qual_score = map(
+                            lambda x: x if x < 41 else 41, qual_dict['ba:1']
+                        )
+                        corrQualStr = ''.join(
+                            chr(x + 33) for x in corrected_qual_score
+                        )
+                        read1_sscs_fq_file.write(f"@{tag}#ba/1 XF:Z:{seq_dict['ba:1'][1]}\n"
+                                                 f"{seq_dict['ba:1'][0]}\n"
+                                                 f"+\n"
+                                                 f"{corrQualStr}\n"
+                                                 )
 
-                if len(seq_dict['ba:1']) != 0 and len(seq_dict['ba:2']) != 0:
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ba:1']
-                    )
-                    corrQualStr = ''.join(
-                        chr(x + 33) for x in corrected_qual_score
-                    )
-                    read1_sscs_fq_file.write(f"@{tag}#ba/1 XF:Z:{seq_dict['ba:1'][1]}\n"
-                                             f"{seq_dict['ba:1'][0]}\n"
-                                             f"+\n"
-                                             f"{corrQualStr}\n"
-                                             )
+                        corrected_qual_score = map(
+                            lambda x: x if x < 41 else 41, qual_dict['ba:2']
+                        )
+                        corrQualStr = ''.join(
+                            chr(x + 33) for x in corrected_qual_score
+                        )
+                        read2_sscs_fq_file.write(f"@{tag}#ba/2 XF:Z:{seq_dict['ba:2'][1]}\n"
+                                                 f"{seq_dict['ba:2'][0]}\n"
+                                                 f"+\n"
+                                                 f"{corrQualStr}\n"
+                                                 )
 
-                    corrected_qual_score = map(
-                        lambda x: x if x < 41 else 41, qual_dict['ba:2']
-                    )
-                    corrQualStr = ''.join(
-                        chr(x + 33) for x in corrected_qual_score
-                    )
-                    read2_sscs_fq_file.write(f"@{tag}#ba/2 XF:Z:{seq_dict['ba:2'][1]}\n"
-                                             f"{seq_dict['ba:2'][0]}\n"
-                                             f"+\n"
-                                             f"{corrQualStr}\n"
-                                             )
+                if o.without_dcs is False:
+                    if len(seq_dict['ab:1']) != 0 and len(seq_dict['ba:2']) != 0:
+                        numDCS += 1
+                        dcs_read_1 = [
+                            consensus_caller(
+                                [seq_dict['ab:1'][0], seq_dict['ba:2'][0]],
+                                1,
+                                tag,
+                                False
+                            ),
+                            seq_dict['ab:1'][1], seq_dict['ba:2'][1]
+                        ]
+                        dcs_read_1_qual = map(
+                            lambda x: x if x < 41 else 41,
+                            qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], dcs_read_1[0])
+                        )
+                        read1_dcs_len = len(dcs_read_1[0])
+                        fam_size_x_axis.append(int(seq_dict['ab:1'][1]))
+                        fam_size_y_axis.append(int(seq_dict['ba:2'][1]))
 
-            if o.without_dcs is False:
-                if len(seq_dict['ab:1']) != 0 and len(seq_dict['ba:2']) != 0:
-                    numDCS += 1
-                    dcs_read_1 = [
-                        consensus_caller(
-                            [seq_dict['ab:1'][0], seq_dict['ba:2'][0]],
-                            1,
-                            tag,
-                            False
-                        ),
-                        seq_dict['ab:1'][1], seq_dict['ba:2'][1]
-                    ]
-                    dcs_read_1_qual = map(
-                        lambda x: x if x < 41 else 41,
-                        qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], dcs_read_1[0])
-                    )
-                    read1_dcs_len = len(dcs_read_1[0])
-                    fam_size_x_axis.append(int(seq_dict['ab:1'][1]))
-                    fam_size_y_axis.append(int(seq_dict['ba:2'][1]))
+                        if dcs_read_1[0].count('N') / read1_dcs_len > o.Ncutoff:
+                            highN_DCS += 1
+                            dcs_read_1[0] = 'N' * read1_dcs_len
+                            dcs_read_1_qual = [0 for x in range(read1_dcs_len)]
+                    else:
+                        failedDcs += 1
+                    if len(seq_dict['ba:1']) != 0 and len(seq_dict['ab:2']) != 0:
+                        numDCS += 1
+                        dcs_read_2 = [
+                            consensus_caller(
+                                [seq_dict['ba:1'][0], seq_dict['ab:2'][0]],
+                                1,
+                                tag,
+                                False
+                            ),
+                            seq_dict['ba:1'][1], seq_dict['ab:2'][1]
+                        ]
+                        dcs_read_2_qual = map(
+                            lambda x: x if x < 41 else 41,
+                            qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], dcs_read_2[0])
+                        )
+                        read2_dcs_len = len(dcs_read_2[0])
 
-                    if dcs_read_1[0].count('N') / read1_dcs_len > o.Ncutoff:
-                        highN_DCS += 1
-                        dcs_read_1[0] = 'N' * read1_dcs_len
-                        dcs_read_1_qual = [0 for x in range(read1_dcs_len)]
-                else:
-                    failedDcs += 1
-                if len(seq_dict['ba:1']) != 0 and len(seq_dict['ab:2']) != 0:
-                    numDCS += 1
-                    dcs_read_2 = [
-                        consensus_caller(
-                            [seq_dict['ba:1'][0], seq_dict['ab:2'][0]],
-                            1,
-                            tag,
-                            False
-                        ),
-                        seq_dict['ba:1'][1], seq_dict['ab:2'][1]
-                    ]
-                    dcs_read_2_qual = map(
-                        lambda x: x if x < 41 else 41,
-                        qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], dcs_read_2[0])
-                    )
-                    read2_dcs_len = len(dcs_read_2[0])
-
-                    if dcs_read_2[0].count('N') / read2_dcs_len > o.Ncutoff:
-                        highN_DCS += 1
-                        dcs_read_2[0] = 'N' * read2_dcs_len
-                        dcs_read_2_qual = [0 for x in range(read2_dcs_len)]
-                else:
-                    failedDcs += 1
-                if read1_dcs_len != 0 and read2_dcs_len != 0:
-                    r1QualStr = ''.join(chr(x + 33) for x in dcs_read_1_qual)
-                    r2QualStr = ''.join(chr(x + 33) for x in dcs_read_2_qual)
-                    read1_dcs_fq_file.write(
-                        f"@{tag}/1 XF:Z:{dcs_read_1[1]}:{dcs_read_1[2]}\n"
-                        f"{dcs_read_1[0]}\n"
-                        f"+\n"
-                        f"{r1QualStr}\n"
-                    )
-                    read2_dcs_fq_file.write(
-                        f"@{tag}/2 XF:Z:{dcs_read_2[1]}:{dcs_read_2[2]}\n"
-                        f"{dcs_read_2[0]}\n"
-                        f"+\n"
-                        f"{r2QualStr}\n"
-                    )
-
+                        if dcs_read_2[0].count('N') / read2_dcs_len > o.Ncutoff:
+                            highN_DCS += 1
+                            dcs_read_2[0] = 'N' * read2_dcs_len
+                            dcs_read_2_qual = [0 for x in range(read2_dcs_len)]
+                    else:
+                        failedDcs += 1
+                    if read1_dcs_len != 0 and read2_dcs_len != 0:
+                        r1QualStr = ''.join(chr(x + 33) for x in dcs_read_1_qual)
+                        r2QualStr = ''.join(chr(x + 33) for x in dcs_read_2_qual)
+                        read1_dcs_fq_file.write(
+                            f"@{tag}/1 XF:Z:{dcs_read_1[1]}:{dcs_read_1[2]}\n"
+                            f"{dcs_read_1[0]}\n"
+                            f"+\n"
+                            f"{r1QualStr}\n"
+                        )
+                        read2_dcs_fq_file.write(
+                            f"@{tag}/2 XF:Z:{dcs_read_2[1]}:{dcs_read_2[2]}\n"
+                            f"{dcs_read_2[0]}\n"
+                            f"+\n"
+                            f"{r2QualStr}\n"
+                        )
             if line != FinalValue:
                 readsCtr += 1
                 # reset conditions for next tag family
