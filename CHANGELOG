@@ -2,6 +2,7 @@ CHANGELOG
 v2.1.2: 
 Bugfix:
     Re-add pre variant calling checkpoint to fix non-functionality of rerun mode 1.
+    Remove "ancient" keyword and snakemake version restriction to fix run problems on macOS X
     
 Internal Changes:
     Instead of removing families containing Ns or mononucleotide repeats in UMIs after all consensus making happened, do it before any consensus making hapens.  The tagstats output removes unchanged at this time; the only difference will be in the SSCS output, which will not contain reads with UMIs that contain Ns or mononucleotide repeats (it did previously).  

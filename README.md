@@ -43,7 +43,7 @@ This pipeline is known to work with the following versions of
 the following required programs:
 
 * Python3.6+
-* Snakemake=5.25.0
+* Snakemake>=5.25.0
 * Pandas
 * Miniconda=4.7.\*
 * bwa=0.7.17.* (for genome setup)
@@ -51,11 +51,11 @@ the following required programs:
 * mamba>=0.5.1 (needed for environment setup; install through conda)
 * wget (on macOS, install using homebrew; present by default on linux)
 
+
+
 Once Python3.6 is installed, snakemake and pandas can be installed using 
-pip3 or using whatever package manager you're using.  While other versions of 
-snakemake may work (though definately no earlier that 5.25.0), there may be 
-some issues with using versions later than 5.25.0; those may be resolved by 
-restarting the pipeline when it crashes.  Blast can be downloaded in any of 
+pip3 or using whatever package manager you're using. 
+NOTE: For MacOS X, use the latest Snakemake.  Blast can be downloaded in any of 
 several ways, including some package managers (Ubuntu: sudo apt-get install 
 ncbi-blast+).  It can also be installed using conda if desired.  
 
@@ -66,13 +66,7 @@ The recommended install method and order is:
 3. Use Mamba to install Snakemake, bwa, blast, and pandas, invoking both the 
 bioconda and conda-forge channels.  
 
-NOTE: At the moment, we are seeing an issue in Mac OS X that seems to be due to 
-mislinking of the scheduler library 
-(see https://github.com/Kennedy-Lab-UW/Duplex-Seq-Pipeline/issues/95); we're 
-not sure if or when this will be fixed.  While this doesn't happen using a 
-newer version of Snakemake, the newer version of snakemake contains other 
-issues that we are still working on resolving 
-(https://github.com/snakemake/snakemake/issues/771).  
+
 
 ## 3: Setup: 
 
