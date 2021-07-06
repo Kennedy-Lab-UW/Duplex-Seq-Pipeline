@@ -2,6 +2,7 @@ import pandas as pd
 from snakemake.utils import validate
 import multiprocessing as mp
 import sys
+import os
 
 configfile: f"{sys.path[0]}/DS_progConfig.yaml"
 # ~ validate(config, "config.schema.yaml")
@@ -94,17 +95,21 @@ def get_rerun_type(wildcards):
 
 def getGeneralPrepedFiles():
     outList = []
+    tmpList = []
     anyRerun = False
     for sampIter in samples.index:
         if samples.loc[sampIter, "rerun_type"] > 0:
             outList.append(f".{sampIter}.preparedForRun")
             anyRerun = True
     if anyRerun:
-        outList.append(f"{config['samples']}.summary.csv.temp")
-        outList.append(f"{config['samples']}.summaryDepth.pdf.temp")
-        outList.append(f"{config['samples']}.summaryInsertSize.pdf.temp")
-        outList.append(f"{config['samples']}.summaryMutsByCycle.pdf.temp")
-        outList.append(f"{config['samples']}.summaryFamilySize.pdf.temp")
+        tmpList.append(f"{config['samples']}.summary.csv")
+        tmpList.append(f"{config['samples']}.summaryDepth.pdf")
+        tmpList.append(f"{config['samples']}.summaryInsertSize.pdf")
+        tmpList.append(f"{config['samples']}.summaryMutsByCycle.pdf")
+        tmpList.append(f"{config['samples']}.summaryFamilySize.pdf")
+    outList.extend([".".join((x, "temp")) for x in tmpList if os.path.exists(x)])
+    print("general")
+    print(outList)
     return outList
 
 def getSamplePrepedFiles(wildcards):
@@ -116,149 +121,171 @@ def getSamplePrepedFiles(wildcards):
         # remove post blast recovery files
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/"
-            f"{wildcards.sample}.report.html.temp"
+            f"{wildcards.sample}.report.html"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-            f"{wildcards.sample}.dcs.countmuts.csv.temp"
+            f"{wildcards.sample}.dcs.countmuts.csv"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-            f"{wildcards.sample}.dcs.vcf.temp"
+            f"{wildcards.sample}.dcs.vcf"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-            f"{wildcards.sample}.dcs.snps.vcf.temp"
+            f"{wildcards.sample}.dcs.snps.vcf"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-            f"{wildcards.sample}.dcs.mutated.bam.temp"
+            f"{wildcards.sample}.dcs.mutated.bam"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-            f"{wildcards.sample}.dcs.mutated.bam.bai.temp"
+            f"{wildcards.sample}.dcs.mutated.bam.bai"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.final.bam"
+        )
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
+            f"{wildcards.sample}.dcs.final.bam.bai"
         )
         if sscsTest:
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
-                f"{wildcards.sample}.sscs.countmuts.csv.temp"
+                f"{wildcards.sample}.sscs.countmuts.csv"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
-                f"{wildcards.sample}.sscs.vcf.temp"
+                f"{wildcards.sample}.sscs.vcf"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
-                f"{wildcards.sample}.sscs.snps.vcf.temp"
+                f"{wildcards.sample}.sscs.snps.vcf"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
-                f"{wildcards.sample}.sscs.mutated.bam.temp"
+                f"{wildcards.sample}.sscs.mutated.bam"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
-                f"{wildcards.sample}.sscs.mutated.bam.bai.temp"
+                f"{wildcards.sample}.sscs.mutated.bam.bai"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.final.bam"
+            )
+            outList.append(
+                f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
+                f"{wildcards.sample}.sscs.final.bam.bai"
             )
     if rerun_type > 1:
         # remove post blast files
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/"
+            f"preVariantCalling/{wildcards.sample}.dcs.prevar.bam")
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/"
+            f"preVariantCalling/{wildcards.sample}.dcs.prevar.bam.bai")
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/"
+            f"preVariantCalling/{wildcards.sample}.sscs.prevar.bam")
+        outList.append(
+            f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/"
+            f"preVariantCalling/{wildcards.sample}.sscs.prevar.bam.bai")
         if blastTest:
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
-                f"{wildcards.sample}_dcs.postRecovery.ambig.bam.temp"
+                f"{wildcards.sample}_dcs.postRecovery.ambig.bam"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
-                f"{wildcards.sample}_dcs.postRecovery.ambig.bam.bai.temp"
+                f"{wildcards.sample}_dcs.postRecovery.ambig.bam.bai"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
-                f"{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam.temp"
+                f"{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/FilteredReads/"
-                f"{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam.bai.temp"
-            )
-            outList.append(
-                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-                f"{wildcards.sample}.dcs.final.bam.temp"
-            )
-            outList.append(
-                f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-                f"{wildcards.sample}.dcs.final.bam.bai.temp"
+                f"{wildcards.sample}_dcs.postRecovery.wrongSpecies.bam.bai"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
-                f"FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.temp"
+                f"FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
-                f"FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.bai.temp"
+                f"FilteredReads/{wildcards.sample}_dcs.ambig.sort.bam.bai"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
-                f"FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.temp"
+                f"FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
-                f"FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai.temp"
+                f"FilteredReads/{wildcards.sample}_dcs.wrongSpecies.sort.bam.bai"
             )
     if rerun_type > 2:
         if blastTest:
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
-                f"{wildcards.sample}_dcs.blast.xml.temp"
+                f"{wildcards.sample}_dcs.blast.xml"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
-                f"{wildcards.sample}_dcs.preBlast.mutated.bam.temp"
-            )
+                f"{wildcards.sample}_dcs.preBlast.mutated.bam"
+            )   
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/postBlast/"
-                f"{wildcards.sample}_dcs.preBlast.unmutated.bam.temp"
+                f"{wildcards.sample}_dcs.preBlast.unmutated.bam"
             )
         else:
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-                f"{wildcards.sample}.dcs.final.bam.temp"
+                f"{wildcards.sample}.dcs.final.bam"
             )
             outList.append(
                 f"{samples.loc[wildcards.sample,'baseDir']}/Final/dcs/"
-                f"{wildcards.sample}.dcs.final.bam.bai.temp"
+                f"{wildcards.sample}.dcs.final.bam.bai"
             )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
-            f"{wildcards.sample}.sscs.final.bam.temp"
+            f"{wildcards.sample}.sscs.final.bam"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Final/sscs/"
-            f"{wildcards.sample}.sscs.final.bam.bai.temp"
+            f"{wildcards.sample}.sscs.final.bam.bai"
         )
     if rerun_type > 3:
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
-            f"{wildcards.sample}_read1_dcs.fq.gz.temp"
+            f"{wildcards.sample}_read1_dcs.fq.gz"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
-            f"{wildcards.sample}_read2_dcs.fq.gz.temp"
+            f"{wildcards.sample}_read2_dcs.fq.gz"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
-            f"{wildcards.sample}_read1_sscs.fq.gz.temp"
+            f"{wildcards.sample}_read1_sscs.fq.gz"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
-            f"{wildcards.sample}_read2_sscs.fq.gz.temp"
+            f"{wildcards.sample}_read2_sscs.fq.gz"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
-            f"{wildcards.sample}_aln_seq1.fq.gz.temp"
+            f"{wildcards.sample}_aln_seq1.fq.gz"
         )
         outList.append(
             f"{samples.loc[wildcards.sample,'baseDir']}/Intermediate/ConsensusMakerOutputs/"
-            f"{wildcards.sample}_aln_seq2.fq.gz.temp"
+            f"{wildcards.sample}_aln_seq2.fq.gz"
         )
-    return outList
+    print(wildcards.sample)
+    print([".".join((x, "temp")) for x in outList if os.path.exists(x)])
+    return [".".join((x, "temp")) for x in outList if os.path.exists(x)]
 
 rule all:
     input:

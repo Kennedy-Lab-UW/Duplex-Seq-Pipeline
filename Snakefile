@@ -613,8 +613,8 @@ rule getOnTarget_cs:
         rgsm = get_rgsm,
         rglb = get_rglb
     input:
-        inBam = "{runPath}/{sample}.{sampType}.prevar.temp.bam",
-        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai",
+        inBam = "{runPath}/Intermediate/preVariantCalling/{sample}.{sampType}.prevar.bam",
+        inBai = "{runPath}/Intermediate/preVariantCalling/{sample}.{sampType}.prevar.bam.bai",
         inBed = get_target_bed
     output:
         outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
@@ -910,7 +910,7 @@ rule PostBlastProcessing1:
     priority: 41
     input:
         inBam1="{runPath}/Intermediate/postBlast/{sample}_dcs.preBlast.mutated.bam",
-        inXML = ancient("{runPath}/Intermediate/postBlast/{sample}_dcs.blast.xml"),
+        inXML = "{runPath}/Intermediate/postBlast/{sample}_dcs.blast.xml",
     output:
         tempBam3 = temp("{runPath}/{sample}_dcs.speciesLabeled.bam"),
     conda:
@@ -1067,7 +1067,7 @@ rule makePreEndClip:
     input:
         inBam = getEndClipBam,
     output:
-        outBam = temp("{runPath}/{sample}.{sampType}.prevar.temp.bam")
+        outBam = "{runPath}/Intermediate/preVariantCalling/{sample}.{sampType}.prevar.bam"
     conda:
         "envs/DS_env_full.yaml"
     log:
@@ -1091,8 +1091,8 @@ rule endClip:
         runPath = get_baseDir
     input:
         # inBam, inBai will be set by getEndClipBam (renamed) and getVarDictBai
-        inBam = "{runPath}/{sample}.{sampType}.prevar.temp.bam",
-        inBai = "{runPath}/{sample}.{sampType}.prevar.temp.bam.bai",
+        inBam = "{runPath}/Intermediate/preVariantCalling/{sample}.{sampType}.prevar.bam",
+        inBai = "{runPath}/Intermediate/preVariantCalling/{sample}.{sampType}.prevar.bam.bai",
         inRef = get_reference
     output:
         outBam = temp("{runPath}/{sample}.{sampType}.clipped.bam"),

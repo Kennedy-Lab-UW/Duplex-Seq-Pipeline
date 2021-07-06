@@ -1,4 +1,15 @@
 CHANGELOG
+v2.1.2: 
+Bugfix:
+    Re-add pre variant calling checkpoint to fix non-functionality of rerun mode 1.
+    Remove "ancient" keyword and snakemake version restriction to fix run problems on macOS X
+    Fix issue in VCF generation where the same variant could appear multiple times
+    
+Internal Changes:
+    Instead of removing families containing Ns or mononucleotide repeats in UMIs after all consensus making happened, do it before any consensus making hapens.  The tagstats output removes unchanged at this time; the only difference will be in the SSCS output, which will not contain reads with UMIs that contain Ns or mononucleotide repeats (it did previously).  
+    Track number of N-containing UMIs in CM_stats file.  
+    Modify rerun to check for file existance (depends on OS module from Python standard library; may not work identically on all systems).
+
 v2.1.1: 
 Bugfix:
     Fix issue where masking in countmuts file was not applied correctly

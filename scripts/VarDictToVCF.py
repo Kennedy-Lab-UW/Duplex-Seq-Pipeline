@@ -299,6 +299,9 @@ def main():
     vardict_vars["RefFract"] = vardict_vars["RefCount"] / vardict_vars["Depth"]
     vardict_vars["AltFract"] = vardict_vars["AltDepth"] / vardict_vars["Depth"]
 
+    # Remove any duplicate rows
+    vardict_vars.drop_duplicates(subset=["Chr","Start","End","Ref","Alt"], inplace=True)
+
     # create array of VCF lines for vardict lines
     myVariants = []
     for index, rowIter in vardict_vars.iterrows():
