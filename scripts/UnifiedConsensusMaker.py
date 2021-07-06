@@ -385,7 +385,6 @@ def main():
         list(first_line.query_qualities)
     )
     tag_count_dict = defaultdict(lambda: 0)
-
     print("Creating consensus reads...")
 
     for line in iteratorWrapper(in_bam_file.fetch(until_eof=True), FinalValue):
@@ -400,6 +399,7 @@ def main():
                 list(line.query_qualities)
             )
         else:
+
             if "N" in tag:
                 famSizes = {x: len(seq_dict[x]) for x in seq_dict}
                 if (famSizes['ab:1'] != famSizes['ab:2']
@@ -469,6 +469,7 @@ def main():
                         numSSCS += 1
                 if o.write_sscs is True:
 
+
                     if len(seq_dict['ab:1']) != 0 and len(seq_dict['ab:2']) != 0:
                         corrQualStr = pysam.qualities_to_qualitystring(
                             [x if x < 41 else 41 for x in qual_dict['ab:1']])
@@ -477,6 +478,7 @@ def main():
                                                  f"+\n"
                                                  f"{corrQualStr}\n"
                                                  )
+
 
                         corrQualStr = pysam.qualities_to_qualitystring(
                             [x if x < 41 else 41 for x in qual_dict['ab:2']])
@@ -487,6 +489,7 @@ def main():
                                                  )
 
                     if len(seq_dict['ba:1']) != 0 and len(seq_dict['ba:2']) != 0:
+
                         corrQualStr = pysam.qualities_to_qualitystring(
                             [x if x < 41 else 41 for x in qual_dict['ba:1']])
                         read1_sscs_fq_file.write(f"@{tag}#ba/1 XF:Z:{seq_dict['ba:1'][1]}\n"
@@ -494,6 +497,7 @@ def main():
                                                  f"+\n"
                                                  f"{corrQualStr}\n"
                                                  )
+
 
                         corrQualStr = pysam.qualities_to_qualitystring(
                             [x if x < 41 else 41 for x in qual_dict['ba:2']])
@@ -515,6 +519,7 @@ def main():
                             ),
                             seq_dict['ab:1'][1], seq_dict['ba:2'][1]
                         ]
+
                         r1QualStr = pysam.qualities_to_qualitystring([
                             x if x < 41 else 41 for x in 
                             qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], 
@@ -540,6 +545,7 @@ def main():
                             ),
                             seq_dict['ba:1'][1], seq_dict['ab:2'][1]
                         ]
+
                         r2QualStr = pysam.qualities_to_qualitystring([
                             x if x < 41 else 41 for x in 
                             qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], 
@@ -565,7 +571,7 @@ def main():
                             f"+\n"
                             f"{r2QualStr}\n"
                         )
-
+                        
             if line != FinalValue:
                 readsCtr += 1
                 # reset conditions for next tag family

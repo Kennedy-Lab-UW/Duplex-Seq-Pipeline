@@ -910,7 +910,7 @@ rule PostBlastProcessing1:
     priority: 41
     input:
         inBam1="{runPath}/Intermediate/postBlast/{sample}_dcs.preBlast.mutated.bam",
-        inXML = ancient("{runPath}/Intermediate/postBlast/{sample}_dcs.blast.xml"),
+        inXML = "{runPath}/Intermediate/postBlast/{sample}_dcs.blast.xml",
     output:
         tempBam3 = temp("{runPath}/{sample}_dcs.speciesLabeled.bam"),
     conda:
