@@ -28,5 +28,6 @@ dependencies:
   - r-gridbase
   - icu=64.*
   - pillow
+  - img2pdf
   - vardict-java=1.8.0
   - fgbio=1.3.0
