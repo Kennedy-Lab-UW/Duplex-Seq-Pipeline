@@ -31,3 +31,4 @@ dependencies:
   - img2pdf
   - vardict-java=1.8.0
   - fgbio=1.3.0
+  - openjdk=8.0.192
