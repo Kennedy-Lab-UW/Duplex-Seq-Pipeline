@@ -3,7 +3,7 @@ description: an entry in the sample sheet
 properties:
   sample:
     type: string
-    pattern: ^[^\s]*$
+    pattern: ^[^\s\#\%\&\{\}\\\<\>\*\?\$\!\'\"\:\@\+\`\|\=]*$
     description: A unique identifier for a sample; this will be used to name all output files for this sample
   rglb:
     type: string
