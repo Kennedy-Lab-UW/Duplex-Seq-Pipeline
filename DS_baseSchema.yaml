@@ -165,7 +165,7 @@ properties:
   cm_filters:
     type: string
     pattern: ^[a-zA-Z_]+((:[a-zA-Z_]+){0,})$
-    default: "none"
+    default: "SNP"
     description: Select which filters to apply durring frequency calculation.  
   runSSCS:
     type: boolean
