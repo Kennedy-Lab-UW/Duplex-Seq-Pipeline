@@ -1,0 +1,6 @@
+name: DS_bcftools
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - bcftools=1.14*

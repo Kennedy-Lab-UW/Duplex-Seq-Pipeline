@@ -4,6 +4,8 @@ Internal Changes:
     Implement speedups in UnifiedConsensusMaker (requires Cython)
     Bump versions for a number of packages in the environment
     Modify depth plot summary script to enable large capture sets
+    Split environment up to allow different requirements for different scripts
+    Atomize variants prior to countMutsPerCycle.py
 
 v2.1.2: 
 Bugfix:

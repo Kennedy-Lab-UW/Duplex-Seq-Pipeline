@@ -405,8 +405,17 @@ rule all:
 # Implemented to save time at run-time on environment setup
 rule initializeEnvs:
     input:
-        "full.initialized",
-        "recovery.initialized"
+        "DS_BLAST_env.initialized",
+        "DS_CM_env.initialized",
+        "DS_bcftools_env.initialized",
+        "DS_bedtools_env.initialized",
+        "DS_bwa_env.initialized",
+        "DS_cutadapt_env.initialized",
+        "DS_env_recovery.initialized",
+        "DS_fgbio_env.initialized",
+        "DS_image_processing_env.initialized",
+        "DS_jupyter_env.initialized",
+        "DS_vardict_env.initialized"
     params:
         basePath = sys.path[0]
     output:
@@ -416,15 +425,136 @@ rule initializeEnvs:
         touch "{output}"
         """
 
-rule initializeFullEnv:
+rule initializeDS_BLAST_env:
     output:
-        temp("full.initialized")
+        temp("DS_BLAST_env.initialized")
+    conda:
+        "envs/DS_BLAST_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_BLAST_env.initialized
+        """
+
+rule initializeDS_CM_env:
+    output:
+        temp("DS_CM_env.initialized")
+    conda:
+        "envs/DS_CM_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_CM_env.initialized
+        """
+
+rule initializeDS_bcftools_env:
+    output:
+        temp("DS_bcftools_env.initialized")
+    conda:
+        "envs/DS_bcftools_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_bcftools_env.initialized
+        """
+
+rule initializeDS_bedtools_env:
+    output:
+        temp("DS_bedtools_env.initialized")
+    conda:
+        "envs/DS_bedtools_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_bedtools_env.initialized
+        """
+
+rule initializeDS_bwa_env:
+    output:
+        temp("DS_bwa_env.initialized")
+    conda:
+        "envs/DS_bwa_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_bwa_env.initialized
+        """
+
+rule initializeDS_cutadapt_env:
+    output:
+        temp("DS_cutadapt_env.initialized")
+    conda:
+        "envs/DS_cutadapt_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_cutadapt_env.initialized
+        """
+
+rule initializeDS_env_full:
+    output:
+        temp("DS_env_full.initialized")
     conda:
         "envs/DS_env_full.yaml"
     shell:
         """
         echo "Initializing envs"
-        touch full.initialized
+        touch DS_env_full.initialized
+        """
+
+rule initializeDS_env_recovery:
+    output:
+        temp("DS_env_recovery.initialized")
+    conda:
+        "envs/DS_env_recovery.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_env_recovery.initialized
+        """
+
+rule initializeDS_fgbio_env:
+    output:
+        temp("DS_fgbio_env.initialized")
+    conda:
+        "envs/DS_fgbio_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_fgbio_env.initialized
+        """
+
+rule initializeDS_image_processing_env:
+    output:
+        temp("DS_image_processing_env.initialized")
+    conda:
+        "envs/DS_image_processing_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_image_processing_env.initialized
+        """
+
+rule initializeDS_jupyter_env:
+    output:
+        temp("DS_jupyter_env.initialized")
+    conda:
+        "envs/DS_jupyter_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_jupyter_env.initialized
+        """
+
+rule initializeDS_vardict_env:
+    output:
+        temp("DS_vardict_env.initialized")
+    conda:
+        "envs/DS_vardict_env.yaml"
+    shell:
+        """
+        echo "Initializing envs"
+        touch DS_vardict_env.initialized
         """
 
 rule initializeRecoveryEnv:
@@ -483,7 +613,7 @@ rule makeConsensus:
         outStats = "{runPath}/Stats/data/{sample}_cmStats.txt"
     priority: 50
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_makeConsensus.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -536,7 +666,7 @@ rule clipAdapters:
         out1 = temp("{runPath}/{sample}_read1_{sampType}.adaptClip.fq.gz"),
         out2 = temp("{runPath}/{sample}_read2_{sampType}.adaptClip.fq.gz"),
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_cutadapt_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_clipAdapters.log"
     shell:
@@ -576,7 +706,7 @@ rule getOnTarget:
         outBai = temp("{runPath}/{sample}_mem.aln.sort.bam.bai"),
         outOnTarget = "{runPath}/Stats/data/{sample}_onTargetCount.txt"
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{sample}_aln_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -619,7 +749,7 @@ rule getOnTarget_cs:
     output:
         outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -656,7 +786,7 @@ rule alignReads:
         outBai = temp("{runPath}/{sample}_mem.{sampType}.sort.bam.bai"),
         tempDir = temp(touch(directory("{runPath}/{sample}.{sampType}.alignReads.samtoolsTemp")))
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_bwa_env.yaml"
     threads: min(max(int(config["maxCores"]/2), 1),4)
     log:
          "{runPath}/logs/{sample}_{sampType}_bwa.log"
@@ -695,7 +825,7 @@ rule PreBlastFilter:
         outBai1 = temp("{runPath}/{sample}_mem.dcs.nonSecSup.bam.bai"),
         outBam2 = temp("{runPath}/{sample}_mem.dcs.SecSup.bam")
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_BLAST_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_PreBlastFilter.log"
     shell:
@@ -721,7 +851,7 @@ rule makeTempBai:
     output:
         outBai = temp("{runPath}/{fileBase}.temp.bam.bai")
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_bwa_env.yaml"
     shell:
         """
         samtools index {input.inBam} {output.outBai}
@@ -734,7 +864,7 @@ rule makeBai:
     output:
         outBai = "{runPath}/{fileBase}.bam.bai"
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_bwa_env.yaml"
     shell:
         """
         samtools index {input.inBam} {output.outBai}
@@ -747,7 +877,7 @@ rule getFlagstats:
     output:
         outBai = "{runPath}/Stats/data/{fileBase}.flagstats.txt"
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{fileBase}_getFlagstats.log"
     shell:
@@ -778,7 +908,7 @@ rule PreBlastProcessing1:
         tempVars = temp("{runPath}/{sample}_dcs.vars.vcf"), 
         tempDepth = temp("{runPath}/{sample}_dcs.vars.vcf_depth.txt")
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_BLAST_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_preBlast1.log"
     shell:
@@ -807,7 +937,7 @@ rule PreBlastProcessing2:
         tempMarked = temp("{runPath}/{sample}_dcs.Markedvars.vcf"),
         tempSnps = temp("{runPath}/{sample}_dcs.snps.vcf")
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_BLAST_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_preBlast2.log"
     shell:
@@ -840,7 +970,7 @@ rule PreBlastProcessing3:
         tempBam2 = "{runPath}/Intermediate/postBlast/{sample}_dcs.preBlast.mutated.bam", 
         tempMPC = temp("{runPath}/Intermediate/postBlast/{sample}_dcs.snpFiltered_MutsPerCycle.dat.csv")
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_BLAST_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_preBlast3.log"
     shell:
@@ -878,7 +1008,7 @@ rule BLAST:
     output:
         outXML = "{runPath}/Intermediate/postBlast/{sample}_dcs.blast.xml",
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_BLAST_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_blast.log"
     shell:
@@ -914,7 +1044,7 @@ rule PostBlastProcessing1:
     output:
         tempBam3 = temp("{runPath}/{sample}_dcs.speciesLabeled.bam"),
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_BLAST_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_postBlast1.log"
     shell:
@@ -956,7 +1086,7 @@ rule PostBlastProcessing2:
         tempDir3 = temp(touch(directory("{runPath}/{sample}.dcs.postBlast3.samtoolsTemp"))),
         tempDir4 = temp(touch(directory("{runPath}/{sample}.dcs.postBlast4.samtoolsTemp")))
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_BLAST_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_postBlast2.log"
     shell:
@@ -1044,7 +1174,7 @@ rule CountAmbig:
     output:
         "{runPath}/Stats/data/{sample}.dcs_ambiguity_counts.txt"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_dcs_countAmbig.log"
     shell:
@@ -1068,8 +1198,6 @@ rule makePreEndClip:
         inBam = getEndClipBam,
     output:
         outBam = "{runPath}/Intermediate/preVariantCalling/{sample}.{sampType}.prevar.bam"
-    conda:
-        "envs/DS_env_full.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_makePreEndClip.log"
     shell:
@@ -1099,7 +1227,7 @@ rule endClip:
         outBai = temp("{runPath}/{sample}.{sampType}.clipped.bai"),
         clippingMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.endClip.metrics.txt")
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_fgbio_env.yaml"
     log:
          "{runPath}/logs/{sample}_{sampType}_endClip.log"
 
@@ -1144,7 +1272,7 @@ rule overlapClip:
         outBai = temp("{runPath}/{sample}.{sampType}.overlapClip.temp.bai"),
         clippingMetrics = "{runPath}/Stats/data/{sample}.{sampType}.overlapClip.metrics.txt"
     conda:
-       "envs/DS_env_full.yaml"
+       "envs/DS_fgbio_env.yaml"
     log:
          "{runPath}/logs/{sample}_{sampType}_overlapClip.log"
     shell:
@@ -1175,7 +1303,7 @@ rule FinalFilter:
     output:
         outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
     conda:
-         "envs/DS_env_full.yaml"
+         "envs/DS_bwa_env.yaml"
     log:
          "{runPath}/logs/{sample}_{sampType}_finalFilter.log"
     shell:
@@ -1202,7 +1330,7 @@ rule makeBufferedBed:
         outBed = temp("{runPath}/{sample}.vardictBed.bed"),
         temp_sizes = temp("{runPath}/{sample}.ref.genome"),
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_bedtools_env.yaml"
     log:
         "{runPath}/logs/{sample}_makeBufferedBed.log"
     shell:
@@ -1241,7 +1369,7 @@ rule varDict:
     output:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.txt"), 
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_vardict_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_varDict.log"
     shell:
@@ -1288,7 +1416,7 @@ rule varDict_Ns:
     output:
         outVars = temp("{runPath}/{sample}.{sampType}.varDict.Ns.txt"), 
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_vardict_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_varDictNs.log"
     shell:
@@ -1329,7 +1457,7 @@ rule varDict2VCF:
         outVCF = temp("{runPath}/{sample}.{sampType}.raw.vcf"),
         outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_varDict2VCF.log"
     shell:
@@ -1362,7 +1490,7 @@ rule maskVariants:
     output:
         outVCF = temp("{runPath}/{sample}.{sampType}.masked.vcf")
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_maskVariants.log"
     shell:
@@ -1409,7 +1537,7 @@ rule makeDepth:
     output:
         outDepth = "{runPath}/Stats/data/{sample}.{sampType}.depth.txt"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     log:
          "{runPath}/logs/{sample}_makeDepth_{sampType}.log"
     shell:
@@ -1441,7 +1569,7 @@ rule summarizeDepth:
     output:
         outDepthSummary = "{runPath}/Stats/data/{sample}.{sampType}.depth.summary.csv"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_summarizeDepth.log"
     shell:
@@ -1483,7 +1611,7 @@ rule makeCountMuts:
     output:
         outCountMuts = "{runPath}/Final/{sampType}/{sample}.{sampType}.countmuts.csv", 
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_makeCountMuts.log"
     shell:
@@ -1529,7 +1657,7 @@ rule InsertSize:
         outMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.iSize_Metrics.txt"),
         out_iSizeHist = temp(touch("{runPath}/{sample}.{sampType}.iSize_Histogram.pdf")),
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_getInsertSize.log"
     shell:
@@ -1571,7 +1699,7 @@ rule PlotInsertSize:
     output:
         "{runPath}/Stats/plots/{sample}.{sampType}.iSize_Histogram.png"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_image_processing_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_plotInsertSize.log"
     shell:
@@ -1598,7 +1726,7 @@ rule PlotCoverage:
     output:
         "{runPath}/Stats/plots/{sample}.{sampType}.targetCoverage.png"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_image_processing_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_plotCoverage.log"
     shell:
@@ -1620,6 +1748,29 @@ rule PlotCoverage:
         }} 2>&1 | tee -a {log}
         """
 
+rule atomizeVcf:
+    params:
+    input:
+        inVCF = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
+    output:
+        outVCF = temp("{runPath}/Final/{sampType}/{sample}.{sampType}.atomized.temp.vcf")
+    conda:
+        "envs/DS_bcftools_env.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_atomizeVcf.log"
+    shell:
+        """
+        set -e
+        set -o pipefail
+        set -x
+        {{
+        bcftools norm \
+        -a -O v \
+        -o {output.outVCF} \
+        {input.inVCF}
+        }} 2>&1 | tee -a {log}
+        """
+
 # Plot number of non-SNP variants per sequencing cycle
 rule MutsPerCycle:
     params:
@@ -1632,7 +1783,7 @@ rule MutsPerCycle:
         inRef = get_reference,
         inFinal = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
         inFinalBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
-        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.vcf"
+        inSnps = "{runPath}/Final/{sampType}/{sample}.{sampType}.atomized.temp.vcf"
     output:
         outBam2 = "{runPath}/Final/{sampType}/{sample}.{sampType}.mutated.bam",
         outErrPerCyc2_WN = "{runPath}/Stats/plots/{sample}.{sampType}_BasePerPosInclNs.png",
@@ -1641,7 +1792,7 @@ rule MutsPerCycle:
         outMutsPerRead = "{runPath}/Stats/data/{sample}.{sampType}.mutsPerRead.txt",
         outMutsPerReadPlot = "{runPath}/Stats/plots/{sample}.{sampType}.mutsPerRead.png"
     conda:
-         "envs/DS_env_full.yaml"
+         "envs/DS_CM_env.yaml"
     log:
          "{runPath}/logs/{sample}_{sampType}_MutsPerCycle.log"
     shell:
@@ -1697,7 +1848,7 @@ rule makeSummaryCSV:
     output:
         outSum = f"{config['samples']}.summary.csv"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_CM_env.yaml"
     shell:
         """
         python {params.basePath}/scripts/retrieveSummary.py \
@@ -1713,7 +1864,7 @@ rule makeSummaryDepth:
     output:
         outSum = f"{config['samples']}.summaryDepth.pdf"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_image_processing_env.yaml"
     shell:
         """
         python {params.basePath}/scripts/plotSummaryDepth.py \
@@ -1729,7 +1880,7 @@ rule makeSummaryInsertSize:
     output:
         outSum = f"{config['samples']}.summaryInsertSize.pdf"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_image_processing_env.yaml"
     shell:
         """
         python {params.basePath}/scripts/plotSummaryInsertSize.py \
@@ -1745,7 +1896,7 @@ rule makeSummaryMutsByCycle:
     output:
         outSum = f"{config['samples']}.summaryMutsByCycle.pdf"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_image_processing_env.yaml"
     shell:
         """
         Rscript {params.basePath}/scripts/plotSummaryMutsByCycle.R \
@@ -1761,7 +1912,7 @@ rule makeSummaryFamilySize:
     output:
         outSum = f"{config['samples']}.summaryFamilySize.pdf"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_image_processing_env.yaml"
     shell:
         """
         Rscript {params.basePath}/scripts/plotSummaryFamilySize.R \
@@ -2124,7 +2275,7 @@ rule compileReport:
     output:
         "{runPath}/Final/{sample}.report.html"
     conda:
-        "envs/DS_env_full.yaml"
+        "envs/DS_jupyter_env.yaml"
     log:
         "{runPath}/logs/{sample}_compileReport.log"
     shell:
