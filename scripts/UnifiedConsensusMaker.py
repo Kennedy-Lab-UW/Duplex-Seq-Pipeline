@@ -219,11 +219,13 @@ def main():
                            {'LN': 1584, 'SN': 'chr2'}
                            ]
                     }
+    save = pysam.set_verbosity(0)
     in_bam_file = pysam.AlignmentFile(o.in_bam, "rb", check_sq=False)
     temp_bam = pysam.AlignmentFile(f"{o.prefix}.temp.bam",
                                    'wb',
                                    header=dummy_header
                                    )
+    pysam.set_verbosity(save)
     # Initialize Counters:
     # Counter for reads UMI-processed, and for number of raw reads
     paired_end_count = 1
@@ -370,9 +372,12 @@ def main():
 
     read1_dcs_len = 0
     read2_dcs_len = 0
+    save = pysam.set_verbosity(0)
     in_bam_file = pysam.AlignmentFile(
         f"{o.prefix}.temp.sort.bam", "rb", check_sq=False
     )
+    pysam.set_verbosity(save)
+    
     first_line = next(in_bam_file)
     readsCtr += 1
     FinalValue = pysam.AlignedSegment()

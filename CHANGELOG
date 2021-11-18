@@ -6,6 +6,7 @@ Internal Changes:
     Modify depth plot summary script to enable large capture sets
     Split environment up to allow different requirements for different scripts
     Atomize variants prior to countMutsPerCycle.py
+    Add a verbosity work around to prevent error/warning messages from htslib via pysam
 
 v2.1.2: 
 Bugfix:
