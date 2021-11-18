@@ -1,0 +1,6 @@
+name: DS_fgbio
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - fgbio=1.3.0
