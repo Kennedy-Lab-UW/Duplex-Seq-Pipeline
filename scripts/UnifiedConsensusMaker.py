@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 """UnifiedConsensusMaker.py
-Version 3.1
-May 29, 2019
+Version 4.0
+June 24, 2021
 Programs by Scott Kennedy(1)
-V3.1 Update by Brendan Kohrn(1)
+V4.0 Update by Brendan Kohrn(1)
 (1) Department of Pathology, University of Washington School of Medicine, Seattle, WA 98195
   
 Changelog:
@@ -47,6 +47,8 @@ from argparse import ArgumentParser
 from collections import defaultdict
 
 import pysam
+import pyximport; pyximport.install(language_level=3)
+from cons_callers import consensus_caller
 
 
 class iteratorWrapper:
@@ -70,60 +72,6 @@ class iteratorWrapper:
         return temp
 
     next = __next__
-
-
-def consensus_caller(input_reads, cutoff, tag, length_check):
-    nuc_identity_list = [0, 0, 0, 0, 0, 0]
-    # In the order of T, C, G, A, N, Total
-    nuc_key_dict = {0: 'T', 1: 'C', 2: 'G', 3: 'A', 4: 'N'}
-    consensus_seq = ''
-
-    if length_check is True:
-
-        for read in input_reads[1:]:
-            if len(read) != len(input_reads[0]):
-                raise Exception((f"Read lengths for UMI {tag} used for "
-                                 f"calculating the SSCS are not uniform!!!"
-                                 ))
-
-    for i in range(len(input_reads[0])):
-        # Count the types of nucleotides at a position in a read.
-        # i is the nucleotide index within a read in groupedReadsList
-        for j in range(len(input_reads)):
-            # Do this for every read that comprises a tag family.
-            # j is the read index within groupedReadsList
-            try:
-                if input_reads[j][i] == 'T':
-                    nuc_identity_list[0] += 1
-                elif input_reads[j][i] == 'C':
-                    nuc_identity_list[1] += 1
-                elif input_reads[j][i] == 'G':
-                    nuc_identity_list[2] += 1
-                elif input_reads[j][i] == 'A':
-                    nuc_identity_list[3] += 1
-                elif input_reads[j][i] == 'N':
-                    nuc_identity_list[4] += 1
-                else:
-                    nuc_identity_list[4] += 1
-                nuc_identity_list[5] += 1
-            except Exception:
-                break
-        try:
-            for j in [0, 1, 2, 3, 4]:
-                if (float(nuc_identity_list[j])
-                    / float(nuc_identity_list[5])
-                ) >= cutoff:
-                    consensus_seq += nuc_key_dict[j]
-                    break
-                elif j == 4:
-                    consensus_seq += 'N'
-        except Exception:
-            consensus_seq += 'N'
-        nuc_identity_list = [0, 0, 0, 0, 0, 0]
-        # Reset for the next nucleotide position
-
-    return consensus_seq
-
 
 def qual_calc(qual_list, read):
     qual = [sum(qual_score) for qual_score in zip(*qual_list)]
@@ -271,11 +219,13 @@ def main():
                            {'LN': 1584, 'SN': 'chr2'}
                            ]
                     }
+    save = pysam.set_verbosity(0)
     in_bam_file = pysam.AlignmentFile(o.in_bam, "rb", check_sq=False)
     temp_bam = pysam.AlignmentFile(f"{o.prefix}.temp.bam",
                                    'wb',
                                    header=dummy_header
                                    )
+    pysam.set_verbosity(save)
     # Initialize Counters:
     # Counter for reads UMI-processed, and for number of raw reads
     paired_end_count = 1
@@ -387,13 +337,13 @@ def main():
                     f"@{temp_read1_entry.query_name}\n"
                     f"{temp_read1_entry.query_sequence[o.tag_len + o.spcr_len:]}\n"
                     f"+\n"
-                    f"{''.join(chr(x + 33) for x in temp_read1_entry.query_qualities[o.tag_len + o.spcr_len:])}\n"
+                    f"{pysam.qualities_to_qualitystring(temp_read1_entry.query_qualities[o.tag_len + o.spcr_len:])}\n"
                 )
                 fAlign2.write(
                     f"@{line.query_name}\n"
                     f"{line.query_sequence[o.tag_len + o.spcr_len:]}\n"
                     f"+\n"
-                    f"{''.join(chr(x + 33) for x in line.query_qualities[o.tag_len + o.spcr_len:])}\n"
+                    f"{pysam.qualities_to_qualitystring(line.query_qualities[o.tag_len + o.spcr_len:])}\n"
                 )
                 alignedReadCount += 1
         paired_end_count += 1
@@ -422,9 +372,12 @@ def main():
 
     read1_dcs_len = 0
     read2_dcs_len = 0
+    save = pysam.set_verbosity(0)
     in_bam_file = pysam.AlignmentFile(
         f"{o.prefix}.temp.sort.bam", "rb", check_sq=False
     )
+    pysam.set_verbosity(save)
+    
     first_line = next(in_bam_file)
     readsCtr += 1
     FinalValue = pysam.AlignedSegment()
@@ -450,7 +403,8 @@ def main():
             qual_dict[line.query_name.split('#')[1]].append(
                 list(line.query_qualities)
             )
-        else: 
+        else:
+
             if "N" in tag:
                 famSizes = {x: len(seq_dict[x]) for x in seq_dict}
                 if (famSizes['ab:1'] != famSizes['ab:2']
@@ -519,25 +473,20 @@ def main():
                         qual_dict[tag_subtype] = qual_calc(qual_dict[tag_subtype], seq_dict[tag_subtype][0])
                         numSSCS += 1
                 if o.write_sscs is True:
+
+
                     if len(seq_dict['ab:1']) != 0 and len(seq_dict['ab:2']) != 0:
-                        corrected_qual_score = map(
-                            lambda x: x if x < 41 else 41, qual_dict['ab:1']
-                        )
-                        corrQualStr = ''.join(
-                            chr(x + 33) for x in corrected_qual_score
-                        )
+                        corrQualStr = pysam.qualities_to_qualitystring(
+                            [x if x < 41 else 41 for x in qual_dict['ab:1']])
                         read1_sscs_fq_file.write(f"@{tag}#ab/1 XF:Z:{seq_dict['ab:1'][1]}\n"
                                                  f"{seq_dict['ab:1'][0]}\n"
                                                  f"+\n"
                                                  f"{corrQualStr}\n"
                                                  )
 
-                        corrected_qual_score = map(
-                            lambda x: x if x < 41 else 41, qual_dict['ab:2']
-                        )
-                        corrQualStr = ''.join(
-                            chr(x + 33) for x in corrected_qual_score
-                        )
+
+                        corrQualStr = pysam.qualities_to_qualitystring(
+                            [x if x < 41 else 41 for x in qual_dict['ab:2']])
                         read2_sscs_fq_file.write(f"@{tag}#ab/2 XF:Z:{seq_dict['ab:2'][1]}\n"
                                                  f"{seq_dict['ab:2'][0]}\n"
                                                  f"+\n"
@@ -545,24 +494,18 @@ def main():
                                                  )
 
                     if len(seq_dict['ba:1']) != 0 and len(seq_dict['ba:2']) != 0:
-                        corrected_qual_score = map(
-                            lambda x: x if x < 41 else 41, qual_dict['ba:1']
-                        )
-                        corrQualStr = ''.join(
-                            chr(x + 33) for x in corrected_qual_score
-                        )
+
+                        corrQualStr = pysam.qualities_to_qualitystring(
+                            [x if x < 41 else 41 for x in qual_dict['ba:1']])
                         read1_sscs_fq_file.write(f"@{tag}#ba/1 XF:Z:{seq_dict['ba:1'][1]}\n"
                                                  f"{seq_dict['ba:1'][0]}\n"
                                                  f"+\n"
                                                  f"{corrQualStr}\n"
                                                  )
 
-                        corrected_qual_score = map(
-                            lambda x: x if x < 41 else 41, qual_dict['ba:2']
-                        )
-                        corrQualStr = ''.join(
-                            chr(x + 33) for x in corrected_qual_score
-                        )
+
+                        corrQualStr = pysam.qualities_to_qualitystring(
+                            [x if x < 41 else 41 for x in qual_dict['ba:2']])
                         read2_sscs_fq_file.write(f"@{tag}#ba/2 XF:Z:{seq_dict['ba:2'][1]}\n"
                                                  f"{seq_dict['ba:2'][0]}\n"
                                                  f"+\n"
@@ -581,10 +524,11 @@ def main():
                             ),
                             seq_dict['ab:1'][1], seq_dict['ba:2'][1]
                         ]
-                        dcs_read_1_qual = map(
-                            lambda x: x if x < 41 else 41,
-                            qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], dcs_read_1[0])
-                        )
+
+                        r1QualStr = pysam.qualities_to_qualitystring([
+                            x if x < 41 else 41 for x in 
+                            qual_calc([qual_dict['ab:1'], qual_dict['ba:2']], 
+                                dcs_read_1[0])])
                         read1_dcs_len = len(dcs_read_1[0])
                         fam_size_x_axis.append(int(seq_dict['ab:1'][1]))
                         fam_size_y_axis.append(int(seq_dict['ba:2'][1]))
@@ -606,10 +550,11 @@ def main():
                             ),
                             seq_dict['ba:1'][1], seq_dict['ab:2'][1]
                         ]
-                        dcs_read_2_qual = map(
-                            lambda x: x if x < 41 else 41,
-                            qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], dcs_read_2[0])
-                        )
+
+                        r2QualStr = pysam.qualities_to_qualitystring([
+                            x if x < 41 else 41 for x in 
+                            qual_calc([qual_dict['ba:1'], qual_dict['ab:2']], 
+                                dcs_read_2[0])])
                         read2_dcs_len = len(dcs_read_2[0])
 
                         if dcs_read_2[0].count('N') / read2_dcs_len > o.Ncutoff:
@@ -619,8 +564,6 @@ def main():
                     else:
                         failedDcs += 1
                     if read1_dcs_len != 0 and read2_dcs_len != 0:
-                        r1QualStr = ''.join(chr(x + 33) for x in dcs_read_1_qual)
-                        r2QualStr = ''.join(chr(x + 33) for x in dcs_read_2_qual)
                         read1_dcs_fq_file.write(
                             f"@{tag}/1 XF:Z:{dcs_read_1[1]}:{dcs_read_1[2]}\n"
                             f"{dcs_read_1[0]}\n"
@@ -633,6 +576,7 @@ def main():
                             f"+\n"
                             f"{r2QualStr}\n"
                         )
+                        
             if line != FinalValue:
                 readsCtr += 1
                 # reset conditions for next tag family

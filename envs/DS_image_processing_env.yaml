@@ -1,0 +1,16 @@
+name: DS_image_processing
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.10.*
+  - snakemake
+  - pandas
+  - numpy
+  - matplotlib
+  - pillow
+  - img2pdf
+  - r>=3.6
+  - r-tidyverse
+  - r-gridextra
+  - r-gridbase
