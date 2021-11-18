@@ -3,13 +3,14 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
-  - python=3.6.*
+  - python=3.9.*
+  - cython
   - bwa=0.7.17.*
-  - samtools=1.9.*
-  - picard=2.20.*
-  - pysam=0.15.3
+  - samtools=1.12
+  - picard=2.25.*
+  - pysam=0.16.0
   - snakemake
-  - bcftools=1.9*
+  - bcftools=1.12*
   - r>=3.6
   - cutadapt
   - pandas
@@ -27,5 +28,7 @@ dependencies:
   - r-gridbase
   - icu=64.*
   - pillow
+  - img2pdf
   - vardict-java=1.8.0
   - fgbio=1.3.0
+  - openjdk=8.0.192

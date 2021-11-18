@@ -35,6 +35,7 @@ echo "vardict_nmfreq: \".0000001\"" >> DS_progConfig.yaml
 echo "vardict_r: \"1\"" >> DS_progConfig.yaml
 echo "vardict_V: \"0.00000000001\"" >> DS_progConfig.yaml
 echo "vardict_adaptor: GCTCTTCCGATCT,CTCTTCCGATCT,TCTTCCGATCT,CTTCCGATCT,TTCCGATCT,TCCGATCT,CCGATCT,CGATCT" >> DS_progConfig.yaml
+echo "mpc_clonality_limit: 0.01" >> DS_progConfig.yaml
 
 
 echo "Configuring snakemake"

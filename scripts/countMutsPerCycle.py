@@ -272,6 +272,13 @@ def main():
         dest="output_text",
         help="Output a text file of the number of reads with various numbers of mismatches.  "
     )
+    parser.add_argument(
+        "--clonality_limit",
+        action="store",
+        type=float,
+        dest="clonal_lim",
+        help="The limit on clonality of variants to be counted.  Only applies if --filter INCLUDE is used",
+        default=0.01)
     o = parser.parse_args()
     # Get list of SNPs from snp file
     inVCF = VariantFile(o.inVCF, 'r')
@@ -289,8 +296,11 @@ def main():
                     if filt_iter in line.filter:
                         filt_out.add(variant)
                         filterVar = True
-            if "INCLUDE" in o.filters and not filterVar:
-                variants.add(variant)
+            if "INCLUDE" in o.filters:
+                if float(line.samples[inVCF.samps[0]]["AF"].split(',')[1]) > o.clonal_lim:
+                    filterVar = True
+                if not filterVar:
+                    variants.add(variant)
 
     myCounter = MismatchCounter(o.rlen, o.filters, filt_out, indels, variants)
     inBam = pysam.AlignmentFile(o.inFile, 'rb')

@@ -1,0 +1,13 @@
+name: DS_BLAST
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.9.*
+  - samtools=1.14*
+  - pysam=0.16.0
+  - biopython
+  - blast=2.9.0
+  - numpy
+  - matplotlib
+  - pandas
