@@ -1778,7 +1778,8 @@ rule MutsPerCycle:
         basePath = sys.path[0],
         runPath = get_baseDir,
         readLength = get_final_length,
-        filter_string = get_mpc_filters
+        filter_string = get_mpc_filters,
+        clonal_lim = config["mpc_clonality_limit"]
     input:
         inRef = get_reference,
         inFinal = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
@@ -1807,7 +1808,8 @@ rule MutsPerCycle:
         --inVCF Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.vcf \
         -o {wildcards.sample}.{wildcards.sampType} \
         -l {params.readLength} -b -t 0 -c --text_file \
-        --filter SNP --filter INCLUDE {params.filter_string}
+        --filter SNP --filter INCLUDE {params.filter_string} \
+        --clonality_limit {params.clonal_lim}
         
         mv {wildcards.sample}.{wildcards.sampType}*.png Stats/plots/
         mv {wildcards.sample}.{wildcards.sampType}_MutsPerCycle.dat.csv Stats/data/

@@ -7,6 +7,8 @@ Internal Changes:
     Split environment up to allow different requirements for different scripts
     Atomize variants prior to countMutsPerCycle.py
     Add a verbosity work around to prevent error/warning messages from htslib via pysam
+New Features:
+    Add a clonality limit for muts_per_cycle (set at the pipeline level) to make the muts_per_cycle plot clearer.
 
 v2.1.2: 
 Bugfix:
