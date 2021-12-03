@@ -1447,7 +1447,8 @@ rule varDict2VCF:
         sampName = get_rgsm, 
         minDepth = get_minDepth, 
         snpLevel = get_snps_threshold,
-        cluster_dist = get_cluster_dist
+        cluster_dist = get_cluster_dist, 
+        n_filt = get_maxNs
     input:
         inVarDict = "{runPath}/{sample}.{sampType}.varDict.txt", 
         inVarDict_Ns = "{runPath}/{sample}.{sampType}.varDict.Ns.txt", 
@@ -1476,7 +1477,8 @@ rule varDict2VCF:
         --samp_name {params.sampName} \
         --snp_threshold {params.snpLevel} \
         -d {params.minDepth} \
-        --cluster_dist {params.cluster_dist}
+        --cluster_dist {params.cluster_dist} \
+        --n_lim {params.n_filt}
         cd ..
         }} 2>&1 | tee -a {log}
         """

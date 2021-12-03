@@ -112,6 +112,13 @@ def main():
         type=int
     )
     parser.add_argument(
+        '--n_lim', 
+        action='store',
+        dest='n_lim'
+        type=float,
+        help='The maximum proportion of Ns to allow to avoid being filtered.',
+        default=0.1)
+    parser.add_argument(
         '--samp_name',
         action='store',
         dest='sampName',
@@ -333,6 +340,10 @@ def main():
         lineType="FILTER",
         label="clustered",
         description=f"This variant is part of a cluster of variants (nearest variant is within {o.cluster_dist} bp).")
+    myHeader.addLine(
+        lineType="FILTER",
+        label="high_Ns",
+        description=f"This variant has a high proportion of Ns (> {o.n_lim}).")
     # Get set of SNP loci and indel loci, and add low_depth and SNP filters
     for varLine in myVariants:
         if int(varLine.samples[o.sampName]["DP"]) < o.min_depth:
@@ -343,6 +354,10 @@ def main():
             varLine.add_filter("SNP")
             # Write to SNP file
             mySnps.append(varLine)
+        if (float(varLine.samples[o.sampName]["AD"].split(',')[1]) / 
+                (float(varLine.samples[o.sampName]["DP"]) + 
+                 float(varLine.samples[o.sampName]["NC"]) ) > o.n_lim):
+            varLine.add_filter("hign_Ns")
         if len(varLine.ref) > 1 or max([len(x) for x in varLine.alts]) > 1:
             myVar = extractVariant(varLine)
             indels[myVar[0]] = indelRegion(myVar[1], myVar[2], myVar[3])
