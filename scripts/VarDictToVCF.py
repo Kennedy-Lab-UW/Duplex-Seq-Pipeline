@@ -114,7 +114,7 @@ def main():
     parser.add_argument(
         '--n_lim', 
         action='store',
-        dest='n_lim'
+        dest='n_lim',
         type=float,
         help='The maximum proportion of Ns to allow to avoid being filtered.',
         default=0.1)
