@@ -613,7 +613,7 @@ rule makeConsensus:
         outStats = "{runPath}/Stats/data/{sample}_cmStats.txt"
     priority: 50
     conda:
-       "envs/DS_CM_env.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_makeConsensus.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -666,7 +666,7 @@ rule clipAdapters:
         out1 = temp("{runPath}/{sample}_read1_{sampType}.adaptClip.fq.gz"),
         out2 = temp("{runPath}/{sample}_read2_{sampType}.adaptClip.fq.gz"),
     conda:
-       "envs/DS_cutadapt_env.yaml"
+        "envs/DS_cutadapt_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_clipAdapters.log"
     shell:
@@ -706,7 +706,7 @@ rule getOnTarget:
         outBai = temp("{runPath}/{sample}_mem.aln.sort.bam.bai"),
         outOnTarget = "{runPath}/Stats/data/{sample}_onTargetCount.txt"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{sample}_aln_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -749,7 +749,7 @@ rule getOnTarget_cs:
     output:
         outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -786,10 +786,10 @@ rule alignReads:
         outBai = temp("{runPath}/{sample}_mem.{sampType}.sort.bam.bai"),
         tempDir = temp(touch(directory("{runPath}/{sample}.{sampType}.alignReads.samtoolsTemp")))
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     threads: min(max(int(config["maxCores"]/2), 1),4)
     log:
-         "{runPath}/logs/{sample}_{sampType}_bwa.log"
+        "{runPath}/logs/{sample}_{sampType}_bwa.log"
     shell:
         """
         set -e
@@ -851,7 +851,7 @@ rule makeTempBai:
     output:
         outBai = temp("{runPath}/{fileBase}.temp.bam.bai")
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     shell:
         """
         samtools index {input.inBam} {output.outBai}
@@ -864,7 +864,7 @@ rule makeBai:
     output:
         outBai = "{runPath}/{fileBase}.bam.bai"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     shell:
         """
         samtools index {input.inBam} {output.outBai}
@@ -877,7 +877,7 @@ rule getFlagstats:
     output:
         outBai = "{runPath}/Stats/data/{fileBase}.flagstats.txt"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{fileBase}_getFlagstats.log"
     shell:
@@ -1227,9 +1227,9 @@ rule endClip:
         outBai = temp("{runPath}/{sample}.{sampType}.clipped.bai"),
         clippingMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.endClip.metrics.txt")
     conda:
-       "envs/DS_fgbio_env.yaml"
+        "envs/DS_fgbio_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_endClip.log"
+        "{runPath}/logs/{sample}_{sampType}_endClip.log"
 
     shell:
         """
@@ -1272,9 +1272,9 @@ rule overlapClip:
         outBai = temp("{runPath}/{sample}.{sampType}.overlapClip.temp.bai"),
         clippingMetrics = "{runPath}/Stats/data/{sample}.{sampType}.overlapClip.metrics.txt"
     conda:
-       "envs/DS_fgbio_env.yaml"
+        "envs/DS_fgbio_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_overlapClip.log"
+        "{runPath}/logs/{sample}_{sampType}_overlapClip.log"
     shell:
         """
         set -e
@@ -1303,9 +1303,9 @@ rule FinalFilter:
     output:
         outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
     conda:
-         "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_finalFilter.log"
+        "{runPath}/logs/{sample}_{sampType}_finalFilter.log"
     shell:
         """
         set -e
@@ -1541,7 +1541,7 @@ rule makeDepth:
     conda:
         "envs/DS_CM_env.yaml"
     log:
-         "{runPath}/logs/{sample}_makeDepth_{sampType}.log"
+        "{runPath}/logs/{sample}_makeDepth_{sampType}.log"
     shell:
         """
         set -e
@@ -1795,9 +1795,9 @@ rule MutsPerCycle:
         outMutsPerRead = "{runPath}/Stats/data/{sample}.{sampType}.mutsPerRead.txt",
         outMutsPerReadPlot = "{runPath}/Stats/plots/{sample}.{sampType}.mutsPerRead.png"
     conda:
-         "envs/DS_CM_env.yaml"
+        "envs/DS_CM_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_MutsPerCycle.log"
+        "{runPath}/logs/{sample}_{sampType}_MutsPerCycle.log"
     shell:
         """
         set -e
