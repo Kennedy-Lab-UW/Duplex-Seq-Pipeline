@@ -3,7 +3,7 @@ import datetime
 
 
 # VCF file function
-def VariantFile(file_name, mode='r', header=None):
+def VariantFile(file_name, mode='r', header=None, progName = None, progVersion = None, progCmd = None):
     if mode not in ('r', 'w'):
         raise Exception(f"Unrecognized mode {mode}")
     elif mode == 'r':
@@ -12,7 +12,7 @@ def VariantFile(file_name, mode='r', header=None):
         if header is None:
             raise Exception("No header provided for VariantWriter creation")
         else:
-            return VariantWriter(file_name, header)
+            return VariantWriter(file_name, header, progName, progVersion, progCmd)
 
 
 # VCF parser class
@@ -48,9 +48,13 @@ class VariantReader:
 
 # VCF writer class
 class VariantWriter:
-    def __init__(self, file_name, header):
+    def __init__(self, file_name, header, progName = None, progVersion = None, progCmd = None):
         self.write_file = open(file_name, 'w')
-        self.write_file.write(str(header))
+        myHeader = header
+        if not(progName is None or progVersion is None or progCmd is None):
+            myHeader.addLine("prog", progName, vNum=progVersion, description=progCmd)
+        myHeader.UpdateDateline()
+        self.write_file.write(str(myHeader))
 
     def writeline(self, vcfLine):
         self.write_file.write(str(vcfLine))
@@ -61,25 +65,74 @@ class VariantWriter:
 
 class VariantHeader:
     def __init__(self, in_lines):
-        self.headLines = in_lines[:-1]
-        self.labelLine = in_lines[-1]
+        self.versionLine = []
+        self.dateline = []
+        self.progLines = []
+        self.formatLines = []
+        self.contigLines = []
+        self.infoLines = []
+        self.filterLines = []
+        self.altLines = []
+        self.labelLine = []
+
+        for line in in_lines:
+            if "##fileformat" in line:
+                self.versionLine.append(line)
+            elif "##filedate" in line:
+                self.dateline.append(line)
+            elif "##prog" in line:
+                self.progLines.append(line)
+            elif "##contig" in line:
+                self.contigLines.append(line)
+            elif "##INFO" in line:
+                self.infoLines.append(line)
+            elif "##FORMAT" in line:
+                self.formatLines.append(line)
+            elif "##FILTER" in line:
+                self.fliterLines.append(line)
+            elif "##ALT" in line:
+                self.altLines.append(line)
+            elif "#CHROM" in line:
+                self.labelLine.append(line)
+            else:
+                raise Exception(f"Unrecognized header line type for line {line}.\n")
 
     def addLine(self, lineType, label, number='.', Type="String", description="", source="", vNum=""):
         if lineType.upper() == "FORMAT":
-            outLine = f'##FORMAT=<ID={label},Number={number},Type={Type},Description="{description}">\n'
+            self.formatLines.append(
+                f'##FORMAT=<ID={label},Number={number},Type={Type},Description="{description}">\n')
         elif lineType.upper() == "INFO":
-            outLine = f'##INFO=<ID={label},Number={number},Type={Type},Description="{description}",Source="{source}",Version="{vNum}">\n'
+            self.infoLines.append(
+                f'##INFO=<ID={label},Number={number},Type={Type},Description="{description}",Source="{source}",Version="{vNum}">\n')
         elif lineType.upper() == "FILTER":
-            outLine = f'##FILTER=<ID={label},Description="{description}">\n'
+            self.filterLines.append(
+                f'##FILTER=<ID={label},Description="{description}">\n')
         elif lineType.upper() == "ALT":
-            outLine = f'##ALT=<ID={label},Description="{description}">\n'
+            self.altLines.append(
+                f'##ALT=<ID={label},Description="{description}">\n')
+        elif lineType == "prog":
+            self.progLines.append(
+                f'##prog=<ID={label},Version={vNum},Command={description}>\n')
         else:
             raise Exception(f"Unrecognized header line type {lineType}.\n")
-        # add the line
-        self.headLines.append(outLine)
+            
+    def UpdateDateline(self):
+        mydate = datetime.date.today()
+        self.dateline = [f"##filedate={mydate.year}{mydate.month:02d}{mydate.day:02d}\n"]
+    
 
     def __str__(self):
-        return f"{''.join(self.headLines)}{self.labelLine}"
+        headLines = []
+        headLines.extend(self.versionLine)
+        headLines.extend(self.dateline)
+        headLines.extend(self.progLines)
+        headLines.extend(self.contigLines)
+        headLines.extend(self.infoLines)
+        headLines.extend(self.formatLines)
+        headLines.extend(self.filterLines)
+        headLines.extend(self.altLines)
+        headLines.extend(self.labelLine)
+        return ''.join(headLines)
 
 
 # VCF line class
@@ -175,19 +228,18 @@ def SamHeaderToVcfHeader(inSamHeader, sampName, progName, progVersion, progCmd):
             progCL = None
             for binIter in range(len(linebins)):
                 if 'ID' in linebins[binIter]:
-                    progHead = f"##{linebins[binIter].split(':')[1].split()[0]}"
+                    progHead = f"{linebins[binIter].split(':')[1].split()[0]}"
                 elif 'VN' in linebins[binIter]:
                     progVersion = linebins[binIter].split(':')[1]
                 elif 'CL' in linebins[binIter]:
                     progCL = " :".join(linebins[binIter:]).split(':')[1]
             if progHead is not None:
                 if progVersion is not None:
-                    programBlock.append(f"{progHead}Version={progVersion}")
-                if progCL is not None:
-                    programBlock.append(f"{progHead}Command={progCL}")
+                    programBlock.append(f'##prog=<ID={progHead},'
+                                        f'Version={progVersion},'
+                                        f'Command="{progCL}">\n')
     headLines.extend(programBlock)
-    headLines.append(f"##{progName}Version={progVersion}\n")
-    headLines.append(f"##{progName}Command={progCmd}\n")
+    headLines.append(f'##prog=<ID={progName},Version={progVersion},Command="{progCmd}">\n')
     headLines.extend(contigBlock)
     headLines.append(f'#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{sampName}\n')
     return VariantHeader(headLines)
