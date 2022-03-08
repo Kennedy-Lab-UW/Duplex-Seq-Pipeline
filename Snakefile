@@ -1483,7 +1483,7 @@ rule varDict2VCF:
         }} 2>&1 | tee -a {log}
         """
 
-rule maskVariants:
+rule FilterVariants:
     params:
         basePath = sys.path[0],
     input:
@@ -1502,7 +1502,7 @@ rule maskVariants:
         set -x
         {{
         cd {wildcards.runPath}
-        python {params.basePath}/scripts/Mask_VCF.py \
+        python {params.basePath}/scripts/Filter_VCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
         -o {wildcards.sample}.{wildcards.sampType}.masked.vcf \
         -b {input.inMask}
