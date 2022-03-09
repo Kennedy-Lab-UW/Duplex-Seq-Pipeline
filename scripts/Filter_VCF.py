@@ -64,8 +64,8 @@ def main():
         '-b', '--mask_bed',
         action='store',
         dest='bed',
-        help='A bed file with the regions to be masked.',
-        required=True)
+        default=None,
+        help='A bed file with the regions to be masked.')
     parser.add_argument(
         '-d', '--min_depth',
         action='store',
@@ -269,7 +269,10 @@ def main():
     # Open output VCF file
     out_vcf = VariantFile(o.out_vcf, 'w', my_header)
     # Open bed file, and extract regions
-    mask_bed = [x for x in Bed_File(o.bed)]
+    if o.bed is not None:
+        mask_bed = [x for x in Bed_File(o.bed)]
+    else:
+        mask_bed = []
     # Activate counters
     lines_read = 0
     lines_written = 0

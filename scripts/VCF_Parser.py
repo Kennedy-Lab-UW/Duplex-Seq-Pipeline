@@ -89,7 +89,7 @@ class VariantHeader:
             elif "##FORMAT" in line:
                 self.formatLines.append(line)
             elif "##FILTER" in line:
-                self.fliterLines.append(line)
+                self.filterLines.append(line)
             elif "##ALT" in line:
                 self.altLines.append(line)
             elif "#CHROM" in line:

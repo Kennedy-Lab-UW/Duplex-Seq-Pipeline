@@ -150,11 +150,11 @@ def get_final_vcf(wildcards):
     if get_mask_bed(wildcards) == "NONE":
         # if mask bed is NONE
         out_vcf = (f"{wildcards.runPath}/{wildcards.sample}."
-                   f"{wildcards.sampType}.raw.vcf")
+                   f"{wildcards.sampType}.filt.vcf")
     else:
         # if mask bed is not NONE
         out_vcf = (f"{wildcards.runPath}/{wildcards.sample}."
-                   f"{wildcards.sampType}.masked.vcf")
+                   f"{wildcards.sampType}.filtmasked.vcf")
     return out_vcf
 
 def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
@@ -1470,7 +1470,7 @@ rule varDict2VCF:
         -n {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt \
         -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
         -o {wildcards.sample}.{wildcards.sampType}.raw.vcf \
-        --samp_name {params.sampName} \
+        --samp_name {params.sampName}
         cd ..
         }} 2>&1 | tee -a {log}
         """
@@ -1484,10 +1484,9 @@ rule FilterVariants:
         n_filt = get_maxNs, 
         long_indel_levl = get_long_indel
     input:
-        inVCF = "{runPath}/{sample}.{sampType}.raw.vcf",
-        inMask = get_mask_bed
+        inVCF = "{runPath}/{sample}.{sampType}.raw.vcf"
     output:
-        outVCF = temp("{runPath}/{sample}.{sampType}.masked.vcf"),
+        outVCF = temp("{runPath}/{sample}.{sampType}.filt.vcf"),
         outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
 
     conda:
@@ -1503,7 +1502,46 @@ rule FilterVariants:
         cd {wildcards.runPath}
         python {params.basePath}/scripts/Filter_VCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
-        -o {wildcards.sample}.{wildcards.sampType}.masked.vcf \
+        -o {wildcards.sample}.{wildcards.sampType}.filt.vcf \
+        -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
+        --snp_threshold {params.snpLevel} \
+        -d {params.minDepth} \
+        --cluster_dist {params.cluster_dist} \
+        --n_lim {params.n_filt} \
+        --max_indel_size {params.long_indel_levl}
+        cd ..
+        }} 2>&1 | tee -a {log}
+        """
+
+rule FilterVariants_withMask:
+    params:
+        basePath = sys.path[0],
+        minDepth = get_minDepth, 
+        snpLevel = get_snps_threshold,
+        cluster_dist = get_cluster_dist, 
+        n_filt = get_maxNs, 
+        long_indel_levl = get_long_indel
+    input:
+        inVCF = "{runPath}/{sample}.{sampType}.raw.vcf",
+        inMask = get_mask_bed
+    output:
+        outVCF = temp("{runPath}/{sample}.{sampType}.filtmasked.vcf"),
+        outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
+
+    conda:
+        "envs/DS_CM_env.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_maskVariants.log"
+    shell:
+        """
+        set -e
+        set -o pipefail
+        set -x
+        {{
+        cd {wildcards.runPath}
+        python {params.basePath}/scripts/Filter_VCF.py \
+        -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
+        -o {wildcards.sample}.{wildcards.sampType}.filtmasked.vcf \
         -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
         -b {input.inMask} \
         --snp_threshold {params.snpLevel} \
@@ -1514,6 +1552,7 @@ rule FilterVariants:
         cd ..
         }} 2>&1 | tee -a {log}
         """
+
 
 rule make_final_VCF:
     input:

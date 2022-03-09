@@ -5,43 +5,7 @@ from argparse import ArgumentParser
 from collections import Counter
 import pysam
 from BedParser import *
-
-def SamHeaderToVcfHeader(inSamHeader, progName, progVersion, progCmd):
-    headLines = [
-        "##fileformat=VCFv4.3"
-    ]
-    contigBlock = []
-    programBlock = []
-
-    for line in str(inSamHeader).split('\n'):
-        linebins = line.strip().split('\t')
-        if linebins[0] == '@HD':
-            pass
-        elif linebins[0] == '@SQ':
-            contigBlock.append(
-                f"##contig=<ID={linebins[1].split(':')[1]},length={linebins[2].split(':')[1]}>"
-            )
-        elif linebins[0] == '@PG':
-            progHead = None
-            progVersion = None
-            progCL = None
-            for binIter in range(len(linebins)):
-                if 'ID' in linebins[binIter]:
-                    progHead = f"##{linebins[binIter].split(':')[1].split()[0]}"
-                elif 'VN' in linebins[binIter]:
-                    progVersion = linebins[binIter].split(':')[1]
-                elif 'CL' in linebins[binIter]:
-                    progCL = " :".join(linebins[binIter:]).split(':')[1]
-            if progHead is not None:
-                if progVersion is not None:
-                    programBlock.append(f"{progHead}Version={progVersion}")
-                if progCL is not None:
-                    programBlock.append(f"{progHead}Command={progCL}")
-    headLines.extend(programBlock)
-    headLines.append(f"##{progName}Version={progVersion}")
-    headLines.append(f"##{progName}Command={progCmd}")
-    headLines.extend(contigBlock)
-    return headLines
+from VCF_Parser import SamHeaderToVcfHeader
 
 
 def getParams():
@@ -211,7 +175,7 @@ class VCF_File:
                     f'##VCF_MutposCommand=VCF_Mutpos test command'
                 )
             else:
-                self.file.write("\n".join(headStart))
+                self.file.write("\n".join(str(headStart).split('\n')[:-2]))
             self.file.write(
                 f'\n##ALT=<ID=*,Description="Represents allele(s) other than observed.">\n'
                 f'##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
@@ -263,6 +227,7 @@ class MutposEngine:
         # Create vcf header
         vcfHeadStart = SamHeaderToVcfHeader(
             self.inBam.header,
+            "Sample",
             "VCF_Mutpos",
             "0.3.0",
             cmd
