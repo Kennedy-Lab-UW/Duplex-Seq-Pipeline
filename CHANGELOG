@@ -7,12 +7,15 @@ Internal Changes:
     Split environment up to allow different requirements for different scripts
     Atomize variants prior to countMutsPerCycle.py
     Add a verbosity work around to prevent error/warning messages from htslib via pysam
+    Move VCF filtering entirely to separate script, along with masking
 New Features:
     Add a clonality limit for muts_per_cycle (set at the pipeline level) to make the muts_per_cycle plot clearer.
+Bugfix:
+    Spellcheck changelog
 
 v2.1.3:
 Bugfix: 
-    Add aditional checks to the 'sample' column of the config file, to exclude characters that aren't allowed in file names.  
+    Add additional checks to the 'sample' column of the config file, to exclude characters that aren't allowed in file names.  
 
 v2.1.2: 
 Bugfix:
@@ -21,9 +24,9 @@ Bugfix:
     Fix issue in VCF generation where the same variant could appear multiple times
     
 Internal Changes:
-    Instead of removing families containing Ns or mononucleotide repeats in UMIs after all consensus making happened, do it before any consensus making hapens.  The tagstats output removes unchanged at this time; the only difference will be in the SSCS output, which will not contain reads with UMIs that contain Ns or mononucleotide repeats (it did previously).  
+    Instead of removing families containing Ns or mononucleotide repeats in UMIs after all consensus making happened, do it before any consensus making happens.  The tagstats output removes unchanged at this time; the only difference will be in the SSCS output, which will not contain reads with UMIs that contain Ns or mononucleotide repeats (it did previously).  
     Track number of N-containing UMIs in CM_stats file.  
-    Modify rerun to check for file existance (depends on OS module from Python standard library; may not work identically on all systems).
+    Modify rerun to check for file existence (depends on OS module from Python standard library; may not work identically on all systems).
 
 v2.1.1: 
 Bugfix:
@@ -35,7 +38,7 @@ Bugfix:
 New Features:
     Populate log files, add missing log files, and normalize log file names
     Add '--keep-going' to snakemake command in run script, which allows for 
-        the pipeline to continue to run independant steps if one step fails; 
+        the pipeline to continue to run independent steps if one step fails; 
         rerun setup script to take advantage of this.  
 
 v2.0.1:
@@ -46,7 +49,7 @@ v2.0.0:
 Bugfixes:
     Add definition of negative taxIDs to report.
     Fix bed blocks issue where terminal comma would cause crashes
-    Fix table formating for countmuts and depth tables in report
+    Fix table formatting for countmuts and depth tables in report
     Change clustering to avoid using SNPs for clustering analysis. 
     explicitly convert report to HTML 
     Fix fastq output third line from consensusMaker
@@ -55,7 +58,7 @@ Bugfixes:
 
 New Features:
     Change recovery script format
-    Create new test data set that can better deomonstrate the BLAST filter
+    Create new test data set that can better demonstrate the BLAST filter
     Create new test reference / blastDB to match new test dataset
     Add extra tests to the test config file
     Make retrieveSummary.py work from the whole-pipeline config file 
@@ -69,7 +72,7 @@ New Features:
     Add % mapped raw read to the summary CSV
     Add RawOnTarget to summaryCSV
     Add masking functionality 
-    Change countMutsPerCycle to allow filtering out mutatios based on VCF filters, and to allow for filtering of near indel variants.  Also allows for an "include" mode that includes only variants in the VCF file.  Modify Snakefile to allow this method to draw from the countmuts filtering parameters.
+    Change countMutsPerCycle to allow filtering out mutations based on VCF filters, and to allow for filtering of near indel variants.  Also allows for an "include" mode that includes only variants in the VCF file.  Modify Snakefile to allow this method to draw from the countmuts filtering parameters.
     Add adapter clipping 
     Add Mamba frontend to setup script.
     Add readout for % on target SSCS and DCS to summaryCSV, report.
@@ -83,8 +86,8 @@ Internal Changes:
     Modify MakeDepthPlot.R and retrieveSummary.py to point to new files.
     Add VarDict-based Muts by Read Position program (not used)
     Give final read length to MutsPerCycle, instead of initial read length.
-    Remove extra envirmonet setup rules
-    Move BedParser to seperate file
+    Remove extra environment setup rules
+    Move BedParser to separate file
     Added pre-variant calling BAM filter to BED coordinates
     Make prevar file temporary.
     Add error checking to enforce number of blockStarts and blockSizes
