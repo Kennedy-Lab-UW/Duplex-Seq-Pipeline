@@ -207,7 +207,7 @@ def main():
             indels[myVar[0]] = indelRegion(myVar[1], myVar[2], myVar[3],
                                            myVar[4], myVar[5], myVar[6])
             varLine.add_filter(myVar[6])
-            if myVar[5] > o.max_indel_size and myVar[6] is not "complex":
+            if myVar[5] > o.max_indel_size:
                 varLine.add_filter("long_indel")
     myVars2 = []
     for vcfIter in range(len(myVariants)):
