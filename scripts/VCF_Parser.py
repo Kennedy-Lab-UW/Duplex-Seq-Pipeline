@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import datetime
+import sys
 
 
 # VCF file function
@@ -73,6 +74,7 @@ class VariantHeader:
         self.infoLines = []
         self.filterLines = []
         self.altLines = []
+        self.otherLines = []
         self.labelLine = []
 
         for line in in_lines:
@@ -95,7 +97,8 @@ class VariantHeader:
             elif "#CHROM" in line:
                 self.labelLine.append(line)
             else:
-                raise Exception(f"Unrecognized header line type for line {line}.\n")
+                self.otherLines.append(line)
+                sys.stderr.write(f"WARN: Unrecognized header line type for line {line}.\n")
 
     def addLine(self, lineType, label, number='.', Type="String", description="", source="", vNum=""):
         if lineType.upper() == "FORMAT":
@@ -131,6 +134,7 @@ class VariantHeader:
         headLines.extend(self.formatLines)
         headLines.extend(self.filterLines)
         headLines.extend(self.altLines)
+        headLines.extend(self.otherLines)
         headLines.extend(self.labelLine)
         return ''.join(headLines)
 
