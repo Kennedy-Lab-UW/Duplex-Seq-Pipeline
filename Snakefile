@@ -87,6 +87,8 @@ def get_minDepth(wildcards):
     return samples.loc[wildcards.sample, "minDepth"]
 def get_maxNs(wildcards):
     return samples.loc[wildcards.sample, "maxNs"]
+def get_long_indel(wildcards):
+    return samples.loc[wildcards.sample, "long_indel"]
 def get_cleanup(wildcards):
     return samples.loc[wildcards.sample, "cleanup"]
 def get_cluster_dist(wildcards):
@@ -148,11 +150,11 @@ def get_final_vcf(wildcards):
     if get_mask_bed(wildcards) == "NONE":
         # if mask bed is NONE
         out_vcf = (f"{wildcards.runPath}/{wildcards.sample}."
-                   f"{wildcards.sampType}.raw.vcf")
+                   f"{wildcards.sampType}.filt.vcf")
     else:
         # if mask bed is not NONE
         out_vcf = (f"{wildcards.runPath}/{wildcards.sample}."
-                   f"{wildcards.sampType}.masked.vcf")
+                   f"{wildcards.sampType}.filtmasked.vcf")
     return out_vcf
 
 def get_outFiles(prefix="", sampType="dcs", suffix=".clipped.bam"):
@@ -613,7 +615,7 @@ rule makeConsensus:
         outStats = "{runPath}/Stats/data/{sample}_cmStats.txt"
     priority: 50
     conda:
-       "envs/DS_CM_env.yaml"
+        "envs/DS_CM_env.yaml"
     log:
         "{runPath}/logs/{sample}_makeConsensus.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -666,7 +668,7 @@ rule clipAdapters:
         out1 = temp("{runPath}/{sample}_read1_{sampType}.adaptClip.fq.gz"),
         out2 = temp("{runPath}/{sample}_read2_{sampType}.adaptClip.fq.gz"),
     conda:
-       "envs/DS_cutadapt_env.yaml"
+        "envs/DS_cutadapt_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_clipAdapters.log"
     shell:
@@ -706,7 +708,7 @@ rule getOnTarget:
         outBai = temp("{runPath}/{sample}_mem.aln.sort.bam.bai"),
         outOnTarget = "{runPath}/Stats/data/{sample}_onTargetCount.txt"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{sample}_aln_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -749,7 +751,7 @@ rule getOnTarget_cs:
     output:
         outOnTarget = "{runPath}/Stats/data/{sample}.{sampType}_onTargetCount.txt"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{sample}_{sampType}_getOnTarget.log"
     threads: min(max(int(config["maxCores"]/2), 1),4)
@@ -786,10 +788,10 @@ rule alignReads:
         outBai = temp("{runPath}/{sample}_mem.{sampType}.sort.bam.bai"),
         tempDir = temp(touch(directory("{runPath}/{sample}.{sampType}.alignReads.samtoolsTemp")))
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     threads: min(max(int(config["maxCores"]/2), 1),4)
     log:
-         "{runPath}/logs/{sample}_{sampType}_bwa.log"
+        "{runPath}/logs/{sample}_{sampType}_bwa.log"
     shell:
         """
         set -e
@@ -851,7 +853,7 @@ rule makeTempBai:
     output:
         outBai = temp("{runPath}/{fileBase}.temp.bam.bai")
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     shell:
         """
         samtools index {input.inBam} {output.outBai}
@@ -864,7 +866,7 @@ rule makeBai:
     output:
         outBai = "{runPath}/{fileBase}.bam.bai"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     shell:
         """
         samtools index {input.inBam} {output.outBai}
@@ -877,7 +879,7 @@ rule getFlagstats:
     output:
         outBai = "{runPath}/Stats/data/{fileBase}.flagstats.txt"
     conda:
-       "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
         "{runPath}/logs/{fileBase}_getFlagstats.log"
     shell:
@@ -1227,9 +1229,9 @@ rule endClip:
         outBai = temp("{runPath}/{sample}.{sampType}.clipped.bai"),
         clippingMetrics = touch("{runPath}/Stats/data/{sample}.{sampType}.endClip.metrics.txt")
     conda:
-       "envs/DS_fgbio_env.yaml"
+        "envs/DS_fgbio_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_endClip.log"
+        "{runPath}/logs/{sample}_{sampType}_endClip.log"
 
     shell:
         """
@@ -1272,9 +1274,9 @@ rule overlapClip:
         outBai = temp("{runPath}/{sample}.{sampType}.overlapClip.temp.bai"),
         clippingMetrics = "{runPath}/Stats/data/{sample}.{sampType}.overlapClip.metrics.txt"
     conda:
-       "envs/DS_fgbio_env.yaml"
+        "envs/DS_fgbio_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_overlapClip.log"
+        "{runPath}/logs/{sample}_{sampType}_overlapClip.log"
     shell:
         """
         set -e
@@ -1303,9 +1305,9 @@ rule FinalFilter:
     output:
         outBam = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam",
     conda:
-         "envs/DS_bwa_env.yaml"
+        "envs/DS_bwa_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_finalFilter.log"
+        "{runPath}/logs/{sample}_{sampType}_finalFilter.log"
     shell:
         """
         set -e
@@ -1445,10 +1447,6 @@ rule varDict2VCF:
     params:
         basePath = sys.path[0],
         sampName = get_rgsm, 
-        minDepth = get_minDepth, 
-        snpLevel = get_snps_threshold,
-        cluster_dist = get_cluster_dist, 
-        n_filt = get_maxNs
     input:
         inVarDict = "{runPath}/{sample}.{sampType}.varDict.txt", 
         inVarDict_Ns = "{runPath}/{sample}.{sampType}.varDict.Ns.txt", 
@@ -1456,7 +1454,6 @@ rule varDict2VCF:
         inBai = "{runPath}/Final/{sampType}/{sample}.{sampType}.final.bam.bai",
     output:
         outVCF = temp("{runPath}/{sample}.{sampType}.raw.vcf"),
-        outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
     conda:
         "envs/DS_CM_env.yaml"
     log:
@@ -1473,24 +1470,25 @@ rule varDict2VCF:
         -n {wildcards.sample}.{wildcards.sampType}.varDict.Ns.txt \
         -b Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.final.bam \
         -o {wildcards.sample}.{wildcards.sampType}.raw.vcf \
-        -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
-        --samp_name {params.sampName} \
-        --snp_threshold {params.snpLevel} \
-        -d {params.minDepth} \
-        --cluster_dist {params.cluster_dist} \
-        --n_lim {params.n_filt}
+        --samp_name {params.sampName}
         cd ..
         }} 2>&1 | tee -a {log}
         """
 
-rule maskVariants:
+rule FilterVariants:
     params:
         basePath = sys.path[0],
+        minDepth = get_minDepth, 
+        snpLevel = get_snps_threshold,
+        cluster_dist = get_cluster_dist, 
+        n_filt = get_maxNs, 
+        long_indel_levl = get_long_indel
     input:
-        inVCF = "{runPath}/{sample}.{sampType}.raw.vcf",
-        inMask = get_mask_bed
+        inVCF = "{runPath}/{sample}.{sampType}.raw.vcf"
     output:
-        outVCF = temp("{runPath}/{sample}.{sampType}.masked.vcf")
+        outVCF = temp("{runPath}/{sample}.{sampType}.filt.vcf"),
+        outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
+
     conda:
         "envs/DS_CM_env.yaml"
     log:
@@ -1502,13 +1500,59 @@ rule maskVariants:
         set -x
         {{
         cd {wildcards.runPath}
-        python {params.basePath}/scripts/Mask_VCF.py \
+        python {params.basePath}/scripts/Filter_VCF.py \
         -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
-        -o {wildcards.sample}.{wildcards.sampType}.masked.vcf \
-        -b {input.inMask}
+        -o {wildcards.sample}.{wildcards.sampType}.filt.vcf \
+        -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
+        --snp_threshold {params.snpLevel} \
+        -d {params.minDepth} \
+        --cluster_dist {params.cluster_dist} \
+        --n_lim {params.n_filt} \
+        --max_indel_size {params.long_indel_levl}
         cd ..
         }} 2>&1 | tee -a {log}
         """
+
+rule FilterVariants_withMask:
+    params:
+        basePath = sys.path[0],
+        minDepth = get_minDepth, 
+        snpLevel = get_snps_threshold,
+        cluster_dist = get_cluster_dist, 
+        n_filt = get_maxNs, 
+        long_indel_levl = get_long_indel
+    input:
+        inVCF = "{runPath}/{sample}.{sampType}.raw.vcf",
+        inMask = get_mask_bed
+    output:
+        outVCF = temp("{runPath}/{sample}.{sampType}.filtmasked.vcf"),
+        outSNPs = "{runPath}/Final/{sampType}/{sample}.{sampType}.snps.vcf"
+
+    conda:
+        "envs/DS_CM_env.yaml"
+    log:
+        "{runPath}/logs/{sample}_{sampType}_maskVariants.log"
+    shell:
+        """
+        set -e
+        set -o pipefail
+        set -x
+        {{
+        cd {wildcards.runPath}
+        python {params.basePath}/scripts/Filter_VCF.py \
+        -i {wildcards.sample}.{wildcards.sampType}.raw.vcf \
+        -o {wildcards.sample}.{wildcards.sampType}.filtmasked.vcf \
+        -s Final/{wildcards.sampType}/{wildcards.sample}.{wildcards.sampType}.snps.vcf \
+        -b {input.inMask} \
+        --snp_threshold {params.snpLevel} \
+        -d {params.minDepth} \
+        --cluster_dist {params.cluster_dist} \
+        --n_lim {params.n_filt} \
+        --max_indel_size {params.long_indel_levl}
+        cd ..
+        }} 2>&1 | tee -a {log}
+        """
+
 
 rule make_final_VCF:
     input:
@@ -1541,7 +1585,7 @@ rule makeDepth:
     conda:
         "envs/DS_CM_env.yaml"
     log:
-         "{runPath}/logs/{sample}_makeDepth_{sampType}.log"
+        "{runPath}/logs/{sample}_makeDepth_{sampType}.log"
     shell:
         """
         set -e
@@ -1795,9 +1839,9 @@ rule MutsPerCycle:
         outMutsPerRead = "{runPath}/Stats/data/{sample}.{sampType}.mutsPerRead.txt",
         outMutsPerReadPlot = "{runPath}/Stats/plots/{sample}.{sampType}.mutsPerRead.png"
     conda:
-         "envs/DS_CM_env.yaml"
+        "envs/DS_CM_env.yaml"
     log:
-         "{runPath}/logs/{sample}_{sampType}_MutsPerCycle.log"
+        "{runPath}/logs/{sample}_{sampType}_MutsPerCycle.log"
     shell:
         """
         set -e
