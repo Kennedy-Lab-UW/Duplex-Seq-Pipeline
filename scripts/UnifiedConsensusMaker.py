@@ -465,7 +465,7 @@ def main():
                         if seq_dict[tag_subtype][0].count('N') / sscsLen > o.Ncutoff:
                             highN_SSCS += 1
                             seq_dict[tag_subtype][0] = 'N' * sscsLen
-                            qual_dict[tag_subtype] = [0 for x in range(read1_dcs_len)]
+                            qual_dict[tag_subtype] = [0 for x in range(sscsLen)]
                     elif famSizes[tag_subtype] > o.maxmem:
                         seq_dict[tag_subtype] = [
                             consensus_caller(seq_dict[tag_subtype][:o.maxmem],
@@ -481,7 +481,7 @@ def main():
                         if seq_dict[tag_subtype][0].count('N') / sscsLen > o.Ncutoff:
                             highN_SSCS += 1
                             seq_dict[tag_subtype][0] = 'N' * sscsLen
-                            qual_dict[tag_subtype] = [0 for x in range(read1_dcs_len)]
+                            qual_dict[tag_subtype] = [0 for x in range(sscsLen)]
                 if o.write_sscs is True:
 
 
