@@ -385,11 +385,10 @@ wildcard_constraints:
 # Run all steps of the pipeline
 rule all:
     input:
-        f"{config['samples']}.summary.csv", 
-        f"{config['samples']}.summaryDepth.pdf", 
-        f"{config['samples']}.summaryInsertSize.pdf", 
-        f"{config['samples']}.summaryMutsByCycle.pdf", 
-        f"{config['samples']}.summaryFamilySize.pdf"
+        getSummaryInput(),
+        getDepthFiles(),
+        getInsertFiles(),
+        getMutsByCycFiles()
         # ~ get_outCountMuts("sscs"),
         # ~ get_outCountMuts("dcs")
         # ~ get_outFiles(sampType="dcs", suffix=".filt.no_overlap.bam")
@@ -401,7 +400,21 @@ rule all:
         rm -rf */picardTempDir
         rm -f Rplots.pdf
         """
-        
+
+# Make the summaries (NOTE: This step will run all steps if they haven't been run before)
+rule makeSummaries:
+    input:
+        f"{config['samples']}.summary.csv", 
+        f"{config['samples']}.summaryDepth.pdf", 
+        f"{config['samples']}.summaryInsertSize.pdf", 
+        f"{config['samples']}.summaryMutsByCycle.pdf", 
+        f"{config['samples']}.summaryFamilySize.pdf"
+    output:
+        temp(".ruleMakeSummariesFinished")
+    shell:
+        """
+        touch "{output}"
+        """
 
 # Environment set up rules
 # Implemented to save time at run-time on environment setup

@@ -76,4 +76,13 @@ echo "inConfig=\"\$1\"" >> DS-clean
 echo "snakemake -s ${snakeDir}/ResetSnakefile --use-conda -j 1 --config samples=\"\${inConfig}\"" >> DS-clean
 chmod a+x DS-clean
 
+echo "Creating summary creation script"
+echo "#!/bin/bash" > DS-summarize
+echo "" >> DS-summarize
+echo "# This is a script to create summaries of output from the DS pipeline" >> DS-summarize
+echo "# Can also be used to run the whole pipeline including summary creation" >> DS-summarize
+echo "inConfig=\"\$1\"" >> DS-summarize
+echo "snakemake -s ${snakeDir}/Snakefile --use-conda -j ${maxCores} --config samples=\"\${inConfig}\" -- makeSummaries" >> DS-summarize
+chmod a+x DS-summarize
+
 echo "Done"

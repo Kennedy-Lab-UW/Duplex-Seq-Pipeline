@@ -11,6 +11,7 @@ Internal Changes:
 New Features:
     Add a clonality limit for muts_per_cycle (set at the pipeline level) to make the muts_per_cycle plot clearer.
     Add per-read N filter for SSCS
+    Split summary creation into a new script
 Bugfix:
     Spellcheck changelog
 
