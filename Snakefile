@@ -2118,9 +2118,9 @@ import numpy as np
         # Alignment Statistics:
         rawReads = int(rawFlagstats[0].split()[0])
         sscsReads=int(sscsFlagstats[0].split()[0])
-        mappedSscs=int(sscsFlagstats[4].split()[0])
+        mappedSscs=int(sscsFlagstats[6].split()[0])
         dcsReads=int(dcsFlagstats[0].split()[0])
-        mappedDcs=int(dcsFlagstats[4].split()[0])
+        mappedDcs=int(dcsFlagstats[6].split()[0])
         if int(rawTarget[1].split()[0]) == 0:
             rawOnTarget=0
         else:

@@ -159,10 +159,10 @@ def main():
         # rawReads = float(pysam.flagstat(f"{index}/{runID}.temp.sort.bam").split('\n')[0].split()[0])
         # sscsFlagstat=pysam.flagstat(f"{index}/{runID}_mem.sscs.sort.bam").split('\n')
         sscsReads = float(sscsFlagstats[0].split()[0])
-        mappedSscs = float(sscsFlagstats[4].split()[0])
+        mappedSscs = float(sscsFlagstats[6].split()[0])
         # ~ dcsFlagstat=pysam.flagstat(f"{index}/{runID}_mem.dcs.sort.bam").split('\n')
         dcsReads = float(dcsFlagstats[0].split()[0])
-        mappedDcs = float(dcsFlagstats[4].split()[0])
+        mappedDcs = float(dcsFlagstats[6].split()[0])
 
         print("Processing Tagstats")
         # get tagstats numbers
