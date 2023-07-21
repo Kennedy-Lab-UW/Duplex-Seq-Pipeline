@@ -693,14 +693,25 @@ class countMutsEngine:
                 "DP": sum([self.blockCounts[x]["DP"] for x in self.blockCounts])
                 }
             for x in self.blockCounts:
-                overall_counts["ins"].update(self.blockCounts[x]["ins"])
-                overall_counts["dels"].update(self.blockCounts[x]["dels"])
+                for insIter in self.blockCounts[x]["ins"]:
+                    overall_counts["ins"][insIter] += self.blockCounts[x]["ins"][insIter]
+                for delIter in self.blockCounts[x]["dels"]:
+                    overall_counts["dels"][delIter] += self.blockCounts[x]["dels"][delIter]
+                # ~ overall_counts["ins"].update(self.blockCounts[x]["ins"])
+                # ~ overall_counts["dels"].update(self.blockCounts[x]["dels"])
                 
         else:
             logging.error(f"Invalid overlap mode: {overall_mode}")
             raise Exception()
         subregNum = 0
         subregNames = [x for x in self.blockCounts]
+        # ~ import pickle
+        # ~ outPickle = open("blockCounts.pkl", 'wb')
+        # ~ outPickle2 = open("geneCounts.pkl", 'wb')
+        # ~ pickle.dump(self.blockCounts, outPickle)
+        # ~ pickle.dump(self.geneCounts, outPickle2)
+        # ~ outPickle.close()
+        # ~ outPickle2.close()
         if gene_mode == "FULL":
             outFile.write(
                 f"##GENE = Total\n"
@@ -754,8 +765,12 @@ class countMutsEngine:
                     gene_counts[geneIter]["G>T"]  += self.blockCounts[subregNames[subregNum]]["G>T"]
                     gene_counts[geneIter]["G>C"]  += self.blockCounts[subregNames[subregNum]]["G>C"]
                     gene_counts[geneIter]["DP"] += self.blockCounts[subregNames[subregNum]]["DP"]
-                    gene_counts[geneIter]["ins"].update(self.blockCounts[subregNames[subregNum]]["ins"])
-                    gene_counts[geneIter]["dels"].update(self.blockCounts[subregNames[subregNum]]["dels"])
+                    for insIter in self.blockCounts[subregNames[subregNum]]["ins"]:
+                        gene_counts[geneIter]["ins"][insIter] += self.blockCounts[subregNames[subregNum]]["ins"][insIter]
+                    for delIter in self.blockCounts[subregNames[subregNum]]["dels"]:
+                        gene_counts[geneIter]["dels"][delIter] += self.blockCounts[subregNames[subregNum]]["dels"][delIter]
+                    # ~ gene_counts[geneIter]["ins"].update(self.blockCounts[subregNames[subregNum]]["ins"])
+                    # ~ gene_counts[geneIter]["dels"].update(self.blockCounts[subregNames[subregNum]]["dels"])
                     subregNum += 1
         else:
             logging.error(f"Invalid gene mode: {gene_mode}")
@@ -927,7 +942,7 @@ class countMutsEngine:
                         outFile.write(
                             f"{self.sample},"
                             f"{self.subregCounts[subreg]['name']},"
-                            f"+{n},DEL,{self.subregCounts[subreg]['dels'][str(n)]},"
+                            f"-{n},DEL,{self.subregCounts[subreg]['dels'][str(n)]},"
                             f"{self.subregCounts[subreg]['DP']},"
                             f"{wilsonCI[0]:.2e}\n"
                             )
