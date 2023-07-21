@@ -1,0 +1,7 @@
+name: DS_cutadapt
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.9.*
+  - cutadapt=3.5*

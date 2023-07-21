@@ -1,0 +1,14 @@
+name: DS_CM
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.9.*
+  - cython
+  - picard=2.25.*
+  - pysam=0.16.0
+  - snakemake
+  - pandas
+  - numpy
+  - matplotlib
+  - regex
