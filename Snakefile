@@ -661,6 +661,7 @@ rule makeConsensus:
 rule clipAdapters:
     params:
         adapterSeq = get_adapter_seq,
+    threads: config["maxCores"]
     input:
         in1 = "{runPath}/Intermediate/ConsensusMakerOutputs/{sample}_read1_{sampType}.fq.gz",
         in2 = "{runPath}/Intermediate/ConsensusMakerOutputs/{sample}_read2_{sampType}.fq.gz",
@@ -679,6 +680,7 @@ rule clipAdapters:
         {{
         cd {wildcards.runPath}
         cutadapt \
+        -j {threads} \
         -a {params.adapterSeq} -A {params.adapterSeq} \
         -o {wildcards.sample}_read1_{wildcards.sampType}.adaptClip.fq.gz \
         -p {wildcards.sample}_read2_{wildcards.sampType}.adaptClip.fq.gz \
