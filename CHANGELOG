@@ -1,4 +1,8 @@
 CHANGELOG
+v2.1.5:
+Bugfix/new feature?:
+    Make cutadapt multicore
+
 v2.1.4:
 Bugfix:
     Fix Gene sums bug in MutationFreqFromVCF.py
